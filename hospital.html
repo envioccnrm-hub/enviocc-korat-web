@@ -1,0 +1,1154 @@
+<!DOCTYPE html><html lang="th" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ระบบติดตามมาตรฐานโรงพยาบาล - แบบฟอร์มส่งรายงานแก้ไข</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Newsreader:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0072CE",            /* สีน้ำเงินหลัก */
+                        "primary-hover": "#00569E",
+                        "primary-light": "#E6F2FF",
+                        "secondary": "#76BC21",          /* สีเขียวสดใส */
+                        "secondary-hover": "#5E981A",
+                        "secondary-light": "#F0F9E8",
+                        "tertiary": "#0A2540",           /* สีน้ำเงินเข้ม/สีกรมท่า */
+                        "tertiary-light": "#1E3A5F",
+                        "background": "#f1f8e9",         /* สีพื้นหลังรวม (Light green) */
+                        "surface": "#FFFFFF",            /* สีขาวบริสุทธิ์สำหรับ การ์ด/คอนเทนเนอร์ */
+                        "outline-custom": "#E2E8F0",     /* สีเส้นขอบ */
+                        "text-main": "#0F172A",          /* สีข้อความหลัก */
+                        "text-muted": "#64748B",          /* สีข้อความรอง */
+                        "yellow-status": "#EAB308",
+                        "army-green": "#4B5320",
+                        "army-green-hover": "#3a4019"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin-desktop": "32px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px",
+                        "sidebar-width": "260px",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "headline": ["Montserrat", "sans-serif"],
+                        "body": ["Newsreader", "serif"],
+                        "label": ["Newsreader", "serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Newsreader', serif; }
+        h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Montserrat', sans-serif; }
+    </style>
+</head>
+<body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
+<!-- Top Header -->
+<header class="flex justify-between items-center h-20 px-6 bg-surface-container-low shadow-md w-full flex-shrink-0 z-50 sticky top-0" style="background-color: rgb(241, 248, 233);">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0">
+<img alt="Logo สำนักงานสาธารณสุขจังหวัดนครราชสีมา" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEsQfZyFn0LzxESX3FRcuE908yyo7VX8FxG1oNFdGP3DtKrNo4bmCpK5hPzo0Da9ess4KIhobd4qxPkWuK3aEX4UxOjPJ9L8HOxptV2Dg5t2ziszBfGztff0uvyqDo0fj37GBrcXJiHHLS78PRBoLpcxzu1KEFqt6Y5aRqfjvht1nLhzxKprJTDCiIacCbGjAxWZP9NYZ3o9vsGQ12E3RElEc9_i0JWQ8sCmJQbvl7IuXZtInlcsw5lkvZ9eyPuruhYQI">
+</div><div class="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0"><img alt="Medical Environmental Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmSWhdPPu2GyoONWvyJd-8LhjgFci8alDrosmJyu_8HgNAy41VVm3uXOl67FsqacY7lQexZUzgwthaaNNjzZIRwehDlprCvwdqbU41SGIubaKJbwCqEfZxHFh2YoOGUb0HdGK3UeBGLTOJI91ogx1p8ngtS8BAdGJpUR0Azb7pzecNK28tzCeIDXkIswRX1mUdSYYdeQE3-7EIMoJPZjs6jvUEQDZcRUTyDl0Ufnxt4zqOc0lDH9GD79Q6rHUvVzcNw6M"></div>
+<div>
+<h1 class="text-headline-sm md:text-lg font-headline font-bold text-primary leading-tight">ระบบติดตามการปรับปรุงแก้ไขหลังการประเมินมาตรฐานโรงพยาบาล</h1>
+<p class="text-text-muted text-sm font-label mt-0.5">สำนักงานสาธารณสุขจังหวัดนครราชสีมา</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex flex-col items-end px-2 gap-1">
+<p class="text-sm font-headline text-primary leading-tight" style="color: rgb(0, 0, 0);">นพ. สมชาย รักดี</p>
+<p class="text-[12px] font-label text-primary">โรงพยาบาลมหาราชนครราชสีมา (User)</p>
+</div>
+<div class="w-9 h-9 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden ml-2 shadow-sm border border-white/20">
+<img class="object-cover w-full h-full" data-alt="A close-up portrait of a smiling healthcare professional in a bright, modern clinical setting. They are wearing light blue scrubs and a stethoscope. The lighting is soft and even, highlighting a friendly and trustworthy expression. The background is a slightly blurred hospital corridor, emphasizing a clean, professional, and caring medical environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC89_Hw96iLSzZZO6NNU9RcRpAfQAT8lFVXxEW0s2mvHl2BT0iG7a9E7beLTt3KnLCVPmehxPicJC8Z9KfKJNIoRhS7uU8jYzyfg9n6icIZ5HdqQtJNk-ED5sMlsNqagK7Xu4gLLYwQdH3ANM0j67RdNQdNRKGGwn4pNscxu5SM6L0QVpB5ZkBQGsKQH3jK0L-Le3R39umgOCD5y5sPRMyYXsxYP18MhrWG8E7olr15Xecy7Y0WAqqZbg">
+</div>
+</div>
+<!-- Mobile Menu Button -->
+<button class="md:hidden p-2 text-primary hover:bg-primary-light rounded-full ml-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<div class="flex flex-1 overflow-hidden h-[calc(100vh-80px)] flex-grow">
+<!-- SideNavBar -->
+<nav class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 border-r border-outline-custom z-40 overflow-y-auto bg-primary text-white self-stretch">
+<ul class="flex-1 space-y-2 mt-4" id="sidebar-tabs">
+<li class="">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link hover:bg-white/10" data-target="tab-green-clean" href="#" onclick="switchTab(event, 'tab-green-clean')">
+<span class="material-symbols-outlined">eco</span>
+                    งาน Green &amp; Clean
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link bg-white/20 font-bold border-l-4 border-secondary" data-target="tab-occupational" href="#" onclick="switchTab(event, 'tab-occupational')">
+<span class="material-symbols-outlined">health_and_safety</span>
+                    งานอาชีวอนามัยฯ
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link hover:bg-white/10" data-target="tab-manual" href="#" onclick="switchTab(event, 'tab-manual')">
+<span class="material-symbols-outlined">menu_book</span>
+                    คู่มือและเอกสาร
+                </a>
+</li>
+</ul>
+<div class="mt-auto pt-4 border-t border-white/20">
+<a class="flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-lg transition-colors font-label text-white" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="">ออกจากระบบ</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col overflow-y-auto bg-surface" id="main-content-area">
+<!-- Tab 1: Green & Clean -->
+<main class="flex-1 p-8 lg:p-12 w-full tab-content hidden" id="tab-green-clean">
+<div class="max-w-6xl mx-auto">
+<div class="mb-8">
+<h1 class="text-2xl md:text-3xl font-bold mb-2 font-headline" style="color: rgb(21, 128, 61);">แบบฟอร์มส่งรายงานแก้ไข Green &amp; Clean</h1>
+<p class="text-text-muted text-base font-body">เลือกประเภทโรงพยาบาล หมวด และข้อที่ต้องการแก้ไข พร้อมแนบไฟล์หลักฐาน PDF</p>
+</div>
+<!-- Form Container (White Card) -->
+<div class="border border-outline-custom rounded-2xl p-6 md:p-8 shadow-sm bg-primary-light/60">
+<!-- Step 1: Submitter & Hospital Info -->
+<section class="mb-10">
+<h2 class="text-lg font-bold text-tertiary mb-6 flex items-center gap-3 border-b border-outline-custom pb-3 font-headline">
+<span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">1</span>
+                    ข้อมูลผู้ประเมินและโรงพยาบาล
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">ประเภทโรงพยาบาล <span class="text-red-500">*</span></label>
+<select class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
+<option disabled="" selected="" value="">เลือกประเภทโรงพยาบาล</option>
+<option>โรงพยาบาลศูนย์</option>
+<option>โรงพยาบาลทั่วไป</option>
+<option>โรงพยาบาลชุมชน</option>
+<option>โรงพยาบาลนอก สป.สธ.</option>
+<option>โรงพยาบาลส่งเสริมสุขภาพส่วนตำบล</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">ปีที่ประเมิน (เฉพาะตัวเลข) <span class="text-red-500">*</span></label>
+<input type="number" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" placeholder="ระบุปี พ.ศ. (เช่น 2573)" value="2573" min="2500" max="2600">
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">ชื่อ-นามสกุลผู้ส่ง</label>
+<input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" type="text" value="นาย สมชาย ใจดี">
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">เบอร์โทรศัพท์ติดต่อ</label>
+<input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" type="text" value="081-234-5678">
+</div>
+</div>
+</section>
+<!-- Step 2: Correction Details & PDF Upload -->
+<section class="mb-10">
+<h2 class="text-lg font-bold text-tertiary mb-6 flex items-center gap-3 border-b border-outline-custom pb-3 font-headline">
+<span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">2</span>
+                    รายละเอียดการแก้ไขและแนบไฟล์
+                </h2>
+<div class="mb-6"><label class="block text-sm font-semibold mb-3 text-tertiary">ส่งประเมินในระดับ <span class="text-red-500">*</span></label><div class="flex flex-col md:flex-row gap-4"><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input checked="" class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="standard"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับมาตรฐาน</span><span class="text-xs text-text-muted">(Standard)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="excellent"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับดีเยี่ยม</span><span class="text-xs text-text-muted">(Excellent)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="challenge"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับท้าทาย</span><span class="text-xs text-text-muted">(Challenge)</span></div></label></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="relative group" id="gc-category-group">
+<label class="block text-sm font-semibold mb-2 text-tertiary">หมวดที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
+<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<div class="flex flex-wrap gap-2 items-center w-full" id="gc-category-tags"></div>
+<span class="material-symbols-outlined text-text-muted">expand_more</span>
+</div>
+<!-- Dropdown Menu -->
+<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="gc-category-list"><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat1" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 1 CLEAN : การสร้างกระบวนการพัฒนา</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat2" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 2 G : Garbage : การจัดการมูลฝอยทุกประเภท</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat3" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 3 R : Restroom : การพัฒนาห้องส้วมมาตรฐานและการจัดการสิ่งปฏิกูล</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat4" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 4 E : Energy : การจัดการพลังงานและทรัพยากร</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat5" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 5 E : Environment : การจัดการสิ่งแวดล้อมภายในโรงพยาบาล</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat6" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 6 N : Nutrition : การจัดการสุขาภิบาลอาหาร น้ำอุปโภคบริโภค และการดำเนินงานอาหารปลอดภัยในโรงพยาบาล</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat7" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 7 Innovation : การพัฒนานวัตกรรมและงานวิจัยด้าน GREEN</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat8" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">หมวด 8 Network : การสร้างเครือข่ายการพัฒนาด้าน GREEN</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="cat9" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">การพัฒนาสู่ความเป็นเลิศเฉพาะด้าน (ระดับท้าทาย) 3 ด้าน</span>
+            </label></div>
+</div>
+</div>
+<div class="relative group" id="gc-item-group">
+<label class="block text-sm font-semibold mb-2 text-tertiary">ข้อที่ต้องการแก้ไข <span class="text-red-500">*</span></label>
+<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<div class="flex flex-wrap gap-2 items-center w-full" id="gc-item-tags"></div>
+<span class="material-symbols-outlined text-text-muted">expand_more</span>
+</div>
+<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="gc-item-list"><div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวดก่อน</div></div>
+</div>
+</div>
+</div>
+<div class="mb-6">
+<label class="block text-sm font-semibold mb-2 text-tertiary">แนบไฟล์หลักฐาน (PDF) <span class="text-red-500">*</span></label>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- File Upload Option -->
+<div class="border-2 border-dashed border-outline-custom rounded-lg p-6 flex flex-col items-center justify-center bg-surface hover:bg-primary-light/30 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-3xl text-text-muted group-hover:text-primary mb-2">upload_file</span>
+<p class="text-sm text-text-main font-semibold mb-1">อัปโหลดไฟล์หลักฐาน (PDF)</p>
+<p class="text-[10px] text-text-muted">ลากและวางไฟล์ หรือคลิกเพื่อเลือก</p>
+</div>
+<!-- Google Drive Link Option -->
+<div class="border border-outline-custom rounded-lg p-6 flex flex-col justify-center bg-surface">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-xl">link</span>
+<span class="text-sm font-semibold text-tertiary">หรือ วางลิงก์ Google Drive ที่นี่</span>
+</div>
+<div class="relative">
+<input class="w-full border border-outline-custom rounded-md px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main bg-primary-light/10" placeholder="https://drive.google.com/..." type="text">
+</div>
+<p class="text-[10px] text-text-muted mt-2">* โปรดตรวจสอบการตั้งค่าการเข้าถึงลิงก์ให้เป็น 'ทุกคนที่มีลิงก์'</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Step 3: Summary & Actions -->
+<section>
+<h2 class="text-lg font-bold text-tertiary mb-6 flex items-center gap-3 border-b border-outline-custom pb-3 font-headline">
+<span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">3</span>
+                    สรุปและส่งรายงาน
+                </h2>
+<div class="p-4 rounded-lg border border-primary/20 mb-6 bg-white">
+<p class="text-text-main mb-1"><strong class="font-semibold text-primary">สรุปการเลือก:</strong> โรงพยาบาลศูนย์/โรงพยาบาลทั่วไป - การจัดการขยะ (1.1 มีระบบคัดแยกขยะมูลฝอย)</p>
+<p class="text-xs text-text-muted">โปรดตรวจสอบข้อมูลและไฟล์แนบให้ครบถ้วนก่อนทำการบันทึกและส่งรายงาน</p>
+</div>
+<div class="flex justify-end gap-3">
+<button class="px-6 py-2.5 border border-red-500 text-red-500 bg-white rounded-lg font-semibold hover:bg-red-50 transition-colors">ยกเลิก</button>
+<button class="px-6 py-2.5 text-white rounded-lg font-semibold transition-all shadow-md flex items-center gap-2" style="background-color: rgb(74, 112, 18);">
+<span class="material-symbols-outlined text-sm">send</span>
+                        บันทึกและส่งรายงาน
+                    </button>
+</div>
+</section>
+</div>
+<!-- Status Stepper Progress Bar -->
+<div class="mt-8 mb-8 p-6 rounded-2xl border border-yellow-status/30 bg-yellow-status/10 flex flex-col gap-2">
+<div class="flex items-center gap-2 text-yellow-status">
+<span class="material-symbols-outlined">warning</span>
+<h3 class="font-bold text-lg font-headline">รายงานการประเมินของคุณถูกส่งกลับให้แก้ไขเพิ่มเติม</h3>
+</div>
+<p class="text-text-main text-sm">
+<span class="font-semibold">ข้อแนะนำจาก สสจ.:</span> กรุณาแนบภาพถ่ายถังขยะแยกประเภทเพิ่มเติมในหมวดที่ 1 (ข้อ 1.1) เนื่องจากภาพเดิมไม่ชัดเจน
+    </p>
+</div><div class="mt-12 mb-8">
+<h2 class="text-xl font-bold text-tertiary mb-6 font-headline">สถานะการส่งรายงานล่าสุด</h2>
+<div class="relative w-full max-w-4xl mx-auto flex justify-between items-start pt-4 pb-8"><!-- Connector Lines -->
+<div class="absolute top-[36px] left-[10%] right-[10%] z-0 flex h-[2px] -translate-y-1/2">
+<div class="flex-1 bg-yellow-status"></div>
+<div class="flex-1 bg-yellow-status"></div>
+<div class="flex-1 bg-outline-custom"></div>
+<div class="flex-1 bg-outline-custom"></div>
+</div>
+<!-- Step 1: Draft -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-tertiary text-white font-bold border-4 border-surface relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+</div>
+<p class="text-xs font-semibold text-text-main whitespace-nowrap text-center mt-4">ยังไม่ส่งข้อมูลแก้ไข</p>
+</div>
+<!-- Step 2: Waiting -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-status text-white font-bold border-4 border-surface relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-sm">hourglass_empty</span>
+</div>
+<p class="text-xs font-semibold text-text-main whitespace-nowrap text-center mt-4">รอการตรวจสอบ</p>
+</div>
+<!-- Step 3: Revision Required (Active) -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-red-500 text-white font-bold border-4 border-surface relative z-10 shadow-md ring-2 ring-red-500/20">
+<span class="material-symbols-outlined text-sm">warning</span>
+</div>
+<p class="text-xs font-bold text-red-500 whitespace-nowrap text-center mt-4">ต้องแก้ไขเพิ่มเติม ⚠️</p>
+</div>
+<!-- Step 4: Checking -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-outline-custom text-text-muted font-bold border-4 border-surface relative z-10">
+<span class="material-symbols-outlined text-sm">fact_check</span>
+</div>
+<p class="text-xs font-semibold text-text-muted whitespace-nowrap text-center mt-4">ดำเนินการตรวจสอบ</p>
+</div>
+<!-- Step 5: Certified -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-outline-custom text-text-muted font-bold border-4 border-surface relative z-10">
+<span class="material-symbols-outlined text-sm">workspace_premium</span>
+</div>
+<p class="text-xs font-semibold text-text-muted text-center leading-tight whitespace-nowrap mt-4">รับรองผลการประเมิน<br><span class="text-[10px] font-normal">[มาตรฐาน / ดีเยี่ยม / ท้าทาย]</span></p>
+</div></div>
+</div>
+<!-- Submission History Table -->
+<div class="mt-8">
+<h2 class="text-xl font-bold text-tertiary mb-4 font-headline">ประวัติการส่งรายงาน (Submission History)</h2>
+<div class="bg-surface border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-background border-b border-outline-custom text-text-muted text-xs font-bold uppercase tracking-wider">
+<th class="py-4 px-6">วันที่ส่ง</th>
+<th class="py-4 px-6">ประเภทโรงพยาบาล</th>
+<th class="py-4 px-6">หมวด/ข้อ Green &amp; Clean ที่แก้ไข</th>
+<th class="py-4 px-6">สถานะ</th>
+<th class="py-4 px-6 text-right">จัดการ</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-custom text-sm">
+<tr class="hover:bg-primary-light/30 transition-colors"><td class="py-4 px-6 font-medium text-text-main">15 ต.ค. 2567</td>
+<td class="py-4 px-6 text-text-main">โรงพยาบาลศูนย์/โรงพยาบาลทั่วไป</td>
+<td class="py-4 px-6 text-text-main">การจัดการขยะ / 1.1 มีระบบคัดแยก</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-500 border border-red-500/30">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+        ต้องแก้ไขเพิ่มเติม
+    </span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-primary hover:text-primary-hover font-semibold transition-colors">ดูรายละเอียด</button>
+</td></tr>
+<tr class="hover:bg-primary-light/30 transition-colors">
+<td class="py-4 px-6 font-medium text-text-main">02 พ.ย. 2567</td>
+<td class="py-4 px-6 text-text-main">โรงพยาบาลชุมชน</td>
+<td class="py-4 px-6 text-text-main">พลังงาน / 3.1 การลดใช้ไฟฟ้า</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-status/10 text-yellow-status border border-yellow-status/30">
+                                        รอการตรวจสอบ
+                                    </span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-primary hover:text-primary-hover font-semibold transition-colors">ดูรายละเอียด</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Tab 2: Occupational Health -->
+<main class="flex-1 p-8 lg:p-12 w-full tab-content" id="tab-occupational">
+<div class="max-w-6xl mx-auto">
+<div class="mb-8">
+<h1 class="text-2xl md:text-3xl font-bold mb-2 font-headline" style="color: rgb(234, 88, 12);">แบบฟอร์มส่งรายงานแก้ไข อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</h1>
+<p class="text-text-muted text-base font-body">เลือกประเภทโรงพยาบาล หมวด และข้อที่ต้องการแก้ไข พร้อมแนบไฟล์หลักฐาน PDF</p>
+</div>
+<!-- Form Container (White Card) -->
+<div class="border border-outline-custom rounded-2xl p-6 md:p-8 shadow-sm bg-primary-light/60">
+<!-- Step 1: Submitter & Hospital Info -->
+<section class="mb-10">
+<h2 class="text-lg font-bold text-tertiary mb-6 flex items-center gap-3 border-b border-outline-custom pb-3 font-headline">
+<span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">1</span>
+                    ข้อมูลผู้ประเมินและโรงพยาบาล
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">ประเภทโรงพยาบาล <span class="text-red-500">*</span></label>
+<select class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
+<option disabled="" selected="" value="">เลือกประเภทโรงพยาบาล</option>
+<option>โรงพยาบาลศูนย์</option>
+<option>โรงพยาบาลทั่วไป</option>
+<option>โรงพยาบาลชุมชน</option>
+<option>โรงพยาบาลนอก สป.สธ.</option>
+<option>โรงพยาบาลส่งเสริมสุขภาพส่วนตำบล</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">ปีที่ประเมิน (เฉพาะตัวเลข) <span class="text-red-500">*</span></label>
+<input type="number" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" placeholder="ระบุปี พ.ศ. (เช่น 2573)" value="2573" min="2500" max="2600">
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">ชื่อ-นามสกุลผู้ส่ง</label>
+<input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" type="text" value="นาย สมชาย ใจดี">
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-tertiary">เบอร์โทรศัพท์ติดต่อ</label>
+<input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" type="text" value="081-234-5678">
+</div>
+</div>
+</section>
+<!-- Step 2: Correction Details & PDF Upload -->
+<section class="mb-10">
+<h2 class="text-lg font-bold text-tertiary mb-6 flex items-center gap-3 border-b border-outline-custom pb-3 font-headline">
+<span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">2</span>
+                    รายละเอียดการแก้ไขและแนบไฟล์
+                </h2>
+<div class="mb-8">
+<label class="block text-sm font-semibold mb-4 text-tertiary">ส่งประเมินในระดับ <span class="text-red-500">*</span></label>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<label class="relative flex flex-col items-center p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/20 transition-all group">
+<input class="absolute opacity-0 peer" name="assessment_level_occ" type="radio" value="beginner">
+<div class="w-full h-full absolute top-0 left-0 rounded-lg border-2 border-transparent peer-checked:border-primary peer-checked:bg-primary-light/10 transition-all"></div>
+<span class="text-sm font-medium text-text-main relative z-10">ระดับเริ่มต้นพัฒนา</span>
+</label>
+<label class="relative flex flex-col items-center p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/20 transition-all group">
+<input class="absolute opacity-0 peer" name="assessment_level_occ" type="radio" value="good">
+<div class="w-full h-full absolute top-0 left-0 rounded-lg border-2 border-transparent peer-checked:border-primary peer-checked:bg-primary-light/10 transition-all"></div>
+<span class="text-sm font-medium text-text-main relative z-10">ระดับดี</span>
+</label>
+<label class="relative flex flex-col items-center p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/20 transition-all group">
+<input class="absolute opacity-0 peer" name="assessment_level_occ" type="radio" value="very_good">
+<div class="w-full h-full absolute top-0 left-0 rounded-lg border-2 border-transparent peer-checked:border-primary peer-checked:bg-primary-light/10 transition-all"></div>
+<span class="text-sm font-medium text-text-main relative z-10">ระดับดีมาก</span>
+</label>
+<label class="relative flex flex-col items-center p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/20 transition-all group">
+<input class="absolute opacity-0 peer" name="assessment_level_occ" type="radio" value="excellent">
+<div class="w-full h-full absolute top-0 left-0 rounded-lg border-2 border-transparent peer-checked:border-primary peer-checked:bg-primary-light/10 transition-all"></div>
+<span class="text-sm font-medium text-text-main relative z-10">ระดับดีเด่น</span>
+</label>
+</div>
+</div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="relative group" id="occ-category-group">
+<label class="block text-sm font-semibold mb-2 text-tertiary">องค์ประกอบที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
+<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<div class="flex flex-wrap gap-2 items-center w-full" id="occ-category-tags"></div>
+<span class="material-symbols-outlined text-text-muted">expand_more</span>
+</div>
+<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="occ-category-list"><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="occ_cat1" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">องค์ประกอบที่ 1 : ด้านนโยบาย โครงสร้าง และการจัดการ</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="occ_cat2" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">องค์ประกอบที่ 2 : ด้านการจัดบริการอาชีวอนามัย</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="occ_cat3" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">องค์ประกอบที่ 3 : ด้านการจัดบริการเวชกรรมสิ่งแวดล้อม</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="occ_cat4" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">องค์ประกอบที่ 4 : ด้านการอาชีวอนามัยและเวชกรรมสิ่งแวดล้อมในชุมชน</span>
+            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
+                <input type="checkbox" value="occ_cat5" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
+                <span class="text-sm text-text-main">องค์ประกอบที่ 5 : ด้านห้องปฏิบัติการอาชีวเวชศาสตร์และเวชศาสตร์สิ่งแวดล้อม</span>
+            </label></div>
+</div>
+</div>
+<div class="relative group" id="occ-item-group">
+<label class="block text-sm font-semibold mb-2 text-tertiary">ข้อที่ต้องการแก้ไข <span class="text-red-500">*</span></label>
+<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<div class="flex flex-wrap gap-2 items-center w-full" id="occ-item-tags"></div>
+<span class="material-symbols-outlined text-text-muted">expand_more</span>
+</div>
+<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="occ-item-list"><div class="p-2 text-xs text-text-muted">กรุณาเลือกองค์ประกอบก่อน</div></div>
+</div>
+</div>
+</div>
+<div class="mb-6">
+<label class="block text-sm font-semibold mb-2 text-tertiary">แนบไฟล์หลักฐาน (PDF) <span class="text-red-500">*</span></label>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- File Upload Option -->
+<div class="border-2 border-dashed border-outline-custom rounded-lg p-6 flex flex-col items-center justify-center bg-surface hover:bg-primary-light/30 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-3xl text-text-muted group-hover:text-primary mb-2">upload_file</span>
+<p class="text-sm text-text-main font-semibold mb-1">อัปโหลดไฟล์หลักฐาน (PDF)</p>
+<p class="text-[10px] text-text-muted">ลากและวางไฟล์ หรือคลิกเพื่อเลือก</p>
+</div>
+<!-- Google Drive Link Option -->
+<div class="border border-outline-custom rounded-lg p-6 flex flex-col justify-center bg-surface">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-xl">link</span>
+<span class="text-sm font-semibold text-tertiary">หรือ วางลิงก์ Google Drive ที่นี่</span>
+</div>
+<div class="relative">
+<input class="w-full border border-outline-custom rounded-md px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main bg-primary-light/10" placeholder="https://drive.google.com/..." type="text">
+</div>
+<p class="text-[10px] text-text-muted mt-2">* โปรดตรวจสอบการตั้งค่าการเข้าถึงลิงก์ให้เป็น 'ทุกคนที่มีลิงก์'</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Step 3: Summary & Actions -->
+<section>
+<h2 class="text-lg font-bold text-tertiary mb-6 flex items-center gap-3 border-b border-outline-custom pb-3 font-headline">
+<span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">3</span>
+                    สรุปและส่งรายงาน
+                </h2>
+<div class="p-4 rounded-lg border border-primary/20 mb-6 bg-white">
+<p class="text-text-main mb-1"><strong class="font-semibold text-primary">สรุปการเลือก:</strong> โรงพยาบาลศูนย์/โรงพยาบาลทั่วไป - การจัดการขยะ (1.1 มีระบบคัดแยกขยะมูลฝอย)</p>
+<p class="text-xs text-text-muted">โปรดตรวจสอบข้อมูลและไฟล์แนบให้ครบถ้วนก่อนทำการบันทึกและส่งรายงาน</p>
+</div>
+<div class="flex justify-end gap-3">
+<button class="px-6 py-2.5 border border-red-500 text-red-500 bg-white rounded-lg font-semibold hover:bg-red-50 transition-colors">ยกเลิก</button>
+<button class="px-6 py-2.5 text-white rounded-lg font-semibold transition-all shadow-md flex items-center gap-2 hover:bg-army-green-hover" style="background-color: rgb(74, 112, 18);">
+<span class="material-symbols-outlined text-sm">send</span>
+                        บันทึกและส่งรายงาน
+                    </button>
+</div>
+</section>
+</div>
+<!-- Status Stepper Progress Bar -->
+<div class="mb-8 p-4 rounded-lg border border-yellow-status/30 bg-yellow-status/10 flex gap-4 items-start hidden">
+<span class="material-symbols-outlined text-yellow-status text-2xl shrink-0">warning</span>
+<div>
+<h3 class="text-lg font-bold text-text-main mb-1 font-headline">⚠️ รายงานการประเมินของคุณถูกส่งกลับให้แก้ไขเพิ่มเติม</h3>
+<p class="text-sm text-text-main mb-2">ข้อเสนอแนะจาก สสจ.:</p>
+<ul class="list-disc list-inside text-sm text-text-main space-y-1">
+<li class="">กรุณาแนบไฟล์หลักฐาน PDF ที่ชัดเจนกว่านี้ในข้อ 1.1</li>
+<li class="">รายละเอียดการแก้ไขในช่องข้อความยังไม่ครบถ้วนตามเกณฑ์</li>
+</ul>
+</div>
+</div><div class="mt-12 mb-8">
+<h2 class="text-xl font-bold text-tertiary mb-6 font-headline">สถานะการส่งรายงานล่าสุด</h2>
+<div class="relative w-full max-w-4xl mx-auto flex justify-between items-start pt-4 pb-8" data-status="revision_required"><!-- Connector Lines -->
+<div class="absolute top-[36px] left-[10%] right-[10%] z-0 flex h-[2px] -translate-y-1/2">
+<div class="flex-1 bg-yellow-status"></div>
+<div class="flex-1 bg-yellow-status"></div>
+<div class="flex-1 bg-outline-custom"></div>
+<div class="flex-1 bg-outline-custom"></div>
+</div>
+<!-- Step 1: Draft -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-tertiary text-white font-bold border-4 border-surface relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+</div>
+<p class="text-sm font-semibold text-text-main whitespace-nowrap text-center mt-4">ยังไม่ส่งข้อมูลแก้ไข</p>
+</div>
+<!-- Step 2: Waiting for Review -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-status text-white font-bold border-4 border-surface relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-sm">hourglass_empty</span>
+</div>
+<p class="text-sm font-semibold text-text-main whitespace-nowrap text-center mt-4">รอการตรวจสอบ</p>
+</div>
+<!-- Step 3: Revision Required -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-red-500 text-white font-bold border-4 border-surface relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-sm">warning</span>
+</div>
+<p class="text-sm font-semibold text-red-500 whitespace-nowrap text-center mt-4">ต้องแก้ไขเพิ่มเติม ⚠️</p>
+</div>
+<!-- Step 4: Processing -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-outline-custom text-text-muted font-bold border-4 border-surface relative z-10">
+<span class="material-symbols-outlined text-sm">fact_check</span>
+</div>
+<p class="text-sm font-semibold text-text-muted whitespace-nowrap text-center mt-4">ดำเนินการตรวจสอบ</p>
+</div>
+<!-- Step 5: Certified -->
+<div class="relative z-10 flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-outline-custom text-text-muted font-bold border-4 border-surface relative z-10">
+<span class="material-symbols-outlined text-sm">workspace_premium</span>
+</div>
+<p class="text-sm font-semibold text-text-muted text-center leading-tight whitespace-nowrap mt-4">รับรองผลการประเมิน</p>
+</div></div>
+</div>
+<!-- Submission History Table -->
+<div class="mt-8">
+<h2 class="text-xl font-bold text-tertiary mb-4 font-headline">ประวัติการส่งรายงาน (Submission History)</h2>
+<div class="bg-surface border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-background border-b border-outline-custom text-text-muted text-xs font-bold uppercase tracking-wider">
+<th class="py-4 px-6">วันที่ส่ง</th>
+<th class="py-4 px-6">ประเภทโรงพยาบาล</th>
+<th class="py-4 px-6">หมวด/ข้อ Green &amp; Clean ที่แก้ไข</th>
+<th class="py-4 px-6">สถานะ</th>
+<th class="py-4 px-6 text-right">จัดการ</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-custom text-sm">
+<tr class="hover:bg-primary-light/30 transition-colors">
+<td class="py-4 px-6 font-medium text-text-main">15 ต.ค. 2567</td>
+<td class="py-4 px-6 text-text-main">โรงพยาบาลศูนย์/โรงพยาบาลทั่วไป</td>
+<td class="py-4 px-6 text-text-main">การจัดการขยะ / 1.1 มีระบบคัดแยก</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-500">
+    ต้องแก้ไขเพิ่มเติม
+</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-primary hover:text-primary-hover font-semibold transition-colors">ดูรายละเอียด</button>
+</td>
+</tr>
+<tr class="hover:bg-primary-light/30 transition-colors">
+<td class="py-4 px-6 font-medium text-text-main">02 พ.ย. 2567</td>
+<td class="py-4 px-6 text-text-main">โรงพยาบาลชุมชน</td>
+<td class="py-4 px-6 text-text-main">พลังงาน / 3.1 การลดใช้ไฟฟ้า</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-status/10 text-yellow-status border border-yellow-status/30">
+                                        รอการตรวจสอบ
+                                    </span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-primary hover:text-primary-hover font-semibold transition-colors">ดูรายละเอียด</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Tab 3: Manuals -->
+<main class="flex-1 p-8 lg:p-12 w-full tab-content hidden" id="tab-manual">
+<div class="max-w-6xl mx-auto space-y-12">
+<!-- Page Header -->
+<div class="space-y-2 border-b border-outline-custom pb-6">
+<h1 class="text-4xl font-headline font-bold text-primary">คู่มือการใช้งานและเอกสารอ้างอิง</h1>
+<p class="text-lg font-body text-text-muted">เอกสารและคู่มือต่างๆ สำหรับใช้ประกอบการประเมินมาตรฐานโรงพยาบาล</p>
+</div>
+<!-- Section 1: Documents and Manuals -->
+<section>
+<h2 class="text-2xl font-headline font-semibold text-text-main mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+                        เอกสารและคู่มือ
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col group h-full">
+<div class="w-20 h-20 rounded-lg bg-primary-light flex items-center justify-center mb-1 text-primary group-hover:bg-primary group-hover:text-white transition-colors mx-auto"><img alt="คู่มือการใช้งาน" class="w-full h-full object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC08Vle89tZijiCrVnACpDpItX4RZ0Zq4RNo2Y40iK1cCtp_jwcRG0_EXK6fMSggji48gkJUei1oNgO5ECH1mKOlG__CG6vJ4cL5ffdOx_eZrTRNBOEnoNoQ62DWw5JFh6nqXMUtUWPRCSemjgEYTETma5IjTQzPLXxqaJbaXMgxtdbQkKRPS0VBLn1fBFwhoWo6mwmdASzRxOVd-Ivl6H7-0QmOdAP5BtlAMEaHnq415jFwGhaZnKzhbDxUMLnftWPse4"></div>
+<h3 class="text-lg font-headline font-semibold text-text-main mb-1 flex-grow text-center">คู่มือการใช้งานระบบ<div class="">สำหรับโรงพยาบาล</div></h3>
+<a href="https://drive.google.com/drive/folders/1-qhHBjju_gZULiI_Ov_n2p5iXgIZS1qn?usp=sharing" target="_blank" class="mt-auto w-full py-2.5 px-4 rounded-lg bg-primary-light text-primary font-label font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">download</span>Download / View</a>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col group h-full">
+<div class="w-20 h-20 rounded-lg bg-secondary-light flex items-center justify-center mb-4 text-secondary group-hover:bg-secondary group-hover:text-white transition-colors mx-auto"><img alt="Green &amp; Clean Logo" class="w-full h-full object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6zB45ckwjKtku9rHx4zJrjhSc1ifj_uUd6XjlOxTHOw8HGMCl73gFSCOTWdCf_HqUad5KJULnE87x3aJrZtsrxRs1izM7EOaw1Iah_LpAcZw7b8_8ZGJUR5bWkQSeUZPnP1hbpSSp9lWxoZLZFYnrK87ZlxZSsLyjm7_QT2irLeWsztnC2NkmGZVKx2b1h83wbnLaXQn7YhFX_CIryEa4r2JrrkAO3m19ZzxEhx-DmGj0SEzJPD8kO4sGsUUgwe2VSxw"></div>
+<h3 class="text-lg font-headline font-semibold text-text-main mb-3 flex-grow justify-center" style="text-align: center; color: rgb(0, 0, 0);">เกณฑ์การประเมินตามมาตรฐาน<br class="">Green &amp; Clean</h3>
+<a href="https://drive.google.com/drive/folders/1j3pTmnWivXo9-7_ZGPG4dIDPhNKT-rle?usp=sharing" target="_blank" class="mt-auto w-full py-2.5 px-4 rounded-lg bg-primary-light text-primary font-label font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">download</span>Download / View</a>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col group h-full">
+<div class="w-20 h-20 rounded-lg bg-primary-light flex items-center justify-center mb-4 transition-colors mx-auto"><img alt="Occupational Health Logo" class="w-full h-full object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADgjzWd6grVjKJj6aYfUk1206JzpmqAZ1z42BlgBFf-kfAvr-30zx16lMWGSORzxc5EpQPwmUBOP5n8-hhu3OST6vuSxf2RIuDC3Tf7ozO1qMyCZMYi5k1NLqRvdDTjSXkA2jQWzedpOcgluLP43ZKa7l420_0HlL2MU6uU8yDxejjGnE5-dPl00N6rXWYSgbtrrkVP274nQyjGeZ3eL7h0OjvBrBoSa-hegG4gY_Z9M-PbEd6PTvO61ZYLarRM90G02c"></div>
+<h3 class="text-lg font-headline font-semibold text-text-main mb-3 flex-grow text-center">เกณฑ์การประเมินมาตรฐาน<div class="">การจัดบริการอาชีวอนามัย</div><div class="">และเวชกรรมสิ่งแวดล้อม</div></h3>
+<a href="https://drive.google.com/drive/mobile/folders/1jiSCLKkpxcU5psxw4Enka1qv4hYVZUQM" target="_blank" class="mt-auto w-full py-2.5 px-4 rounded-lg bg-primary-light text-primary font-label font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">download</span>Download / View</a>
+</div>
+</div>
+</section>
+<!-- Section 2: Contact Info -->
+<section>
+<h2 class="text-2xl font-headline font-semibold text-text-main mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">contact_support</span>
+                        ช่องทางติดต่อเจ้าหน้าที่
+                    </h2>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Group 1: Green & Clean -->
+<div class="bg-background rounded-xl p-6 border border-outline-custom">
+<h3 class="text-xl font-headline font-semibold text-secondary mb-4 flex items-center gap-2 border-b border-secondary/20 pb-2">
+<span class="material-symbols-outlined">eco</span>
+                                งาน Green &amp; Clean
+                            </h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div>
+<p class="font-headline font-semibold text-text-main">นายชัยภัทร ธีรชาญไชย</p>
+<p class="text-sm text-text-muted font-label mb-1">นักสาธารณสุขชำนาญการ</p>
+<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>097-353-9594</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div>
+<p class="font-headline font-semibold text-text-main">นายภัทรธร สมัครสมาน</p>
+<p class="text-sm text-text-muted font-label mb-1">นักสาธารณสุขปฏิบัติการ</p>
+<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>082-156-1962</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div>
+<p class="font-headline font-semibold text-text-main">นางสาวผไทมาศ เปรื่องปรีชาศักดิ์</p>
+<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขปฏิบัติการ</p>
+<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>084-961-1035</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- Group 2: Occupational Health -->
+<div class="bg-background rounded-xl p-6 border border-outline-custom">
+<h3 class="text-xl font-headline font-semibold text-tertiary mb-4 flex items-center gap-2 border-b border-tertiary/20 pb-2" style="color: rgb(249, 115, 22);">
+<span class="material-symbols-outlined">health_and_safety</span>
+                                งานอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม
+                            </h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div>
+<p class="font-headline font-semibold text-text-main">นายสุขเกษม หลาวทอง</p>
+<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขชำนาญการ</p>
+<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>085-044-4147</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div>
+<p class="font-headline font-semibold text-text-main">นายวรายุ สุมาลา</p>
+<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขปฏิบัติการ</p>
+<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>082-818-1991</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div>
+<p class="font-headline font-semibold text-text-main">นางสาววิชุณี หัสรังค์</p>
+<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขปฏิบัติการ</p>
+<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>080-394-1959</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface border-t border-outline-custom py-6 px-margin-mobile md:px-margin-desktop w-full mt-auto flex-shrink-0">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted font-label">
+<div class="flex items-center gap-2">
+<img alt="Brand Logo" class="h-7 w-auto object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXSNV09oGzimac481nxR7ByKTu5rgrgxitYDHDCpcYEiBdpuPA0fG-9JMdT7JjjgNz4dbkW1vBtUd971Z4tSHD-YdCbc7SIm05DLB8U_CEkpH-J5Sduw5AdBGnTag9WuhB24ZewIJWPpLWDfXMpqCaLCRnorWSjY6sitkihJpxS9ZUIwYm1oqChI5A7u3ip-G1AxcY4E2DxJAF_apKF9NYxCgS-Etm8NNaJq2KEfAD1T3_LbfybxOibXK9CSLN6_VC_ic">
+<span class="font-semibold text-tertiary">ระบบติดตามการปรับปรุงแก้ไขหลังการประเมินมาตรฐานโรงพยาบาล</span>
+</div>
+<p class="">© 2026 ระบบติดตามมาตรฐานโรงพยาบาล. สงวนลิขสิทธิ์.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">System Status</a>
+</div>
+</div>
+</footer>
+</div>
+</div>
+<script>
+    function switchTab(event, targetId) {
+        event.preventDefault();
+
+        // 1. Hide all tab contents
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        // 2. Remove active styling from all tab links
+        const links = document.querySelectorAll('.tab-link');
+        links.forEach(link => {
+            link.classList.remove('bg-white/20', 'font-bold', 'border-l-4', 'border-secondary');
+            link.classList.add('hover:bg-white/10');
+        });
+
+        // 3. Show target tab content
+        document.getElementById(targetId).classList.remove('hidden');
+
+        // 4. Add active styling to clicked tab link
+        const clickedLink = event.currentTarget;
+        clickedLink.classList.remove('hover:bg-white/10');
+        clickedLink.classList.add('bg-white/20', 'font-bold', 'border-l-4', 'border-secondary');
+    }
+
+    // Green & Clean Form Dynamic Logic
+    const gcData = [
+        { id: 'cat1', name: 'หมวด 1 CLEAN : การสร้างกระบวนการพัฒนา', short: 'หมวด 1 CLEAN', items: [
+            { id: 'item1_1', name: '1.1 กำหนดนโยบาย: มีนโยบายด้านสิ่งแวดล้อมที่เป็นลายลักษณ์อักษรและสื่อสารให้เจ้าหน้าที่ทราบทั้งองค์กร' },
+            { id: 'item1_2', name: '1.2 ตั้งคณะทำงาน: มีคำสั่งแต่งตั้งคณะกรรมการหรือผู้รับผิดชอบ และมีการประชุมเพื่อขับเคลื่อนงานอย่างต่อเนื่อง' },
+            { id: 'item1_3', name: '1.3 จัดทำแผนงาน: สำรวจสถานการณ์ ประเมินความเสี่ยง และจัดทำแผนการดำเนินงานด้าน GREEN' },
+            { id: 'item1_4', name: '1.4 พัฒนาศักยภาพ: อบรมและให้ความรู้ด้านอนามัยสิ่งแวดล้อมแก่เจ้าหน้าที่ผู้ปฏิบัติงาน' },
+            { id: 'item1_5', name: '1.5 สื่อสารสาธารณะ: รณรงค์และประชาสัมพันธ์กิจกรรม GREEN ผ่านช่องทางต่าง ๆ เพื่อสร้างการมีส่วนร่วม' }
+        ]},
+        { id: 'cat2', name: 'หมวด 2 G : Garbage : การจัดการมูลฝอยทุกประเภท', short: 'หมวด 2 G : Garbage', items: [
+            { id: 'item2_1', name: '2.1 จัดการมูลฝอยทั่วไป: คัดแยก (รีไซเคิล, อินทรีย์, ทั่วไป) เก็บขน และกำจัดให้ถูกต้องตามกฎหมาย' },
+            { id: 'item2_2', name: '2.2 มาตรการ 3R: ลดการใช้ (Reduce) ใช้ซ้ำ (Reuse) และนำกลับมาใช้ใหม่ (Recycle) อย่างเป็นรูปธรรม' },
+            { id: 'item2_3', name: '2.3 บันทึกข้อมูล: จดบันทึกปริมาณขยะทุกประเภทและมีหลักฐานการส่งกำจัดที่ชัดเจน' },
+            { id: 'item2_4', name: '3.1 จัดการขยะอันตราย: แยกขยะพิษ (เช่น หลอดไฟ, ถ่านไฟฉาย) และจัดที่พักรวมขยะอันตรายให้ถูกต้อง' },
+            { id: 'item2_5', name: '3.2 กำกับติดตาม: มีข้อมูลประเภท/ปริมาณขยะอันตราย และหลักฐานการส่งกำจัดตามเกณฑ์' },
+            { id: 'item2_6', name: '4. จัดการมูลฝอยติดเชื้อ: คัดแยก ใส่ถุงแดง/กล่องมีคม เคลื่อนย้ายด้วยรถเฉพาะ และกำจัดตามมาตรฐานกฎหมาย' }
+        ]},
+        { id: 'cat3', name: 'หมวด 3 R : Restroom : การพัฒนาห้องส้วมมาตรฐานและการจัดการสิ่งปฏิกูล', short: 'หมวด 3 R : Restroom', items: [
+            { id: 'item3_1', name: '5.1 ส้วมมาตรฐาน (HAS): พัฒนาส้วมในอาคาร OPD ให้ผ่านเกณฑ์ความสะอาด (H), ความเพียงพอ (A) และความปลอดภัย (S) รวม 16 ข้อ' },
+            { id: 'item3_2', name: '5.2 ส้วมมาตรฐาน (HAS): พัฒนาส้วมในอาคาร IPD ให้ผ่านเกณฑ์ความสะอาด (H), ความเพียงพอ (A) และความปลอดภัย (S) รวม 16 ข้อ' },
+            { id: 'item3_3', name: '5.3 ประเมินความพึงพอใจ: สำรวจความคิดเห็นของผู้ใช้บริการห้องส้วมและนำมาปรับปรุง' },
+            { id: 'item3_4', name: '6.1 การมีและดูแลระบบกำจัดสิ่งปฏิกูล: จัดให้มีระบบกำจัดแบบติดกับที่หรือต่อต่อไปเครื่องบำบัดที่ใช้งานได้จริง และต้องตรวจสอบไม่ให้ท่อหรือระบบเกิดการรั่วซึม' },
+            { id: 'item3_5', name: '6.2 การสูบและขนส่งสิ่งปฏิกูล: ใช้บริการจากผู้ที่ได้รับอนุญาตเท่านั้น เพื่อกำจัดให้ถูกต้องสุขลักษณะและต้องมีหลักฐานการใช้บริการยืนยัน' },
+            { id: 'item3_6', name: '6.3 ตรวจคุณภาพน้ำทิ้ง: ตรวจหาไข่พยาธิและเชื้ออีโคไลในน้ำทิ้งและกากตะกอนอย่างน้อยปีละ 1 ครั้ง' }
+        ]},
+        { id: 'cat4', name: 'หมวด 4 E : Energy : การจัดการพลังงานและทรัพยากร', short: 'หมวด 4 E : Energy', items: [
+            { id: 'item4_1', name: '7.1 ด้านไฟฟ้า: มีนโยบายประหยัดไฟ วิเคราะห์ข้อมูลการใช้ และมุ่งเป้าลดการใช้ไฟฟ้าลงอย่างน้อย 1%' },
+            { id: 'item4_2', name: '7.2 ด้านน้ำประปา: มีมาตรการประหยัดน้ำ ตรวจสอบระบบท่อไม่ให้รั่วซึม และนำเทคโนโลยีมาช่วยลดการใช้น้ำ' },
+            { id: 'item4_3', name: '7.3 ด้านน้ำมันเชื้อเพลิง: มีมาตรการประหยัดน้ำมันสำหรับการขนส่งและเครื่องจักร พร้อมวิเคราะห์เปรียบเทียบข้อมูลปีต่อปี' },
+            { id: 'item4_4', name: '7.4 ด้านกระดาษ: มีมาตรการลดการใช้กระดาษและใช้ระบบดิจิทัลทดแทน เพื่อให้ปริมาณการใช้ลดลงหรือคงที่' },
+            { id: 'item4_5', name: '7.5 Green Meeting: จัดประชุมที่เป็นมิตรกับสิ่งแวดล้อม เช่น ลดการใช้พลาสติกและกระดาษ' },
+            { id: 'item4_6', name: '7.6 Green Procurement: เลือกซื้อสินค้าและจัดจ้างบริการที่มีฉลากเขียวหรือเป็นมิตรกับสิ่งแวดล้อม' }
+        ]},
+        { id: 'cat5', name: 'หมวด 5 E : Environment : การจัดการสิ่งแวดล้อมภายในโรงพยาบาล', short: 'หมวด 5 E : Environment', items: [
+            { id: 'item5_1', name: '8.1 สิ่งแวดล้อมทั่วไป: ดูแลอาคารให้สะอาด ปลอดภัย มีแสงสว่างเพียงพอ ควบคุมสัตว์แมลงนำโรค และมีระบบป้องกันอัคคีภัย' },
+            { id: 'item5_2', name: '8.2 สถานที่ทำงานน่าอยู่: จัดกิจกรรมส่งเสริมคุณภาพชีวิตและความสุขของคนทำงาน (Healthy Workplace)' },
+            { id: 'item5_3', name: '8.3 จัดการน้ำเสีย: บำบัดน้ำเสียให้ได้มาตรฐานก่อนปล่อยออกสู่สาธารณะ และตรวจคุณภาพน้ำทิ้งสม่ำเสมอ' },
+            { id: 'item5_4', name: '8.4 พื้นที่สีเขียว: จัดให้มีพื้นที่สีเขียวหรือจุดพักผ่อนร่มรื่นอย่างน้อยร้อยละ 50 ของพื้นที่ว่าง' },
+            { id: 'item5_5', name: '9.1 ให้ความรู้ GREEN & Hygiene: สื่อสารและให้ความรู้ด้านสุขอนามัยแก่ผู้รับบริการ เพื่อให้นำไปปรับใช้ในตนเองและชุมชน' },
+            { id: 'item5_6', name: '9.2 กิจกรรมปรับพฤติกรรมสุขภาพ: สอน สาธิต หรือให้คำปรึกษาแก่ผู้รับบริการทุกกลุ่มและกลุ่มเสี่ยง NCDs เพื่อปรับนิสัยการกินและเพิ่มกิจกรรมทางกาย' },
+            { id: 'item5_7', name: '9.3 ดูแลสุขภาพบุคลากร: ตรวจสุขภาพเจ้าหน้าที่ วิเคราะห์ข้อมูล และจัดกิจกรรมสร้างแรงจูงใจในการปรับเปลี่ยนพฤติกรรมสุขภาพของบุคลากร' }
+        ]},
+        { id: 'cat6', name: 'หมวด 6 N : Nutrition : การจัดการสุขาภิบาลอาหาร น้ำอุปโภคบริโภค และการดำเนินงานอาหารปลอดภัยในโรงพยาบาล', short: 'หมวด 6 N : Nutrition', items: [
+            { id: 'item6_1', name: '10. มาตรฐานโรงครัว: จัดสถานที่ปรุงอาหารผู้ป่วยให้ผ่านเกณฑ์สุขาภิบาลอาหาร 4 หมวด และสุ่มตรวจเชื้อโคลิฟอร์มทุก 3 เดือน' },
+            { id: 'item6_2', name: '11. มาตรฐานร้านอาหาร: ร้านอาหารในโรงพยาบาลทุกร้านต้องผ่านเกณฑ์สุขาภิบาลอาหาร 4 หมวด และสุ่มตรวจเชื้อโคลิฟอร์มทุก 3 เดือน' },
+            { id: 'item6_3', name: '12.1 น้ำดื่มเพียงพอ: จัดจุดบริการน้ำดื่มให้เพียงพอต่อจำนวนผู้รับบริการและไม่มีข้อร้องเรียน' },
+            { id: 'item6_4', name: '12.2 จุดบริการสะอาด: ดูแลหัวก๊อกและตู้กดน้ำให้สะอาด สภาพดี และมีระบบตรวจสอบดูแลสม่ำเสมอ (SOP)' },
+            { id: 'item6_5', name: '12.3 ภาชนะปลอดภัย: แยกแก้วน้ำที่ใช้แล้วออกจากแก้วสะอาด หรือใช้ภาชนะแบบใช้ครั้งเดียวเพื่อป้องกันการแพร่เชื้อ' },
+            { id: 'item6_6', name: '12.4 ตรวจเชื้อในน้ำ: ตรวจโคลิฟอร์มในน้ำดื่ม (OPD, IPD), น้ำปรุงอาหาร และน้ำใช้ในห้องน้ำ (OPD) ทุก 3 เดือน' },
+            { id: 'item6_7', name: '12.5 ตรวจน้ำประปา (ต้นท่อ): ส่งตรวจคุณภาพน้ำประปาทางห้องปฏิบัติการปีละ 1 ครั้ง ตามมาตรฐานน้ำประปาดื่มได้' },
+            { id: 'item6_8', name: '12.6 ตรวจคลอรีนอิสระ: ตรวจวัดปริมาณคลอรีนอิสระคงเหลือในน้ำประปา (ปลายท่อ) ให้ได้ตามเกณฑ์ทุกสัปดาห์' },
+            { id: 'item6_9', name: '13.1 วัตถุดิบปลอดภัย: คัดเลือกวัตถุดิบผักและผลไม้ที่ผ่านมาตรฐานเกษตรอินทรีย์, PGS หรือ GAP' },
+            { id: 'item6_10', name: '13.2 ตรวจสารปนเปื้อน: ตรวจสอบสารตกค้างในวัตถุดิบประกอบอาหารและอาหารแปรรูปอย่างน้อยเดือนละ 1 ครั้ง' },
+            { id: 'item6_11', name: '13.3 เมนูอาหารล่วงหน้า: มีการจัดทำและวางแผนเมนูอาหารไว้ล่วงหน้าอย่างน้อย 3 เดือน' },
+            { id: 'item6_12', name: '13.4 สนับสนุนเกษตรกร: จัดซื้อวัตถุดิบจากกลุ่มวิสาหกิจชุมชนหรือกลุ่มเกษตรกรที่ได้รับการรับรองโดยตรง' },
+            { id: 'item6_13', name: '13.5 จัดตลาด Green Market: จัดกิจกรรมตลาดจำหน่ายสินค้าเกษตรปลอดภัยในโรงพยาบาลอย่างน้อยสัปดาห์ละ 1 ครั้ง' }
+        ]},
+        { id: 'cat7', name: 'หมวด 7 Innovation : การพัฒนานวัตกรรมและงานวิจัยด้าน GREEN', short: 'หมวด 7 Innovation', items: [
+            { id: 'item7_1', name: '14.1 สร้างนวัตกรรม: ส่งเสริมการคิดค้นสิ่งใหม่หรือกระบวนการทำงานใหม่ด้าน GREEN และมีการแลกเปลี่ยนเรียนรู้' },
+            { id: 'item7_2', name: '14.2 ขยายผลนวัตกรรม: นำนวัตกรรมหรือผลงานวิจัยด้าน GREEN ไปเผยแพร่หรือให้หน่วยงานอื่นนำไปใช้ประโยชน์' }
+        ]},
+        { id: 'cat8', name: 'หมวด 8 Network : การสร้างเครือข่ายการพัฒนาด้าน GREEN', short: 'หมวด 8 Network', items: [
+            { id: 'item8_1', name: '15.1 เครือข่ายชุมชน: ร่วมมือกับท้องถิ่น วัด โรงเรียน หรือชุมชน เพื่อขับเคลื่อนกิจกรรม GREEN Community' },
+            { id: 'item8_2', name: '15.2 ขยายผลสู่ รพ.สต.: สนับสนุนและช่วยพัฒนาให้ รพ.สต. เครือข่ายผ่านเกณฑ์ GREEN & CLEAN ระดับมาตรฐานขึ้นไป' }
+        ]},
+        { id: 'cat9', name: 'การพัฒนาสู่ความเป็นเลิศเฉพาะด้าน (ระดับท้าทาย) 3 ด้าน', short: 'ระดับท้าทาย', items: [
+            { id: 'item9_1', name: '1. การจัดการของเสียทางการแพทย์ (Medical Waste Management)' },
+            { id: 'item9_2', name: '2. การจัดการพลังงานอย่างมีประสิทธิภาพ' },
+            { id: 'item9_3', name: '3. การพัฒนาโรงพยาบาลคาร์บอนต่ำและเท่าทันการเปลี่ยนแปลงสภาพภูมิอากาศ (Low Carbon and Climate Resilient Health Care)' }
+        ]}
+    ];
+
+    let gcSelectedCategories = [];
+    let gcSelectedItems = [];
+
+    function renderGCCategories() {
+        const listContainer = document.getElementById('gc-category-list');
+        listContainer.innerHTML = '';
+        gcData.forEach(cat => {
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors';
+            label.innerHTML = `
+                <input type="checkbox" value="${cat.id}" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${gcSelectedCategories.includes(cat.id) ? 'checked' : ''}>
+                <span class="text-sm text-text-main">${cat.name}</span>
+            `;
+            label.querySelector('input').addEventListener('change', (e) => {
+                if(e.target.checked) {
+                    gcSelectedCategories.push(cat.id);
+                } else {
+                    gcSelectedCategories = gcSelectedCategories.filter(id => id !== cat.id);
+                    // Uncheck associated items
+                    const catItems = cat.items.map(i => i.id);
+                    gcSelectedItems = gcSelectedItems.filter(id => !catItems.includes(id));
+                }
+                updateGCTags();
+                renderGCItems();
+            });
+            listContainer.appendChild(label);
+        });
+    }
+
+    function renderGCItems() {
+        const listContainer = document.getElementById('gc-item-list');
+        listContainer.innerHTML = '';
+        
+        if (gcSelectedCategories.length === 0) {
+            listContainer.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวดก่อน</div>';
+            return;
+        }
+
+        listContainer.innerHTML = `<div class="p-2 bg-gray-50 border-b border-outline-custom text-xs font-semibold text-text-muted">ตัวเลือกจากหมวดที่เลือก:</div>`;
+        
+        gcSelectedCategories.forEach(catId => {
+            const cat = gcData.find(c => c.id === catId);
+            if (cat) {
+                const header = document.createElement('div');
+                header.className = 'text-xs font-bold text-tertiary px-3 py-1 mt-2 border-t border-outline-custom pt-2';
+                header.textContent = cat.short;
+                listContainer.appendChild(header);
+
+                cat.items.forEach(item => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors ml-2';
+                    label.innerHTML = `
+                        <input type="checkbox" value="${item.id}" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${gcSelectedItems.includes(item.id) ? 'checked' : ''}>
+                        <span class="text-sm text-text-main">${item.name}</span>
+                    `;
+                    label.querySelector('input').addEventListener('change', (e) => {
+                        if(e.target.checked) {
+                            gcSelectedItems.push(item.id);
+                        } else {
+                            gcSelectedItems = gcSelectedItems.filter(id => id !== item.id);
+                        }
+                        updateGCTags();
+                    });
+                    listContainer.appendChild(label);
+                });
+            }
+        });
+    }
+
+    function updateGCTags() {
+        // Categories
+        const catTagsContainer = document.getElementById('gc-category-tags');
+        catTagsContainer.innerHTML = '';
+        gcSelectedCategories.forEach(catId => {
+            const cat = gcData.find(c => c.id === catId);
+            const span = document.createElement('span');
+            span.className = 'inline-flex items-center gap-1 bg-primary-light text-primary px-2.5 py-1 rounded-md text-sm font-medium border border-primary/20';
+            span.innerHTML = `
+                ${cat.short}
+                <span class="material-symbols-outlined text-[14px] hover:text-red-500 cursor-pointer" onclick="removeGCCat('${cat.id}', event)">close</span>
+            `;
+            catTagsContainer.appendChild(span);
+        });
+
+        // Items
+        const itemTagsContainer = document.getElementById('gc-item-tags');
+        itemTagsContainer.innerHTML = '';
+        gcSelectedItems.forEach(itemId => {
+            let itemObj = null;
+            gcData.forEach(cat => {
+                const found = cat.items.find(i => i.id === itemId);
+                if (found) itemObj = found;
+            });
+            if (itemObj) {
+                const span = document.createElement('span');
+                span.className = 'inline-flex items-center gap-1 bg-secondary-light text-secondary-hover px-2.5 py-1 rounded-md text-sm font-medium border border-secondary/20';
+                span.innerHTML = `
+                    ${itemObj.name}
+                    <span class="material-symbols-outlined text-[14px] hover:text-red-500 cursor-pointer" onclick="removeGCItem('${itemObj.id}', event)">close</span>
+                `;
+                itemTagsContainer.appendChild(span);
+            }
+        });
+    }
+
+    window.removeGCCat = function(id, event) {
+        event.stopPropagation();
+        gcSelectedCategories = gcSelectedCategories.filter(catId => catId !== id);
+        const cat = gcData.find(c => c.id === id);
+        const catItems = cat.items.map(i => i.id);
+        gcSelectedItems = gcSelectedItems.filter(itemId => !catItems.includes(itemId));
+        
+        renderGCCategories();
+        renderGCItems();
+        updateGCTags();
+    };
+
+    window.removeGCItem = function(id, event) {
+        event.stopPropagation();
+        gcSelectedItems = gcSelectedItems.filter(itemId => itemId !== id);
+        renderGCItems();
+        updateGCTags();
+    };
+
+    // Occupational Health Form Dynamic Logic
+    const occData = [
+        { id: 'occ_cat1', name: 'องค์ประกอบที่ 1 : ด้านนโยบาย โครงสร้าง และการจัดการ', short: 'องค์ประกอบ 1', items: [
+            { id: 'occ_item1_1', name: 'ข้อ 1. มีผู้บริหารเป็นคณะกรรมการ หรือคณะทำงานด้านอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม' },
+            { id: 'occ_item1_2', name: 'ข้อ 2. มีนโยบาย แผนงาน โครงการ และงบประมาณครอบคลุมการจัดบริการอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม' },
+            { id: 'occ_item1_3', name: 'ข้อ 3. มีสถานที่/พื้นที่และมีบุคลากรที่รับผิดชอบการจัดบริการอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม' },
+            { id: 'occ_item1_4', name: 'ข้อ 4. มีการดำเนินงานในรูปแบบคณะกรรมการ หรือคณะทำงานที่เกี่ยวข้องกับอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม' },
+            { id: 'occ_item1_5', name: 'ข้อ 5. มีระบบการจัดการข้อมูล (บันทึก จัดเก็บ ประมวลผล และวิเคราะห์)' }
+        ]},
+        { id: 'occ_cat2', name: 'องค์ประกอบที่ 2 : ด้านการจัดบริการอาชีวอนามัย', short: 'องค์ประกอบ 2', items: [
+            { id: 'occ_item2_1', name: 'ข้อ 6. มีการชี้บ่งอันตรายและประเมินความเสี่ยงจากการทำงาน สำหรับบุคลากรในโรงพยาบาล' },
+            { id: 'occ_item2_2', name: 'ข้อ 7. มีการตรวจสุขภาพตามความเสี่ยงจากการทำงาน (บุคลากรในโรงพยาบาล/หน่วยงานภาครัฐ/สถานประกอบกิจการ/แรงงานนอกระบบ)' },
+            { id: 'occ_item2_3', name: 'ข้อ 8. มีการวินิจฉัย/การรักษา/การส่งต่อ (บุคลากรในโรงพยาบาล/หน่วยงานภาครัฐ/สถานประกอบกิจการ/แรงงานนอกระบบ)' },
+            { id: 'occ_item2_4', name: 'ข้อ 9. มีระบบรายงาน สอบสวนและเฝ้าระวังโรคหรือการบาดเจ็บจากการทำงาน (บุคลากรในโรงพยาบาล/สถานประกอบกิจการ)' },
+            { id: 'occ_item2_5', name: 'ข้อ 10. มีคลินิกโรคจากการทำงานครบวงจรและให้บริการตามมาตรฐาน' },
+            { id: 'occ_item2_6', name: 'ข้อ 11. มีการประเมินเพื่อกลับเข้าทำงาน/การเปลี่ยนงาน (Return to work/Fit for work) สำหรับบุคลากรในโรงพยาบาล/สถานประกอบกิจการ' },
+            { id: 'occ_item2_7', name: 'ข้อ 12. มีการดำเนินงานด้านการส่งเสริมสุขภาพ การป้องกันโรค และคุ้มครองความปลอดภัยในการทำงาน (บุคลากรในโรงพยาบาล/สถานประกอบกิจการ)' },
+            { id: 'occ_item2_8', name: 'ข้อ 13. มีการดำเนินการด้านการยศาสตร์ (Ergonomics) เพื่อปรับปรุงสภาพแวดล้อมการทำงานสำหรับบุคลากรในโรงพยาบาล' }
+        ]},
+        { id: 'occ_cat3', name: 'องค์ประกอบที่ 3 : ด้านการจัดบริการเวชกรรมสิ่งแวดล้อม', short: 'องค์ประกอบ 3', items: [
+            { id: 'occ_item3_1', name: 'ข้อ 14. มีระบบการประเมินความเสี่ยงและสื่อสารความเสี่ยงด้านสุขภาพจากมลพิษสิ่งแวดล้อม' },
+            { id: 'occ_item3_2', name: 'ข้อ 15. มีแนวปฏิบัติ/แผนรองรับ หรือมีระบบเฝ้าระวังและสอบสวนโรคที่เกิดจากมลพิษสิ่งแวดล้อม หรือสาธารณภัย' },
+            { id: 'occ_item3_3', name: 'ข้อ 16. มีคลินิกมลพิษและให้บริการตามมาตรฐานคลินิกมลพิษของกระทรวงสาธารณสุข' },
+            { id: 'occ_item3_4', name: 'ข้อ 17. มีการดำเนินงานด้านการเปลี่ยนแปลงสภาพภูมิอากาศ (Climate Change) ของโรงพยาบาล' }
+        ]},
+        { id: 'occ_cat4', name: 'องค์ประกอบที่ 4 : ด้านการอาชีวอนามัยและเวชกรรมสิ่งแวดล้อมในชุมชน', short: 'องค์ประกอบ 4', items: [
+            { id: 'occ_item4_1', name: 'ข้อ 18. มีการชี้บ่งอันตรายและประเมินความเสี่ยงจากการทำงาน สำหรับกลุ่มเกษตรกร/แรงงานนอกระบบในชุมชน' },
+            { id: 'occ_item4_2', name: 'ข้อ 19. มีการให้ความรู้ด้านอาชีวอนามัยและเวชกรรมสิ่งแวดล้อมแก่เครือข่าย/ประชาชนในพื้นที่' },
+            { id: 'occ_item4_3', name: 'ข้อ 20. มีการจัดการปัญหาความเสี่ยงด้านสิ่งแวดล้อมที่ส่งผลกระทบต่อสุขภาพประชาชนในพื้นที่' },
+            { id: 'occ_item4_4', name: 'ข้อ 21. มีโครงการ/กิจกรรมส่งเสริมสุขภาพและป้องกันโรคจากการทำงาน หรือจากมลพิษสิ่งแวดล้อมร่วมกับชุมชน' }
+        ]},
+        { id: 'occ_cat5', name: 'องค์ประกอบที่ 5 : ด้านห้องปฏิบัติการอาชีวเวชศาสตร์และเวชศาสตร์สิ่งแวดล้อม', short: 'องค์ประกอบ 5', items: [
+            { id: 'occ_item5_1', name: 'ข้อ 22. มีการตรวจวิเคราะห์ทางห้องปฏิบัติการด้านอาชีวเวชศาสตร์ (เช่น ตรวจการได้ยิน สมรรถภาพปอด สายตา)' },
+            { id: 'occ_item5_2', name: 'ข้อ 23. มีการตรวจติดตามทางชีวภาพ (Biological monitoring) สำหรับสารเคมีหรือโลหะหนัก' },
+            { id: 'occ_item5_3', name: 'ข้อ 24. ห้องปฏิบัติการและเครื่องมือได้รับการสอบเทียบและควบคุมคุณภาพตามมาตรฐาน' },
+            { id: 'occ_item5_4', name: 'ข้อ 25. มีการแปลผลและให้คำแนะนำผลการตรวจทางห้องปฏิบัติการโดยแพทย์อาชีวเวชศาสตร์หรือผู้ผ่านการอบรม' }
+        ]}
+    ];
+
+    let occSelectedCategories = [];
+    let occSelectedItems = [];
+
+    function renderOccCategories() {
+        const listContainer = document.getElementById('occ-category-list');
+        listContainer.innerHTML = '';
+        occData.forEach(cat => {
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors';
+            label.innerHTML = `
+                <input type="checkbox" value="${cat.id}" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${occSelectedCategories.includes(cat.id) ? 'checked' : ''}>
+                <span class="text-sm text-text-main">${cat.name}</span>
+            `;
+            label.querySelector('input').addEventListener('change', (e) => {
+                if(e.target.checked) {
+                    occSelectedCategories.push(cat.id);
+                } else {
+                    occSelectedCategories = occSelectedCategories.filter(id => id !== cat.id);
+                    const catItems = cat.items.map(i => i.id);
+                    occSelectedItems = occSelectedItems.filter(id => !catItems.includes(id));
+                }
+                updateOccTags();
+                renderOccItems();
+            });
+            listContainer.appendChild(label);
+        });
+    }
+
+    function renderOccItems() {
+        const listContainer = document.getElementById('occ-item-list');
+        listContainer.innerHTML = '';
+        
+        if (occSelectedCategories.length === 0) {
+            listContainer.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกองค์ประกอบก่อน</div>';
+            return;
+        }
+
+        listContainer.innerHTML = `<div class="p-2 bg-gray-50 border-b border-outline-custom text-xs font-semibold text-text-muted">ตัวเลือกจากองค์ประกอบที่เลือก:</div>`;
+        
+        occSelectedCategories.forEach(catId => {
+            const cat = occData.find(c => c.id === catId);
+            if (cat) {
+                const header = document.createElement('div');
+                header.className = 'text-xs font-bold text-tertiary px-3 py-1 mt-2 border-t border-outline-custom pt-2';
+                header.textContent = cat.short;
+                listContainer.appendChild(header);
+
+                cat.items.forEach(item => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors ml-2';
+                    label.innerHTML = `
+                        <input type="checkbox" value="${item.id}" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${occSelectedItems.includes(item.id) ? 'checked' : ''}>
+                        <span class="text-sm text-text-main">${item.name}</span>
+                    `;
+                    label.querySelector('input').addEventListener('change', (e) => {
+                        if(e.target.checked) {
+                            occSelectedItems.push(item.id);
+                        } else {
+                            occSelectedItems = occSelectedItems.filter(id => id !== item.id);
+                        }
+                        updateOccTags();
+                    });
+                    listContainer.appendChild(label);
+                });
+            }
+        });
+    }
+
+    function updateOccTags() {
+        // Categories
+        const catTagsContainer = document.getElementById('occ-category-tags');
+        catTagsContainer.innerHTML = '';
+        occSelectedCategories.forEach(catId => {
+            const cat = occData.find(c => c.id === catId);
+            const span = document.createElement('span');
+            span.className = 'inline-flex items-center gap-1 bg-primary-light text-primary px-2.5 py-1 rounded-md text-sm font-medium border border-primary/20';
+            span.innerHTML = `
+                ${cat.short}
+                <span class="material-symbols-outlined text-[14px] hover:text-red-500 cursor-pointer" onclick="removeOccCat('${cat.id}', event)">close</span>
+            `;
+            catTagsContainer.appendChild(span);
+        });
+
+        // Items
+        const itemTagsContainer = document.getElementById('occ-item-tags');
+        itemTagsContainer.innerHTML = '';
+        occSelectedItems.forEach(itemId => {
+            let itemObj = null;
+            occData.forEach(cat => {
+                const found = cat.items.find(i => i.id === itemId);
+                if (found) itemObj = found;
+            });
+            if (itemObj) {
+                const span = document.createElement('span');
+                span.className = 'inline-flex items-center gap-1 bg-secondary-light text-secondary-hover px-2.5 py-1 rounded-md text-sm font-medium border border-secondary/20';
+                span.innerHTML = `
+                    ${itemObj.name}
+                    <span class="material-symbols-outlined text-[14px] hover:text-red-500 cursor-pointer" onclick="removeOccItem('${itemObj.id}', event)">close</span>
+                `;
+                itemTagsContainer.appendChild(span);
+            }
+        });
+    }
+
+    window.removeOccCat = function(id, event) {
+        event.stopPropagation();
+        occSelectedCategories = occSelectedCategories.filter(catId => catId !== id);
+        const cat = occData.find(c => c.id === id);
+        const catItems = cat.items.map(i => i.id);
+        occSelectedItems = occSelectedItems.filter(itemId => !catItems.includes(itemId));
+        
+        renderOccCategories();
+        renderOccItems();
+        updateOccTags();
+    };
+
+    window.removeOccItem = function(id, event) {
+        event.stopPropagation();
+        occSelectedItems = occSelectedItems.filter(itemId => itemId !== id);
+        renderOccItems();
+        updateOccTags();
+    };
+
+    // Initialize Forms
+    document.addEventListener('DOMContentLoaded', () => {
+        renderGCCategories();
+        renderGCItems();
+        renderOccCategories();
+        renderOccItems();
+    });
+
+</script>
+
+
+</body></html>

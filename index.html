@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="th" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Login - Vital Health</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" class="">
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "inverse-surface": "#20333e",
+                  "on-surface-variant": "#414752",
+                  "on-tertiary": "#ffffff",
+                  "secondary-fixed": "#acf75a",
+                  "surface-container-highest": "#d1e5f4",
+                  "surface": "#f5faff",
+                  "secondary-fixed-dim": "#91da40",
+                  "on-tertiary-fixed": "#001b3f",
+                  "surface-container": "#ddf0ff",
+                  "surface-tint": "#005fae",
+                  "outline": "#717783",
+                  "primary-fixed-dim": "#a5c8ff",
+                  "tertiary-container": "#3d70c1",
+                  "on-tertiary-container": "#f5f6ff",
+                  "on-surface": "#0a1e28",
+                  "on-secondary": "#ffffff",
+                  "primary-fixed": "#d4e3ff",
+                  "on-primary-container": "#f4f6ff",
+                  "surface-dim": "#c9ddec",
+                  "tertiary": "#1c57a6",
+                  "background": "#f5faff",
+                  "secondary-container": "#aaf457",
+                  "on-error": "#ffffff",
+                  "primary": "#0059a4",
+                  "outline-variant": "#c1c7d4",
+                  "on-primary": "#ffffff",
+                  "on-background": "#0a1e28",
+                  "on-primary-fixed": "#001c3a",
+                  "surface-container-lowest": "#ffffff",
+                  "on-secondary-fixed": "#0f2000",
+                  "secondary": "#3d6a00",
+                  "tertiary-fixed-dim": "#abc7ff",
+                  "surface-container-low": "#e9f5ff",
+                  "error": "#ba1a1a",
+                  "on-error-container": "#93000a",
+                  "on-tertiary-fixed-variant": "#00458f",
+                  "error-container": "#ffdad6",
+                  "surface-variant": "#d1e5f4",
+                  "on-primary-fixed-variant": "#004785",
+                  "on-secondary-container": "#406e00",
+                  "inverse-primary": "#a5c8ff",
+                  "surface-bright": "#f5faff",
+                  "on-secondary-fixed-variant": "#2d5000",
+                  "surface-container-high": "#d7ebfa",
+                  "tertiary-fixed": "#d7e2ff",
+                  "primary-container": "#0072ce",
+                  "inverse-on-surface": "#e3f3ff"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "md": "24px",
+                  "base": "8px",
+                  "lg": "40px",
+                  "xl": "64px",
+                  "xs": "4px",
+                  "sm": "12px",
+                  "margin-desktop": "48px",
+                  "gutter": "24px",
+                  "margin-mobile": "16px"
+          },
+          "fontFamily": {
+                  "headline-xl": [
+                          "Manrope"
+                  ],
+                  "label-sm": [
+                          "Public Sans"
+                  ],
+                  "body-md": [
+                          "Public Sans"
+                  ],
+                  "label-md": [
+                          "Public Sans"
+                  ],
+                  "body-sm": [
+                          "Public Sans"
+                  ],
+                  "headline-lg-mobile": [
+                          "Manrope"
+                  ],
+                  "body-lg": [
+                          "Public Sans"
+                  ],
+                  "headline-md": [
+                          "Manrope"
+                  ],
+                  "headline-lg": [
+                          "Manrope"
+                  ],
+                  "sans": ['Public Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="layout">
+    body {
+      background-color: #f5faff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .main-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .bg-illustration {
+      background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCCsom4rBekEpbbki4j8kLZROX1XlFLYEQnEiXGJsS4qupCMrG_Axo2RWOedjm8kKU4TeNkvrECaZOyKqwFXWb09wgfSgG1cxe9Csp52lOKQA4zOSGEh8QQzdW2DcLjjWqbtjns3X1RZFdcBCL-hcVyVVeOkdAeeuiWD1y1RDwkf7QhsvTj4pzyE-erVTD9GErupp428onCvfCQND1tO9LJOx9l8swCNUETYnvarfvloeF87IfwymBV_jB4F_akDyoWKk0');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .bg-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to right, rgba(245, 250, 255, 0.9) 0%, rgba(245, 250, 255, 0.4) 50%, rgba(245, 250, 255, 0.9) 100%);
+        z-index: 1;
+    }
+  </style>
+<style data-purpose="components">
+    .gradient-btn {
+      background: linear-gradient(90deg, #0072ce 0%, #3d6a00 100%);
+      transition: opacity 0.2s;
+    }
+    .gradient-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&amp;display=swap" rel="stylesheet" class=""></head>
+<body class="font-sans text-on-surface relative m-0 p-0 overflow-x-hidden" style="font-family: Sarabun, sans-serif !important;">
+<!-- Background Image Overlay -->
+<div class="bg-illustration"></div>
+<div class="bg-overlay"></div>
+<!-- BEGIN: MainContent -->
+<main class="main-container relative z-10 w-full px-4 sm:px-6 lg:px-8">
+<div class="w-full max-w-7xl mx-auto flex flex-col items-center justify-between gap-12 lg:gap-8">
+<!-- BEGIN: LeftSection (Illustration & Typography) -->
+<div class="flex-1 w-full lg:w-1/2 flex flex-col items-center text-center z-10">
+<div class="w-full mb-2">
+<!-- Logo Placeholder / Header -->
+<div class="flex justify-center">
+<div class="w-32 h-32 flex items-center justify-center mx-auto overflow-hidden rounded-full bg-white shadow-sm mt-4"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVxyavKOf4d5Qxiy93MTKD8ptROfpqeaPYLUlSPCixBxyCKuDfNGJSY4Woo3aFpkApYuR7hl84YS4wpuR7JeEn_M5GT55hlgfB3WePv2VIqvoeOWbGNc5RIrjT35Lo-X6tB7nt2B4AlaPkDjbjRdHDWdew74telbj3NHXaK1yXASazOtRRNka7IFU1FYaREaACvLKoU2B_ZXMbO_sdqjlZCFua-4jOmTDEmCft1oSBBW5OM4CgrHsPepwsB00u_QL5wGQ" alt="Logo" class="w-full h-full object-cover"></div>
+</div>
+<h1 class="text-3xl lg:text-4xl font-headline-xl text-primary-container mb-2 text-4xl mt-6" style="text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px;"><span class="font-bold block mb-2 text-on-primary-fixed-variant">ระบบติดตามการปรับปรุงแก้ไข</span><span class="font-bold block mt-2 text-on-primary-fixed-variant">หลังการประเมินมาตรฐานโรงพยาบาล</span></h1>
+<p class="text-xl lg:text-2xl font-body-md text-secondary mt-6 flex items-center justify-center font-bold" style="font-family: Sarabun, sans-serif !important;"><span class="w-2 h-2 rounded-full bg-secondary mr-3"></span>สำนักงานสาธารณสุขจังหวัดนครราชสีมา</p>
+</div>
+</div>
+<!-- END: LeftSection -->
+<!-- BEGIN: RightSection (Login Card) -->
+<div class="w-full max-w-md lg:w-1/2 z-10">
+<div class="bg-white rounded-2xl p-8 lg:p-10 shadow-lg border border-surface-variant" style="font-family: Sarabun, sans-serif;">
+<!-- Card Header Icon -->
+<div class="flex justify-center">
+<div class="w-24 h-24 flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm mx-auto"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2cHLBCn042aI2nFZtYOQ7bgX8l09da0OmGi22FMHNbQVi9MwHLBhj5f7dtLuwaLZfBYW0sV23UjXP3UIcHNzO1d6SsVW9lsMvtpaCLrc39Q4uffQoiGLkQBuRt5He8Da69Y1SlZ3EeD5Fpq8fJ3tX5jdl8-XMPBkBAJO5HhTfRHxr9CJZNxB4p1YU0swOOAkH96xQezgxJ63T_QRol0983jJIRsH782Zusq4agxMFSSfIQ9ckQYLWChtAF4VGTa0NUsw" alt="Logo" class="w-full h-full object-cover"></div>
+</div>
+<h3 class="text-center text-base font-bold text-secondary mb-1 mt-6" style="font-family: Sarabun, sans-serif;">กลุ่มงานอนามัยสิ่งแวดล้อมและอาชีวอนามัย</h3><h2 class="text-center text-base font-bold text-on-surface mb-4">กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบ</h2>
+<!-- Form Fields -->
+<form action="#" class="space-y-4" method="POST">
+<!-- District -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+<label class="w-full sm:w-24 flex items-center text-sm font-medium text-on-surface-variant" for="district">
+<svg class="w-4 h-4 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                อำเภอ
+              </label>
+<select class="flex-1 block w-full pl-3 pr-10 text-base border-outline-variant focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-lg text-on-surface bg-surface-bright py-2" id="district" name="district">
+<option>เลือกอำเภอ</option>
+</select>
+</div>
+<!-- Type -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+<label class="w-full sm:w-24 flex items-center text-sm font-medium text-on-surface-variant" for="type">
+<svg class="w-4 h-4 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                ประเภท
+              </label>
+<select class="flex-1 block w-full pl-3 pr-10 text-base border-outline-variant focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-lg text-on-surface bg-surface-bright py-2" id="type" name="type">
+<option>เลือกประเภท</option>
+</select>
+</div>
+<!-- Hospital Name -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+<label class="w-full sm:w-24 flex items-center text-sm font-medium text-on-surface-variant" for="hospital"><svg class="w-4 h-4 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="">โรงพยาบาล</span></label>
+<select class="flex-1 block w-full pl-3 pr-10 text-base border-outline-variant focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-lg text-on-surface bg-surface-bright py-2" id="hospital" name="hospital">
+<option>เลือกโรงพยาบาล</option>
+</select>
+</div>
+<!-- Username -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+<label class="w-full sm:w-24 flex items-center text-sm font-medium text-on-surface-variant" for="password">
+<svg class="w-4 h-4 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                รหัสผ่าน
+              </label>
+<div class="flex-1 relative rounded-lg shadow-sm">
+<input class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-outline-variant rounded-lg bg-surface-bright text-on-surface py-2" id="password" name="password" placeholder="กรอกรหัสผ่าน" type="password">
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
+<svg class="h-5 w-5 text-outline hover:text-on-surface-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+</div><div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+<label class="w-full sm:w-24 flex items-center text-sm font-medium text-on-surface-variant" for="username">
+<svg class="w-4 h-4 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                ผู้ใช้งาน
+              </label>
+<div class="flex-1 relative rounded-lg shadow-sm">
+<input class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-outline-variant rounded-lg bg-surface-bright text-on-surface py-2" id="username" name="username" placeholder="กรอกชื่อผู้ใช้งาน" type="text">
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+<svg class="h-5 w-5 text-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+</div>
+<!-- Password -->
+
+<div class="pt-4">
+<button class="gradient-btn w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-label-md text-on-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" type="submit" style="background: linear-gradient(90deg, rgb(0, 114, 206) 0%, rgb(0, 89, 164) 100%);">
+<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                เข้าสู่ระบบ
+              </button>
+</div>
+<div class="mt-6 flex items-center justify-center mb-8">
+<div class="w-full border-t border-surface-variant"></div>
+<div class="px-4 text-sm font-body-sm text-outline bg-white">หรือ</div>
+<div class="w-full border-t border-surface-variant"></div>
+</div>
+<div class="text-center mt-4">
+<a class="inline-flex items-center text-sm font-label-md text-primary hover:text-primary-container" href="#">
+<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                ลืมรหัสผ่าน?
+              </a>
+</div>
+</form>
+</div>
+</div>
+<!-- END: RightSection -->
+</div>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: Footer -->
+<footer class="py-6 text-center text-sm font-body-sm text-on-surface-variant relative z-10 w-full bg-white/50 backdrop-blur-md border-t border-white/50">
+<p class="">© 2024 สำนักงานสาธารณสุขจังหวัดนครราชสีมา</p>
+<p class="">สงวนลิขสิทธิ์ทุกประการ</p>
+</footer>
+<!-- END: Footer -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>
