@@ -1150,5 +1150,58 @@
 
 </script>
 
+<!-- SweetAlert2 สำหรับแจ้งเตือน -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 1. ดึงข้อมูลคนที่ล็อกอินเข้ามา
+    const savedUser = JSON.parse(localStorage.getItem('currentUser'));
 
+    // ถ้ายังไม่ได้ล็อกอิน ให้เด้งกลับหน้า Login ทันที
+    if (!savedUser) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // 2. เปลี่ยนชื่อผู้ใช้ และชื่อโรงพยาบาลที่มุมขวาบนตามจริง
+    const allElements = document.querySelectorAll('div, span, p, h1, h2, h3');
+    allElements.forEach(el => {
+        if (el.children.length === 0) { // ทำงานเฉพาะโหนดข้อความข้างในสุด
+            if (el.textContent.includes('นพ. สมชาย รักดี')) {
+                el.textContent = savedUser.username;
+            }
+            if (el.textContent.includes('โรงพยาบาลมหาราชนครราชสีมา')) {
+                el.textContent = `${savedUser.hospital} (${savedUser.role})`;
+            }
+        }
+    });
+
+    // 3. ผูกคำสั่งปุ่ม "ออกจากระบบ" ให้ใช้งานได้จริง
+    const elements = document.querySelectorAll('a, button, div, span');
+    elements.forEach(el => {
+        if (el.textContent.trim().includes('ออกจากระบบ')) {
+            el.style.cursor = 'pointer';
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                Swal.fire({
+                    title: 'ยืนยันการออกจากระบบ?',
+                    text: "คุณต้องการออกจากระบบใช่หรือไม่",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0059a4',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ออกจากระบบ',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        localStorage.removeItem('currentUser'); // ลบข้อมูลการล็อกอิน
+                        window.location.href = 'index.html'; // เด้งกลับหน้าล็อกอิน
+                    }
+                });
+            });
+        }
+    });
+});
+</script>
 </body></html>
