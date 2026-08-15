@@ -1176,7 +1176,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-   // 3. ผูกคำสั่งปุ่ม "ออกจากระบบ" เพียงปุ่มเดียว
+// 3. ผูกคำสั่งปุ่ม "ออกจากระบบ" เพียงปุ่มเดียว
 const elements = Array.from(document.querySelectorAll('a, button'));
 const logoutBtn = elements.find(el => el.textContent.trim() === 'ออกจากระบบ');
 
@@ -1195,9 +1195,12 @@ if (logoutBtn) {
             confirmButtonText: 'ออกจากระบบ',
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
-            if (result.isConfirmed) {
+           if (result.isConfirmed) {
+                // 1. ลบข้อมูลการล็อกอิน
                 localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
+                
+                // 2. ย้ายกลับหน้า login แบบลบ History (ย้อนกลับไม่ได้)
+                window.location.replace('./index.html');
             }
         });
     });
