@@ -1176,32 +1176,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // 3. ผูกคำสั่งปุ่ม "ออกจากระบบ" ให้ใช้งานได้จริง
-    const elements = document.querySelectorAll('a, button, div, span');
-    elements.forEach(el => {
-        if (el.textContent.trim().includes('ออกจากระบบ')) {
-            el.style.cursor = 'pointer';
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                
-                Swal.fire({
-                    title: 'ยืนยันการออกจากระบบ?',
-                    text: "คุณต้องการออกจากระบบใช่หรือไม่",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#0059a4',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'ออกจากระบบ',
-                    cancelButtonText: 'ยกเลิก'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        localStorage.removeItem('currentUser'); // ลบข้อมูลการล็อกอิน
-                        window.location.href = 'index.html'; // เด้งกลับหน้าล็อกอิน
-                    }
-                });
-            });
-        }
+   // 3. ผูกคำสั่งปุ่ม "ออกจากระบบ" เพียงปุ่มเดียว
+const elements = Array.from(document.querySelectorAll('a, button'));
+const logoutBtn = elements.find(el => el.textContent.trim() === 'ออกจากระบบ');
+
+if (logoutBtn) {
+    logoutBtn.style.cursor = 'pointer';
+    logoutBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        Swal.fire({
+            title: 'ยืนยันการออกจากระบบ?',
+            text: "คุณต้องการออกจากระบบใช่หรือไม่",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0059a4',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ออกจากระบบ',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            }
+        });
     });
+}
 });
 </script>
 </body></html>
