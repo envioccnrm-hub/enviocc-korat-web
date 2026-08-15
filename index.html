@@ -349,8 +349,37 @@
 
     // ส่วนนี้เตรียมไว้สำหรับให้ดึงข้อมูล อำเภอ/ประเภท/โรงพยาบาล จาก Google Sheets อัตโนมัติตอนโหลดหน้าเว็บ
     // หากฝั่ง Apps Script เขียน action=getDropdowns ไว้แล้ว จะสามารถใช้งานได้ทันที
+    // โหลดข้อมูล Dropdown เมื่อเปิดหน้าเว็บ
     window.addEventListener('load', function() {
-        // fetch(SCRIPT_URL + '?action=getDropdowns')...
+        fetch(SCRIPT_URL + '?action=getDropdowns')
+        .then(response => response.json())
+        .then(data => {
+            const districtSelect = document.getElementById('district');
+            const typeSelect = document.getElementById('type');
+            const hospitalSelect = document.getElementById('hospital');
+
+            // เติมข้อมูลอำเภอ
+            data.districts.forEach(d => {
+                let option = document.createElement('option');
+                option.value = d; option.text = d;
+                districtSelect.appendChild(option);
+            });
+
+            // เติมข้อมูลประเภท
+            data.types.forEach(t => {
+                let option = document.createElement('option');
+                option.value = t; option.text = t;
+                typeSelect.appendChild(option);
+            });
+
+            // เติมข้อมูลโรงพยาบาล
+            data.hospitals.forEach(h => {
+                let option = document.createElement('option');
+                option.value = h; option.text = h;
+                hospitalSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error:', error));
     });
 </script>
 
