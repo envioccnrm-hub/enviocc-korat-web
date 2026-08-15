@@ -334,12 +334,13 @@
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const hospital = document.getElementById('hospital').value;
-        const password = document.getElementById('password').value;
+        const hospitalVal = document.getElementById('hospital').value;
+        const usernameVal = document.getElementById('username').value;
+        const passwordVal = document.getElementById('password').value;
         const submitBtn = document.getElementById('submitBtn');
         const originalBtnHTML = submitBtn.innerHTML;
 
-        if(!hospital || !password) {
+        if(!hospitalVal || !passwordVal) {
             Swal.fire({
                 icon: 'warning',
                 title: 'กรุณากรอกข้อมูล',
@@ -357,13 +358,20 @@
         fetch(SCRIPT_URL + '?action=login', {
             method: 'POST',
             body: JSON.stringify({
-                hospital: hospital,
-                password: password
+                hospital: hospitalVal,
+                password: passwordVal
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                // บันทึกข้อมูลการล็อกอินลง localStorage เพื่อส่งต่อไปยังหน้า hospital.html และ admin.html
+                localStorage.setItem('currentUser', JSON.stringify({
+                    hospital: hospitalVal,
+                    username: usernameVal || hospitalVal,
+                    role: data.role || (hospitalVal.includes('สสจ') ? 'admin' : 'user')
+                }));
+
                 Swal.fire({
                     icon: 'success',
                     title: 'เข้าสู่ระบบสำเร็จ',
@@ -371,7 +379,7 @@
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => {
-                    if(data.role === 'admin') {
+                    if(data.role === 'admin' || hospitalVal.includes('สสจ')) {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'hospital.html';
