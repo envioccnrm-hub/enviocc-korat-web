@@ -152,11 +152,12 @@
 <input type="number" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" placeholder="ระบุปี พ.ศ. (เช่น 2573)" min="2500" max="2600">
 </div>
 <div>
-<label class="block text-sm font-semibold mb-2 text-tertiary">ชื่อ-นามสกุลผู้ส่ง</label>
-<input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" type="text" placeholder="กรอกชื่อ-นามสกุลผู้ส่ง">
+    <label class="block text-sm font-semibold mb-2 text-tertiary">ชื่อ-นามสกุลผู้ส่ง</label>
+    <input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 text-text-main" placeholder="กรอกชื่อ-นามสกุลผู้ส่ง" value="">
 </div>
-<label class="block text-sm font-semibold mb-2 text-tertiary">เบอร์โทรศัพท์ติดต่อ</label>
-<input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" type="text" placeholder="กรอกเบอร์โทรศัพท์ติดต่อ">
+<div>
+    <label class="block text-sm font-semibold mb-2 text-tertiary">เบอร์โทรศัพท์ติดต่อ</label>
+    <input class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 text-text-main" placeholder="กรอกเบอร์โทรศัพท์ติดต่อ" value="">
 </div>
 </div>
 </section>
@@ -522,6 +523,16 @@ document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => 
         }
     });
 });
+// ระบบคลิกเปิด-ปิด ดรอปดาวน์หมวดหมู่ค้างไว้
+    const gcGroup = document.getElementById('gc-category-group');
+    if (gcGroup) {
+        const gcMenu = gcGroup.querySelector('.absolute');
+        gcGroup.addEventListener('click', (e) => {
+            e.stopPropagation();
+            gcMenu.style.display = (gcMenu.style.display === 'block') ? 'none' : 'block';
+        });
+        document.addEventListener('click', () => { if (gcMenu) gcMenu.style.display = 'none'; });
+    }
 </script>
 </body>
 </html>
