@@ -67,4 +67,34 @@ Error generating stack: `+a.message+`
   
 
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // โหลดไอคอน
+    if (!document.querySelector('link[href*="Material+Icons"]')) {
+        const iconLink = document.createElement('link');
+        iconLink.rel = 'stylesheet';
+        iconLink.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
+        document.head.appendChild(iconLink);
+    }
+
+    // ดึงชื่อ สังกัด และเปลี่ยนรูปโปรไฟล์
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        const user = JSON.parse(savedUser);
+        const profileBox = document.querySelector('header .flex.items-center.gap-3') || document.querySelector('.flex.items-center.gap-3');
+        
+        if (profileBox) {
+            profileBox.innerHTML = `
+                <div class="text-right">
+                    <div class="font-bold text-gray-800 text-sm">${user.name || user.username || 'ผู้ใช้งาน'}</div>
+                    <div class="text-xs text-blue-600 font-medium">${user.hospital || 'สสจ.นครราชสีมา'} (${user.role === 'admin' ? 'Admin' : 'User'})</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200">
+                    <span class="material-icons text-2xl">account_circle</span>
+                </div>
+            `;
+        }
+    }
+});
+</script>      
 </body></html>
