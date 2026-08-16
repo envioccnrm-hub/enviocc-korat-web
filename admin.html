@@ -118,13 +118,44 @@ Error generating stack: `+a.message+`
     // ตรวจสอบและอัปเดตทุกๆ 0.3 วินาที เพื่อรองรับการ Re-render ของ React
     setInterval(updateProfile, 300);
 
-    // ระบบกดปุ่มออกจากระบบ
-    document.addEventListener('click', function(e) {
-        const target = e.target.closest('*');
-        if (target && target.textContent && target.textContent.trim().includes('ออกจากระบบ')) {
+// โหลด SweetAlert2 อัตโนมัติ
+    if (typeof Swal === 'undefined' && !document.querySelector('script[src*="sweetalert2"]')) {
+        const swalScript = document.createElement('script');
+        swalScript.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+        document.head.appendChild(swalScript);
+    }
+
+    // จัดการการคลิกปุ่มออกจากระบบ พร้อมแสดงป๊อปอัพยืนยันแบบเดียวกับหน้า hospital
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('#btn-logout') || 
+                    (e.target.textContent && e.target.textContent.trim().includes('ออกจากระบบ') ? e.target.closest('a, button, div') : null);
+
+        if (btn) {
             e.preventDefault();
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
+
+            const runSwal = () => {
+                Swal.fire({
+                    title: 'ยืนยันการออกจากระบบ?',
+                    text: "คุณต้องการออกจากระบบใช่หรือไม่",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0072CE',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ออกจากระบบ',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        localStorage.removeItem('currentUser');
+                        window.location.replace('./index.html');
+                    }
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                runSwal();
+            } else {
+                setTimeout(runSwal, 200);
+            }
         }
     });
 })();
