@@ -874,33 +874,34 @@ function initMasterDataSystem() {
 }
 
     // ฟังก์ชันกรองหมวด/องค์ประกอบ (คอลัมน์ A) ตามประเภทโรงพยาบาล (คอลัมน์ C)
-    function updateCategoryDropdowns(selectedType) {
-      ['gc', 'occ'].forEach(prefix => {
-        const dataKey = prefix === 'gc' ? 'green' : 'occ';
-        const dataset = masterData[dataKey] || [];
-        const catList = document.getElementById(`${prefix}-category-list`);
-        const catTags = document.getElementById(`${prefix}-category-tags`);
-        const itemList = document.getElementById(`${prefix}-item-list`);
-        const itemTags = document.getElementById(`${prefix}-item-tags`);
+function updateCategoryDropdowns(selectedType) {
+  const shortType = selectedType ? selectedType.replace(/โรงพยาบาล/g, '').trim() : '';
 
-        // ล้างค่าเก่าออกก่อน
-        if (catList) catList.innerHTML = '';
-        if (catTags) catTags.innerHTML = '';
-        if (itemList) itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
-        if (itemTags) itemTags.innerHTML = '';
+  ['gc', 'occ'].forEach(prefix => {
+    const dataKey = prefix === 'gc' ? 'green' : 'occ';
+    const dataset = masterData[dataKey] || [];
+    const catList = document.getElementById(`${prefix}-category-list`);
+    const catTags = document.getElementById(`${prefix}-category-tags`);
+    const itemList = document.getElementById(`${prefix}-item-list`);
+    const itemTags = document.getElementById(`${prefix}-item-tags`);
 
-        if (!selectedType) {
-          if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกประเภทโรงพยาบาลก่อน</div>';
-          return;
-        }
+    // ล้างค่าเก่าออกก่อน
+    if (catList) catList.innerHTML = '';
+    if (catTags) catTags.innerHTML = '';
+    if (itemList) itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
+    if (itemTags) itemTags.innerHTML = '';
 
-        // กรองเอาหมวด/องค์ประกอบที่ไม่ซ้ำกัน โดยเช็กกับคอลัมน์ C (hospType)
-        const filteredCategories = [...new Set(
-          dataset
-            .filter(row => row.hospType && row.hospType.includes(selectedType))
-            .map(row => row.category)
-        )];
+    if (!selectedType) {
+      if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกประเภทโรงพยาบาลก่อน</div>';
+      return;
+    }
 
+    // กรองเอาหมวด/องค์ประกอบที่ไม่ซ้ำกัน โดยเช็กกับคอลัมน์ C (hospType)
+    const filteredCategories = [...new Set(
+      dataset
+.filter(row => row.hospType && (row.hospType.includes(selectedType) || (shortType && row.hospType.includes(shortType))))
+        .map(row => row.category)
+    )];
         if (filteredCategories.length === 0) {
           if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">ไม่พบข้อมูลสำหรับประเภทโรงพยาบาลนี้</div>';
           return;
