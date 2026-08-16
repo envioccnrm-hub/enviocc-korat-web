@@ -68,8 +68,8 @@ Error generating stack: `+a.message+`
 
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // โหลดไอคอน
+(function() {
+    // โหลดฟอนต์ไอคอน Material Icons
     if (!document.querySelector('link[href*="Material+Icons"]')) {
         const iconLink = document.createElement('link');
         iconLink.rel = 'stylesheet';
@@ -77,24 +77,46 @@ document.addEventListener('DOMContentLoaded', function() {
         document.head.appendChild(iconLink);
     }
 
-    // ดึงชื่อ สังกัด และเปลี่ยนรูปโปรไฟล์
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
+    // ฟังก์ชันเฝ้ารอและเปลี่ยนชื่อเมื่อ React แสดงผลเสร็จ
+    const updateProfile = () => {
+        const savedUser = localStorage.getItem('currentUser');
+        if (!savedUser) return;
         const user = JSON.parse(savedUser);
-        const profileBox = document.querySelector('header .flex.items-center.gap-3') || document.querySelector('.flex.items-center.gap-3');
-        
-        if (profileBox) {
-            profileBox.innerHTML = `
-                <div class="text-right">
-                    <div class="font-bold text-gray-800 text-sm">${user.name || user.username || 'ผู้ใช้งาน'}</div>
-                    <div class="text-xs text-blue-600 font-medium">${user.hospital || 'สสจ.นครราชสีมา'} (${user.role === 'admin' ? 'Admin' : 'User'})</div>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200">
-                    <span class="material-icons text-2xl">account_circle</span>
-                </div>
-            `;
+
+        // ค้นหาโหนดข้อความที่มีคำว่า สมเกียรติ
+        const allElements = document.querySelectorAll('*');
+        for (let el of allElements) {
+            if (el.children.length === 0 && el.textContent.includes('สมเกียรติ')) {
+                // เปลี่ยนชื่อผู้ใช้
+                el.textContent = user.name || user.username || 'ผู้ใช้งาน';
+
+                // เปลี่ยนชื่อหน่วยงานด้านล่าง
+                const parent = el.parentElement;
+                if (parent) {
+                    const subText = parent.querySelector('.text-xs');
+                    if (subText) {
+                        subText.textContent = `${user.hospital || 'สสจ.นครราชสีมา'} (${user.role === 'admin' ? 'Admin' : 'User'})`;
+                    }
+                }
+
+                // เปลี่ยนรูปโปรไฟล์เป็นไอคอนรูปคน
+                const container = el.closest('.flex');
+                if (container) {
+                    const img = container.querySelector('img');
+                    if (img) {
+                        const iconDiv = document.createElement('div');
+                        iconDiv.className = "w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200 shrink-0";
+                        iconDiv.innerHTML = '<span class="material-icons text-2xl">account_circle</span>';
+                        img.parentNode.replaceChild(iconDiv, img);
+                    }
+                }
+                break;
+            }
         }
-    }
-});
-</script>      
+    };
+
+    // ตรวจสอบและอัปเดตทุกๆ 0.3 วินาที เพื่อรองรับการ Re-render ของ React
+    setInterval(updateProfile, 300);
+})();
+</script> 
 </body></html>
