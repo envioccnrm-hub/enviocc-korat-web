@@ -138,7 +138,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-sm font-semibold mb-2 text-tertiary">ประเภทโรงพยาบาล <span class="text-red-500">*</span></label>
-<select id="hospital-type" name="hospital_type" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
+<select id="gc-hospital-type" name="hospital_type" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
 <option disabled="" selected="" value="">เลือกประเภทโรงพยาบาล</option>
 <option>โรงพยาบาลศูนย์</option>
 <option>โรงพยาบาลทั่วไป</option>
@@ -379,7 +379,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-sm font-semibold mb-2 text-tertiary">ประเภทโรงพยาบาล <span class="text-red-500">*</span></label>
-<select id="hospital-type" name="hospital_type" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
+<select id="occ-hospital-type" name="hospital_type" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
 <option disabled="" selected="" value="">เลือกประเภทโรงพยาบาล</option>
 <option>โรงพยาบาลศูนย์</option>
 <option>โรงพยาบาลทั่วไป</option>
@@ -820,72 +820,81 @@ document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => 
 });
 </script>
 
-  <!-- Style ล็อก Dropdown ไม่ให้หดหายเมื่อคลิกเลือก -->
-  <style>
-    .group:hover .group-hover\:block { display: none !important; }
-    .group-hover\:block.menu-open { display: block !important; }
+<style>
+    /* ซ่อน Dropdown โดยปกติ และแสดงเมื่อมีคลาส menu-open */
+    .dropdown-menu-custom { display: none; }
+    .dropdown-menu-custom.menu-open { display: block !important; }
   </style>
 
-  <!-- Script เชื่อมโยง Master Data จาก Google Sheets ตามประเภทโรงพยาบาล -->
   <script>
   let masterData = { green: [], occ: [] };
-  
-  // URL Web App จาก Apps Script ของคุณ
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9t6vY3B6ITx8BlGdl1riw0GhTIMnGWVuqQQQDRG7xMo8smqrLOniahIC0QlOI-Ms/exec";
 
   document.addEventListener("DOMContentLoaded", function () {
-    // 1. ดึงข้อมูลสดจาก Google Sheets แท็บ Master_Data_Green และ Master_Data_Occ
     loadMasterData();
 
-    function loadMasterData() {
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(function (data) {
-          masterData = data || { green: [], occ: [] };
-          initMasterDataSystem();
-        }).getMasterData();
-      } else {
-        // กรณีรันบน GitHub Pages
-        fetch(`${WEB_APP_URL}?action=getMasterData`)
-          .then(res => res.json())
-          .then(data => {
-            masterData = data || { green: [], occ: [] };
-            initMasterDataSystem();
-          })
-          .catch(err => console.error("Error loading master data:", err));
-      }
-    }
-
-function initMasterDataSystem() {
-  const hospTypeSelects = document.querySelectorAll('#hospital-type, select[name="hospital_type"]');
-
-  hospTypeSelects.forEach(select => {
-    select.addEventListener('change', function () {
-      const selectedType = this.value.trim();
-      updateCategoryDropdowns(selectedType);
-    });
-
-    if (select.value) {
-      updateCategoryDropdowns(select.value.trim());
-    }
+    // ผูก Event ให้ปุ่มบันทึกรายงานของทั้ง 2 แท็บ
+    setupSubmitButtons();
   });
 
-  setupTabDropdown('gc', 'green');
-  setupTabDropdown('occ', 'occ');
-}
+  function loadMasterData() {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function (data) {
+        masterData = data || { green: [], occ: [] };
+        initMasterDataSystem();
+      }).getMasterData();
+    } else {
+      fetch(`${WEB_APP_URL}?action=getMasterData`)
+        .then(res => res.json())
+        .then(data => {
+          masterData = data || { green: [], occ: [] };
+          initMasterDataSystem();
+        })
+        .catch(err => console.error("Error loading master data:", err));
+    }
+  }
 
-    // ฟังก์ชันกรองหมวด/องค์ประกอบ (คอลัมน์ A) ตามประเภทโรงพยาบาล (คอลัมน์ C)
-function updateCategoryDropdowns(selectedType) {
-  const shortType = selectedType ? selectedType.replace(/โรงพยาบาล/g, '').trim() : '';
+  function initMasterDataSystem() {
+    setupTabSystem('gc', 'green', 'gc-hospital-type');
+    setupTabSystem('occ', 'occ', 'occ-hospital-type');
+  }
 
-  ['gc', 'occ'].forEach(prefix => {
-    const dataKey = prefix === 'gc' ? 'green' : 'occ';
+  function setupTabSystem(prefix, dataKey, hospSelectId) {
+    const hospSelect = document.getElementById(hospSelectId);
+    if (hospSelect) {
+      hospSelect.addEventListener('change', function () {
+        updateCategoryDropdown(prefix, dataKey, this.value.trim());
+      });
+    }
+
+    setupDropdownToggle(`${prefix}-category-group`);
+    setupDropdownToggle(`${prefix}-item-group`);
+
+    // เมื่อเลือกหมวด ให้โหลดรายการข้อ
+    const catList = document.getElementById(`${prefix}-category-list`);
+    catList?.addEventListener('change', function () {
+      const selectedType = hospSelect ? hospSelect.value.trim() : '';
+      const checkedCats = Array.from(catList.querySelectorAll('input:checked')).map(cb => cb.value);
+
+      renderTags(`${prefix}-category-tags`, checkedCats, catList, () => catList.dispatchEvent(new Event('change')));
+      updateItemDropdown(prefix, dataKey, checkedCats, selectedType);
+    });
+
+    // เมื่อเลือกข้อ ให้แสดง Tag
+    const itemList = document.getElementById(`${prefix}-item-list`);
+    itemList?.addEventListener('change', function () {
+      const checkedItems = Array.from(itemList.querySelectorAll('input:checked')).map(cb => cb.value);
+      renderTags(`${prefix}-item-tags`, checkedItems, itemList, () => itemList.dispatchEvent(new Event('change')));
+    });
+  }
+
+  function updateCategoryDropdown(prefix, dataKey, selectedType) {
     const dataset = masterData[dataKey] || [];
     const catList = document.getElementById(`${prefix}-category-list`);
     const catTags = document.getElementById(`${prefix}-category-tags`);
     const itemList = document.getElementById(`${prefix}-item-list`);
     const itemTags = document.getElementById(`${prefix}-item-tags`);
 
-    // ล้างค่าเก่าออกก่อน
     if (catList) catList.innerHTML = '';
     if (catTags) catTags.innerHTML = '';
     if (itemList) itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
@@ -896,120 +905,154 @@ function updateCategoryDropdowns(selectedType) {
       return;
     }
 
-    // กรองเอาหมวด/องค์ประกอบที่ไม่ซ้ำกัน โดยเช็กกับคอลัมน์ C (hospType)
+    const shortType = selectedType.replace(/โรงพยาบาล/g, '').trim();
     const filteredCategories = [...new Set(
       dataset
-.filter(row => row.hospType && (row.hospType.includes(selectedType) || (shortType && row.hospType.includes(shortType))))
+        .filter(row => row.hospType && (row.hospType.includes(selectedType) || (shortType && row.hospType.includes(shortType))))
         .map(row => row.category)
     )];
-        if (filteredCategories.length === 0) {
-          if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">ไม่พบข้อมูลสำหรับประเภทโรงพยาบาลนี้</div>';
-          return;
-        }
 
-        // สร้างรายการ Checkbox หมวด/องค์ประกอบ
-        catList.innerHTML = filteredCategories.map(cat => `
-          <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
-            <input type="checkbox" value="${cat}" class="w-4 h-4 rounded text-primary">
-            <span class="text-sm text-text-main">${cat}</span>
-          </label>
-        `).join('');
-      });
+    if (filteredCategories.length === 0) {
+      if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">ไม่พบข้อมูลสำหรับประเภทโรงพยาบาลนี้</div>';
+      return;
     }
 
-    // ฟังก์ชันจัดการการคลิกเปิด/ปิด และเลือกข้อรายการ (คอลัมน์ B)
-    function setupTabDropdown(prefix, dataKey) {
-      const catGroup = document.getElementById(`${prefix}-category-group`);
-      const itemGroup = document.getElementById(`${prefix}-item-group`);
+    catList.innerHTML = filteredCategories.map(cat => `
+      <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
+        <input type="checkbox" value="${cat}" class="w-4 h-4 rounded text-primary">
+        <span class="text-sm text-text-main">${cat}</span>
+      </label>
+    `).join('');
+  }
 
-      // ล็อกหน้าต่าง Dropdown ไม่ให้หดหายเมื่อคลิก
-      [catGroup, itemGroup].forEach(group => {
-        if (!group) return;
-        const menu = group.querySelector('.absolute');
-        group.addEventListener('click', function (e) {
-          e.stopPropagation();
-          document.querySelectorAll('.group-hover\\:block').forEach(m => {
-            if (m !== menu) m.classList.remove('menu-open');
-          });
-          if (menu) menu.classList.toggle('menu-open');
-        });
-        if (menu) menu.addEventListener('click', e => e.stopPropagation());
-      });
+  function updateItemDropdown(prefix, dataKey, checkedCats, selectedType) {
+    const itemList = document.getElementById(`${prefix}-item-list`);
+    const itemTags = document.getElementById(`${prefix}-item-tags`);
+    if (!itemList) return;
 
-      // เมื่อมีการเลือกหมวด/องค์ประกอบ -> ดึงข้อรายการ (คอลัมน์ B) ที่สัมพันธ์กันมาแสดง
-      const catList = document.getElementById(`${prefix}-category-list`);
-      catList?.addEventListener('change', function () {
-        const hospTypeSelect = document.getElementById('hospital-type') || document.querySelector('select[name="hospital_type"]');
-        const selectedType = hospTypeSelect ? hospTypeSelect.value.trim() : '';
-        const checkedCats = Array.from(catList.querySelectorAll('input:checked')).map(cb => cb.value);
+    itemList.innerHTML = '';
+    if (itemTags) itemTags.innerHTML = '';
 
-        renderTags(`${prefix}-category-tags`, checkedCats, catList, () => catList.dispatchEvent(new Event('change')));
-
-        const itemList = document.getElementById(`${prefix}-item-list`);
-        const itemTags = document.getElementById(`${prefix}-item-tags`);
-        if (!itemList) return;
-
-        itemList.innerHTML = '';
-        if (itemTags) itemTags.innerHTML = '';
-
-        if (checkedCats.length === 0) {
-          itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
-          return;
-        }
-
-        // กรองข้อที่ต้องการแก้ไข (คอลัมน์ B) ตามหมวดที่เลือกและประเภทโรงพยาบาล
-        const dataset = masterData[dataKey] || [];
-        const filteredItems = dataset.filter(row => 
-          checkedCats.includes(row.category) && 
-          (!selectedType || (row.hospType && row.hospType.includes(selectedType)))
-        );
-
-        itemList.innerHTML = filteredItems.map(row => `
-          <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
-            <input type="checkbox" value="${row.item}" class="w-4 h-4 rounded text-primary">
-            <span class="text-sm text-text-main">${row.item}</span>
-          </label>
-        `).join('');
-      });
-
-      // เมื่อมีการเลือกข้อที่ต้องการแก้ไข -> แสดง Tag
-      const itemList = document.getElementById(`${prefix}-item-list`);
-      itemList?.addEventListener('change', function () {
-        const checkedItems = Array.from(itemList.querySelectorAll('input:checked')).map(cb => cb.value);
-        renderTags(`${prefix}-item-tags`, checkedItems, itemList, () => itemList.dispatchEvent(new Event('change')));
-      });
+    if (checkedCats.length === 0) {
+      itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
+      return;
     }
 
-    // ฟังก์ชันสร้าง Tag ปุ่มกดลบ
-    function renderTags(containerId, values, listContainer, onRemoveCallback) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      container.innerHTML = '';
+    const dataset = masterData[dataKey] || [];
+    const filteredItems = dataset.filter(row => 
+      checkedCats.includes(row.category) && 
+      (!selectedType || (row.hospType && row.hospType.includes(selectedType)))
+    );
 
-      values.forEach(val => {
-        const tag = document.createElement('span');
-        tag.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-light text-primary border border-primary/30 shadow-sm';
-        tag.innerHTML = `
-          <span>${val}</span>
-          <button type="button" class="hover:text-red-500 font-bold text-sm leading-none ml-1">&times;</button>
-        `;
-        tag.querySelector('button').addEventListener('click', function (e) {
-          e.stopPropagation();
-          const targetCb = listContainer.querySelector(`input[value="${CSS.escape(val)}"]`);
-          if (targetCb) targetCb.checked = false;
-          if (onRemoveCallback) onRemoveCallback();
-        });
-        container.appendChild(tag);
-      });
-    }
+    itemList.innerHTML = filteredItems.map(row => `
+      <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
+        <input type="checkbox" value="${row.item}" class="w-4 h-4 rounded text-primary">
+        <span class="text-sm text-text-main">${row.item}</span>
+      </label>
+    `).join('');
+  }
 
-    // ปิดเมนูเมื่อคลิกนอกพื้นที่
-    document.addEventListener('click', function () {
-      document.querySelectorAll('.group-hover\\:block').forEach(menu => {
-        menu.classList.remove('menu-open');
+  function setupDropdownToggle(groupId) {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    const menu = group.querySelector('.absolute');
+    if (menu) menu.classList.add('dropdown-menu-custom');
+
+    group.addEventListener('click', function (e) {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown-menu-custom').forEach(m => {
+        if (m !== menu) m.classList.remove('menu-open');
       });
+      if (menu) menu.classList.toggle('menu-open');
+    });
+
+    if (menu) menu.addEventListener('click', e => e.stopPropagation());
+  }
+
+  function renderTags(containerId, values, listContainer, onRemoveCallback) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    values.forEach(val => {
+      const tag = document.createElement('span');
+      tag.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-light text-primary border border-primary/30 shadow-sm';
+      tag.innerHTML = `
+        <span>${val}</span>
+        <button type="button" class="hover:text-red-500 font-bold text-sm leading-none ml-1">&times;</button>
+      `;
+      tag.querySelector('button').addEventListener('click', function (e) {
+        e.stopPropagation();
+        const targetCb = listContainer.querySelector(`input[value="${CSS.escape(val)}"]`);
+        if (targetCb) targetCb.checked = false;
+        if (onRemoveCallback) onRemoveCallback();
+      });
+      container.appendChild(tag);
+    });
+  }
+
+  // ปิดเมนูเมื่อคลิกพื้นที่อื่น
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.dropdown-menu-custom').forEach(menu => {
+      menu.classList.remove('menu-open');
     });
   });
+
+  // ฟังก์ชันส่งรายงานบันทึกข้อมูลไปยัง Apps Script
+  function setupSubmitButtons() {
+    const gcSubmitBtn = document.querySelector('#tab-green-clean button[style*="background-color"]');
+    const occSubmitBtn = document.querySelector('#tab-occupational button[style*="background-color"]');
+
+    if (gcSubmitBtn) gcSubmitBtn.addEventListener('click', () => submitFormData('gc', 'งาน Green & Clean'));
+    if (occSubmitBtn) occSubmitBtn.addEventListener('click', () => submitFormData('occ', 'งานอาชีวอนามัยฯ'));
+  }
+
+  function submitFormData(prefix, workType) {
+    const tabEl = document.getElementById(`tab-${prefix === 'gc' ? 'green-clean' : 'occupational'}`);
+    const hospType = tabEl.querySelector('select[id$="-hospital-type"]')?.value;
+    const year = tabEl.querySelector('input[type="number"]')?.value;
+    const inputs = tabEl.querySelectorAll('input[type="text"]');
+    const senderName = inputs[0]?.value || '';
+    const phone = inputs[1]?.value || '';
+    const driveLink = inputs[2]?.value || '';
+
+    const level = tabEl.querySelector(`input[name="assessment_level_${prefix}"]:checked`)?.value || '';
+    const categories = Array.from(tabEl.querySelectorAll(`#${prefix}-category-list input:checked`)).map(c => c.value);
+    const items = Array.from(tabEl.querySelectorAll(`#${prefix}-item-list input:checked`)).map(c => c.value);
+
+    if (!hospType || !year || categories.length === 0 || items.length === 0) {
+      Swal.fire('กรอกข้อมูลไม่ครบ', 'กรุณากรอบประเภทโรงพยาบาล ปีที่ประเมิน เลือกหมวด และข้อที่แก้ไขให้ครบถ้วน', 'warning');
+      return;
+    }
+
+    const payload = {
+      action: 'submitReport',
+      workType: workType,
+      hospType: hospType,
+      year: year,
+      senderName: senderName,
+      phone: phone,
+      level: level,
+      categories: categories,
+      items: items,
+      driveLink: driveLink
+    };
+
+    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    fetch(WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      Swal.fire('บันทึกสำเร็จ!', 'ส่งรายงานการปรับปรุงแก้ไขเรียบร้อยแล้ว', 'success');
+    })
+    .catch(err => {
+      Swal.fire('เกิดข้อผิดพลาด', err.toString(), 'error');
+    });
+  }
   </script>
 </body>
 </html>
