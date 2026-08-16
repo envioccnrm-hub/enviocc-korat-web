@@ -93,13 +93,13 @@
 <nav class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 border-r border-outline-custom z-40 overflow-y-auto bg-primary text-white self-stretch">
 <ul class="flex-1 space-y-2 mt-4" id="sidebar-tabs">
 <li class="">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link hover:bg-white/10" data-target="tab-green-clean" href="#" onclick="switchTab(event, 'tab-green-clean')">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link bg-white/20 font-bold border-l-4 border-secondary" data-target="tab-green-clean" href="#" onclick="switchTab(event, 'tab-green-clean')">
 <span class="material-symbols-outlined">eco</span>
                     งาน Green &amp; Clean
                 </a>
 </li>
 <li class="">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link bg-white/20 font-bold border-l-4 border-secondary" data-target="tab-occupational" href="#" onclick="switchTab(event, 'tab-occupational')">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link hover:bg-white/10" data-target="tab-occupational" href="#" onclick="switchTab(event, 'tab-occupational')">
 <span class="material-symbols-outlined">health_and_safety</span>
                     งานอาชีวอนามัยฯ
                 </a>
@@ -121,7 +121,7 @@
 <!-- Main Content Area -->
 <div class="flex-1 flex flex-col overflow-y-auto bg-surface" id="main-content-area">
 <!-- Tab 1: Green & Clean -->
-<main class="flex-1 p-8 lg:p-12 w-full tab-content hidden" id="tab-green-clean">
+<main class="flex-1 p-8 lg:p-12 w-full tab-content" id="tab-green-clean">
 <div class="max-w-6xl mx-auto">
 <div class="mb-8">
 <h1 class="text-2xl md:text-3xl font-bold mb-2 font-headline" style="color: rgb(21, 128, 61);">แบบฟอร์มส่งรายงานแก้ไข Green &amp; Clean</h1>
@@ -362,7 +362,7 @@
 </div>
 </main>
 <!-- Tab 2: Occupational Health -->
-<main class="flex-1 p-8 lg:p-12 w-full tab-content" id="tab-occupational">
+<main class="flex-1 p-8 lg:p-12 w-full tab-content hidden" id="tab-occupational">
 <div class="max-w-6xl mx-auto">
 <div class="mb-8">
 <h1 class="text-2xl md:text-3xl font-bold mb-2 font-headline" style="color: rgb(234, 88, 12);">แบบฟอร์มส่งรายงานแก้ไข อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</h1>
