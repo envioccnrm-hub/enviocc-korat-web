@@ -166,7 +166,7 @@
 <span class="bg-primary text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">2</span>
                     รายละเอียดการแก้ไขและแนบไฟล์
                 </h2>
-<div class="mb-6"><label class="block text-sm font-semibold mb-3 text-tertiary">ส่งประเมินในระดับ <span class="text-red-500">*</span></label><div class="flex flex-col md:flex-row gap-4"><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input checked="" class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="standard"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับมาตรฐาน</span><span class="text-xs text-text-muted">(Standard)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="excellent"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับดีเยี่ยม</span><span class="text-xs text-text-muted">(Excellent)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="challenge"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับท้าทาย</span><span class="text-xs text-text-muted">(Challenge)</span></div></label></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div class="mb-6"><label class="block text-sm font-semibold mb-3 text-tertiary">ส่งประเมินในระดับ <span class="text-red-500">*</span></label><div class="flex flex-col md:flex-row gap-4"><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="standard"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับมาตรฐาน</span><span class="text-xs text-text-muted">(Standard)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="excellent"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับดีเยี่ยม</span><span class="text-xs text-text-muted">(Excellent)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="challenge"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับท้าทาย</span><span class="text-xs text-text-muted">(Challenge)</span></div></label></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 <div class="relative group" id="gc-category-group">
 <label class="block text-sm font-semibold mb-2 text-tertiary">หมวดที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
 <div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
@@ -510,6 +510,18 @@ function switchTab(evt, tabName) {
     evt.currentTarget.classList.add("bg-white/20", "font-bold", "border-l-4", "border-secondary");
     evt.currentTarget.classList.remove("hover:bg-white/10");
 }
+        // ระบบ Toggle ปุ่ม Radio: คลิก 1 ครั้งเพื่อเลือก / คลิกซ้ำเพื่อยกเลิก
+document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => {
+    radio.addEventListener('click', function() {
+        if (this.wasChecked) {
+            this.checked = false;
+            this.wasChecked = false;
+        } else {
+            document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => r.wasChecked = false);
+            this.wasChecked = true;
+        }
+    });
+});
 </script>
 </body>
 </html>
