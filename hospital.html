@@ -859,34 +859,66 @@ document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => 
     setupTabSystem('occ', 'occ', 'occ-hospital-type');
   }
 
-  function setupTabSystem(prefix, dataKey, hospSelectId) {
-    const hospSelect = document.getElementById(hospSelectId);
-    if (hospSelect) {
-      hospSelect.addEventListener('change', function () {
-        updateCategoryDropdown(prefix, dataKey, this.value.trim());
-      });
+// --- ส่วนที่ 1: วางแทนบรรทัด 862 - 889 ---
+function setupTabSystem(prefix, dataKey, hospSelectId) {
+  const catList = document.getElementById(`${prefix}-category-list`);
+  const catGroup = document.getElementById(`${prefix}-category-group`);
+  const catBox = catGroup ? catGroup.querySelector('div, button') : null;
+
+  setupDropdownToggle(`${prefix}-category-group`);
+  setupDropdownToggle(`${prefix}-item-group`);
+
+  const syncSelection = () => {
+    if (!catList) return;
+
+    const checkedCats = Array.from(catList.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
+    let tagContainer = document.getElementById(`${prefix}-category-tags`);
+    if (!tagContainer && catBox) {
+      tagContainer = document.createElement('div');
+      tagContainer.id = `${prefix}-category-tags`;
+      tagContainer.className = 'flex flex-wrap gap-1 items-center w-full pointer-events-none';
+      catBox.prepend(tagContainer);
     }
 
-    setupDropdownToggle(`${prefix}-category-group`);
-    setupDropdownToggle(`${prefix}-item-group`);
+    if (tagContainer) {
+      tagContainer.innerHTML = checkedCats.length === 0 ? '' : checkedCats.map(val => `
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+          <span>${val}</span>
+        </span>
+      `).join('');
+    }
 
-    // เมื่อเลือกหมวด ให้โหลดรายการข้อ
-    const catList = document.getElementById(`${prefix}-category-list`);
-    catList?.addEventListener('change', function () {
-      const selectedType = hospSelect ? hospSelect.value.trim() : '';
-      const checkedCats = Array.from(catList.querySelectorAll('input:checked')).map(cb => cb.value);
+    updateItemDropdown(prefix, dataKey, checkedCats);
+  };
 
-      renderTags(`${prefix}-category-tags`, checkedCats, catList, () => catList.dispatchEvent(new Event('change')));
-      updateItemDropdown(prefix, dataKey, checkedCats, selectedType);
-    });
+  catList?.addEventListener('change', syncSelection);
+  catList?.addEventListener('click', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.closest('label')) {
+      setTimeout(syncSelection, 20);
+    }
+  });
 
-    // เมื่อเลือกข้อ ให้แสดง Tag
-    const itemList = document.getElementById(`${prefix}-item-list`);
-    itemList?.addEventListener('change', function () {
-      const checkedItems = Array.from(itemList.querySelectorAll('input:checked')).map(cb => cb.value);
-      renderTags(`${prefix}-item-tags`, checkedItems, itemList, () => itemList.dispatchEvent(new Event('change')));
-    });
-  }
+  const itemList = document.getElementById(`${prefix}-item-list`);
+  const itemGroup = document.getElementById(`${prefix}-item-group`);
+  const itemBox = itemGroup ? itemGroup.querySelector('div, button') : null;
+
+  itemList?.addEventListener('change', () => {
+    const checkedItems = Array.from(itemList.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    let itemTagContainer = document.getElementById(`${prefix}-item-tags`);
+    if (!itemTagContainer && itemBox) {
+      itemTagContainer = document.createElement('div');
+      itemTagContainer.id = `${prefix}-item-tags`;
+      itemTagContainer.className = 'flex flex-wrap gap-1 items-center w-full pointer-events-none';
+      itemBox.prepend(itemTagContainer);
+    }
+    if (itemTagContainer) {
+      itemTagContainer.innerHTML = checkedItems.map(val => `
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">${val}</span>
+      `).join('');
+    }
+  });
+}
 
   function updateCategoryDropdown(prefix, dataKey, selectedType) {
     const dataset = masterData[dataKey] || [];
@@ -925,32 +957,43 @@ document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => 
     `).join('');
   }
 
-  function updateItemDropdown(prefix, dataKey, checkedCats, selectedType) {
-    const itemList = document.getElementById(`${prefix}-item-list`);
-    const itemTags = document.getElementById(`${prefix}-item-tags`);
-    if (!itemList) return;
+// --- ส่วนที่ 2: วางแทน function updateItemDropdown เดิมที่อยู่ด้านล่าง ---
+function updateItemDropdown(prefix, dataKey, checkedCats) {
+  const itemList = document.getElementById(`${prefix}-item-list`);
+  if (!itemList) return;
 
-    itemList.innerHTML = '';
-    if (itemTags) itemTags.innerHTML = '';
+  itemList.innerHTML = '';
 
-    if (checkedCats.length === 0) {
-      itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
-      return;
-    }
-
-    const dataset = masterData[dataKey] || [];
-    const filteredItems = dataset.filter(row => 
-      checkedCats.includes(row.category) && 
-      (!selectedType || (row.hospType && row.hospType.includes(selectedType)))
-    );
-
-    itemList.innerHTML = filteredItems.map(row => `
-      <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
-        <input type="checkbox" value="${row.item}" class="w-4 h-4 rounded text-primary">
-        <span class="text-sm text-text-main">${row.item}</span>
-      </label>
-    `).join('');
+  if (!checkedCats || checkedCats.length === 0) {
+    itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
+    return;
   }
+
+  const hospSelect = document.getElementById('hospital-type') || document.querySelector('select[name="hospital_type"]');
+  const selectedType = hospSelect ? hospSelect.value.trim() : '';
+  const shortType = selectedType ? selectedType.replace(/โรงพยาบาล/g, '').trim() : '';
+
+  const dataset = masterData[dataKey] || [];
+  const filteredItems = dataset.filter(row => {
+    const matchCat = checkedCats.includes(row.category);
+    const matchType = !selectedType || !row.hospType || 
+                      row.hospType.includes(selectedType) || 
+                      (shortType && row.hospType.includes(shortType));
+    return matchCat && matchType;
+  });
+
+  if (filteredItems.length === 0) {
+    itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">ไม่พบรายการข้อในองค์ประกอบที่เลือก</div>';
+    return;
+  }
+
+  itemList.innerHTML = filteredItems.map(row => `
+    <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
+      <input type="checkbox" value="${row.item}" class="w-4 h-4 rounded text-primary">
+      <span class="text-sm text-text-main">${row.item}</span>
+    </label>
+  `).join('');
+}
 
   function setupDropdownToggle(groupId) {
     const group = document.getElementById(groupId);
