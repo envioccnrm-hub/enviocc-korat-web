@@ -138,7 +138,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-sm font-semibold mb-2 text-tertiary">ประเภทโรงพยาบาล <span class="text-red-500">*</span></label>
-<select class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
+<select id="hospital-type" name="hospital_type" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
 <option disabled="" selected="" value="">เลือกประเภทโรงพยาบาล</option>
 <option>โรงพยาบาลศูนย์</option>
 <option>โรงพยาบาลทั่วไป</option>
@@ -379,7 +379,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-sm font-semibold mb-2 text-tertiary">ประเภทโรงพยาบาล <span class="text-red-500">*</span></label>
-<select class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
+<select id="hospital-type" name="hospital_type" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main">
 <option disabled="" selected="" value="">เลือกประเภทโรงพยาบาล</option>
 <option>โรงพยาบาลศูนย์</option>
 <option>โรงพยาบาลทั่วไป</option>
@@ -855,24 +855,23 @@ document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => 
       }
     }
 
-    function initMasterDataSystem() {
-      const hospTypeSelect = document.getElementById('hospital-type') || document.querySelector('select[name="hospital_type"]');
+function initMasterDataSystem() {
+  const hospTypeSelects = document.querySelectorAll('#hospital-type, select[name="hospital_type"]');
 
-      if (hospTypeSelect) {
-        hospTypeSelect.addEventListener('change', function () {
-          const selectedType = this.value.trim();
-          updateCategoryDropdowns(selectedType);
-        });
+  hospTypeSelects.forEach(select => {
+    select.addEventListener('change', function () {
+      const selectedType = this.value.trim();
+      updateCategoryDropdowns(selectedType);
+    });
 
-        // หากมีการเลือกประเภทโรงพยาบาลค้างไว้อยู่แล้ว ให้โหลดรายการทันที
-        if (hospTypeSelect.value) {
-          updateCategoryDropdowns(hospTypeSelect.value.trim());
-        }
-      }
-
-      setupTabDropdown('gc', 'green');
-      setupTabDropdown('occ', 'occ');
+    if (select.value) {
+      updateCategoryDropdowns(select.value.trim());
     }
+  });
+
+  setupTabDropdown('gc', 'green');
+  setupTabDropdown('occ', 'occ');
+}
 
     // ฟังก์ชันกรองหมวด/องค์ประกอบ (คอลัมน์ A) ตามประเภทโรงพยาบาล (คอลัมน์ C)
     function updateCategoryDropdowns(selectedType) {
