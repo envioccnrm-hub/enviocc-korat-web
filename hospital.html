@@ -818,16 +818,198 @@ document.querySelectorAll('input[name="assessment_level_gc"]').forEach(radio => 
         }
     });
 });
-// ระบบคลิกเปิด-ปิด ดรอปดาวน์หมวดหมู่ค้างไว้
-    const gcGroup = document.getElementById('gc-category-group');
-    if (gcGroup) {
-        const gcMenu = gcGroup.querySelector('.absolute');
-        gcGroup.addEventListener('click', (e) => {
-            e.stopPropagation();
-            gcMenu.style.display = (gcMenu.style.display === 'block') ? 'none' : 'block';
-        });
-        document.addEventListener('click', () => { if (gcMenu) gcMenu.style.display = 'none'; });
-    }
 </script>
+
+  <!-- Style ล็อก Dropdown ไม่ให้หดหายเมื่อคลิกเลือก -->
+  <style>
+    .group:hover .group-hover\:block { display: none !important; }
+    .group-hover\:block.menu-open { display: block !important; }
+  </style>
+
+  <!-- Script เชื่อมโยง Master Data จาก Google Sheets ตามประเภทโรงพยาบาล -->
+  <script>
+  let masterData = { green: [], occ: [] };
+  
+  // URL Web App จาก Apps Script ของคุณ
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9t6vY3B6ITx8BlGdl1riw0GhTIMnGWVuqQQQDRG7xMo8smqrLOniahIC0QlOI-Ms/exec";
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // 1. ดึงข้อมูลสดจาก Google Sheets แท็บ Master_Data_Green และ Master_Data_Occ
+    loadMasterData();
+
+    function loadMasterData() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(function (data) {
+          masterData = data || { green: [], occ: [] };
+          initMasterDataSystem();
+        }).getMasterData();
+      } else {
+        // กรณีรันบน GitHub Pages
+        fetch(`${WEB_APP_URL}?action=getMasterData`)
+          .then(res => res.json())
+          .then(data => {
+            masterData = data || { green: [], occ: [] };
+            initMasterDataSystem();
+          })
+          .catch(err => console.error("Error loading master data:", err));
+      }
+    }
+
+    function initMasterDataSystem() {
+      const hospTypeSelect = document.getElementById('hospital-type') || document.querySelector('select[name="hospital_type"]');
+
+      if (hospTypeSelect) {
+        hospTypeSelect.addEventListener('change', function () {
+          const selectedType = this.value.trim();
+          updateCategoryDropdowns(selectedType);
+        });
+
+        // หากมีการเลือกประเภทโรงพยาบาลค้างไว้อยู่แล้ว ให้โหลดรายการทันที
+        if (hospTypeSelect.value) {
+          updateCategoryDropdowns(hospTypeSelect.value.trim());
+        }
+      }
+
+      setupTabDropdown('gc', 'green');
+      setupTabDropdown('occ', 'occ');
+    }
+
+    // ฟังก์ชันกรองหมวด/องค์ประกอบ (คอลัมน์ A) ตามประเภทโรงพยาบาล (คอลัมน์ C)
+    function updateCategoryDropdowns(selectedType) {
+      ['gc', 'occ'].forEach(prefix => {
+        const dataKey = prefix === 'gc' ? 'green' : 'occ';
+        const dataset = masterData[dataKey] || [];
+        const catList = document.getElementById(`${prefix}-category-list`);
+        const catTags = document.getElementById(`${prefix}-category-tags`);
+        const itemList = document.getElementById(`${prefix}-item-list`);
+        const itemTags = document.getElementById(`${prefix}-item-tags`);
+
+        // ล้างค่าเก่าออกก่อน
+        if (catList) catList.innerHTML = '';
+        if (catTags) catTags.innerHTML = '';
+        if (itemList) itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
+        if (itemTags) itemTags.innerHTML = '';
+
+        if (!selectedType) {
+          if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกประเภทโรงพยาบาลก่อน</div>';
+          return;
+        }
+
+        // กรองเอาหมวด/องค์ประกอบที่ไม่ซ้ำกัน โดยเช็กกับคอลัมน์ C (hospType)
+        const filteredCategories = [...new Set(
+          dataset
+            .filter(row => row.hospType && row.hospType.includes(selectedType))
+            .map(row => row.category)
+        )];
+
+        if (filteredCategories.length === 0) {
+          if (catList) catList.innerHTML = '<div class="p-2 text-xs text-text-muted">ไม่พบข้อมูลสำหรับประเภทโรงพยาบาลนี้</div>';
+          return;
+        }
+
+        // สร้างรายการ Checkbox หมวด/องค์ประกอบ
+        catList.innerHTML = filteredCategories.map(cat => `
+          <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
+            <input type="checkbox" value="${cat}" class="w-4 h-4 rounded text-primary">
+            <span class="text-sm text-text-main">${cat}</span>
+          </label>
+        `).join('');
+      });
+    }
+
+    // ฟังก์ชันจัดการการคลิกเปิด/ปิด และเลือกข้อรายการ (คอลัมน์ B)
+    function setupTabDropdown(prefix, dataKey) {
+      const catGroup = document.getElementById(`${prefix}-category-group`);
+      const itemGroup = document.getElementById(`${prefix}-item-group`);
+
+      // ล็อกหน้าต่าง Dropdown ไม่ให้หดหายเมื่อคลิก
+      [catGroup, itemGroup].forEach(group => {
+        if (!group) return;
+        const menu = group.querySelector('.absolute');
+        group.addEventListener('click', function (e) {
+          e.stopPropagation();
+          document.querySelectorAll('.group-hover\\:block').forEach(m => {
+            if (m !== menu) m.classList.remove('menu-open');
+          });
+          if (menu) menu.classList.toggle('menu-open');
+        });
+        if (menu) menu.addEventListener('click', e => e.stopPropagation());
+      });
+
+      // เมื่อมีการเลือกหมวด/องค์ประกอบ -> ดึงข้อรายการ (คอลัมน์ B) ที่สัมพันธ์กันมาแสดง
+      const catList = document.getElementById(`${prefix}-category-list`);
+      catList?.addEventListener('change', function () {
+        const hospTypeSelect = document.getElementById('hospital-type') || document.querySelector('select[name="hospital_type"]');
+        const selectedType = hospTypeSelect ? hospTypeSelect.value.trim() : '';
+        const checkedCats = Array.from(catList.querySelectorAll('input:checked')).map(cb => cb.value);
+
+        renderTags(`${prefix}-category-tags`, checkedCats, catList, () => catList.dispatchEvent(new Event('change')));
+
+        const itemList = document.getElementById(`${prefix}-item-list`);
+        const itemTags = document.getElementById(`${prefix}-item-tags`);
+        if (!itemList) return;
+
+        itemList.innerHTML = '';
+        if (itemTags) itemTags.innerHTML = '';
+
+        if (checkedCats.length === 0) {
+          itemList.innerHTML = '<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวด/องค์ประกอบก่อน</div>';
+          return;
+        }
+
+        // กรองข้อที่ต้องการแก้ไข (คอลัมน์ B) ตามหมวดที่เลือกและประเภทโรงพยาบาล
+        const dataset = masterData[dataKey] || [];
+        const filteredItems = dataset.filter(row => 
+          checkedCats.includes(row.category) && 
+          (!selectedType || (row.hospType && row.hospType.includes(selectedType)))
+        );
+
+        itemList.innerHTML = filteredItems.map(row => `
+          <label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer">
+            <input type="checkbox" value="${row.item}" class="w-4 h-4 rounded text-primary">
+            <span class="text-sm text-text-main">${row.item}</span>
+          </label>
+        `).join('');
+      });
+
+      // เมื่อมีการเลือกข้อที่ต้องการแก้ไข -> แสดง Tag
+      const itemList = document.getElementById(`${prefix}-item-list`);
+      itemList?.addEventListener('change', function () {
+        const checkedItems = Array.from(itemList.querySelectorAll('input:checked')).map(cb => cb.value);
+        renderTags(`${prefix}-item-tags`, checkedItems, itemList, () => itemList.dispatchEvent(new Event('change')));
+      });
+    }
+
+    // ฟังก์ชันสร้าง Tag ปุ่มกดลบ
+    function renderTags(containerId, values, listContainer, onRemoveCallback) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+
+      values.forEach(val => {
+        const tag = document.createElement('span');
+        tag.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-light text-primary border border-primary/30 shadow-sm';
+        tag.innerHTML = `
+          <span>${val}</span>
+          <button type="button" class="hover:text-red-500 font-bold text-sm leading-none ml-1">&times;</button>
+        `;
+        tag.querySelector('button').addEventListener('click', function (e) {
+          e.stopPropagation();
+          const targetCb = listContainer.querySelector(`input[value="${CSS.escape(val)}"]`);
+          if (targetCb) targetCb.checked = false;
+          if (onRemoveCallback) onRemoveCallback();
+        });
+        container.appendChild(tag);
+      });
+    }
+
+    // ปิดเมนูเมื่อคลิกนอกพื้นที่
+    document.addEventListener('click', function () {
+      document.querySelectorAll('.group-hover\\:block').forEach(menu => {
+        menu.classList.remove('menu-open');
+      });
+    });
+  });
+  </script>
 </body>
 </html>
