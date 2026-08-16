@@ -117,6 +117,16 @@ Error generating stack: `+a.message+`
 
     // ตรวจสอบและอัปเดตทุกๆ 0.3 วินาที เพื่อรองรับการ Re-render ของ React
     setInterval(updateProfile, 300);
+
+    // ระบบกดปุ่มออกจากระบบ
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('*');
+        if (target && target.textContent && target.textContent.trim().includes('ออกจากระบบ')) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    });
 })();
 </script> 
 </body></html>
