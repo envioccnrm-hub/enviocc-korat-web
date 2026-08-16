@@ -365,11 +365,16 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // บันทึกข้อมูลการล็อกอินลง localStorage เพื่อส่งต่อไปยังหน้า hospital.html และ admin.html
+// เช็กสิทธิ์ว่าเป็น Admin หรือ สสจ. (ดักทั้งคำว่า สสจ, สาธารณสุขจังหวัด และ username = admin)
+                const isAdmin = data.role === 'admin' || 
+                                hospitalVal.includes('สสจ') || 
+                                hospitalVal.includes('สาธารณสุขจังหวัด') || 
+                                usernameVal.trim().toLowerCase() === 'admin';
+
                 localStorage.setItem('currentUser', JSON.stringify({
                     hospital: hospitalVal,
                     username: usernameVal || hospitalVal,
-                    role: data.role || (hospitalVal.includes('สสจ') ? 'admin' : 'user')
+                    role: isAdmin ? 'admin' : 'user'
                 }));
 
                 Swal.fire({
@@ -379,7 +384,7 @@
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => {
-                    if(data.role === 'admin' || hospitalVal.includes('สสจ')) {
+                    if (isAdmin) {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'hospital.html';
