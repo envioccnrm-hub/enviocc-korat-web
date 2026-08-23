@@ -1,0 +1,159 @@
+const SHEET_NAME = "Login รายชื่อผู้ใช้งาน"; 
+const SHEET_GREEN = "Master_Data_Green"; 
+const SHEET_OCC = "Master_Data_Occ"; 
+const SHEET_FOLLOW_GREEN = "ติดตามงาน Green & Clean Hospital"; 
+const SHEET_FOLLOW_OCC = "ติดตามงาน อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม"; 
+
+// แท็บสำหรับเก็บข้อมูลการส่งรายงาน
+
+function doGet(e) {
+  var action = e ? e.parameter.action : '';
+  
+  if (action === 'getDropdowns') {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    var data = sheet.getDataRange().getValues();
+    
+    var districts = [];
+    var types = [];
+    var hospitals = [];
+    var fullData = [];
+    
+    for (var i = 1; i < data.length; i++) {
+      var district = String(data[i][0]).trim();
+      var type = String(data[i][1]).trim();
+      var hospital = String(data[i][2]).trim();
+      
+      if (district && districts.indexOf(district) === -1) districts.push(district);
+      if (type && types.indexOf(type) === -1) types.push(type);
+      if (hospital && hospitals.indexOf(hospital) === -1) hospitals.push(hospital);
+
+      if (hospital) {
+        fullData.push({ district: district, type: type, hospital: hospital });
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      districts: districts, types: types, hospitals: hospitals, fullData: fullData
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'getMasterData') {
+    var masterData = getMasterData();
+    return ContentService.createTextOutput(JSON.stringify(masterData))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  return ContentService.createTextOutput("API ทำงานปกติครับ");
+}
+
+function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    var action = payload.action || e.parameter.action;
+    
+    // 1. ระบบ Login
+    if (action === 'login') {
+      var hospital = payload.hospital || payload.username; 
+      var password = payload.password;
+      
+      var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+      var data = sheet.getDataRange().getValues();
+      
+      for (var i = 1; i < data.length; i++) {
+        var sheetHospital = String(data[i][2]).trim();
+        var sheetPass = String(data[i][3]).trim();
+        var sheetRole = String(data[i][4]).trim();
+        
+        if (sheetHospital === String(hospital).trim() && sheetPass === String(password).trim()) {
+          return ContentService.createTextOutput(JSON.stringify({
+            status: 'success', role: sheetRole, hospital: sheetHospital
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+      
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error', message: 'โรงพยาบาลหรือรหัสผ่านไม่ถูกต้อง'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 2. ระบบบันทึกการส่งรายงานแก้ไข
+    if (action === 'submitReport') {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      
+      var targetSheetName = (payload.workType && payload.workType.indexOf("Green") !== -1) 
+                            ? SHEET_FOLLOW_GREEN 
+                            : SHEET_FOLLOW_OCC;
+                            
+      var submitSheet = ss.getSheetByName(targetSheetName);
+      
+      if (!submitSheet) {
+        submitSheet = ss.insertSheet(targetSheetName);
+        submitSheet.appendRow([
+          "วัน-เวลาที่ส่ง", "ประเภทงาน", "ประเภทโรงพยาบาล", "ปีที่ประเมิน", 
+          "ชื่อผู้ส่ง", "เบอร์โทรศัพท์", "ระดับการประเมิน", "หมวดที่แก้ไข", 
+          "ข้อที่แก้ไข", "ลิงก์ Google Drive", "สถานะ"
+        ]);
+      }
+
+      submitSheet.appendRow([
+        new Date(),
+        payload.workType || '',
+        payload.hospType || '',
+        payload.year || '',
+        payload.senderName || '',
+        payload.phone || '',
+        payload.level || '',
+        (payload.categories || []).join(', '),
+        (payload.items || []).join(', '),
+        payload.driveLink || '',
+        'รอการตรวจสอบ'
+      ]);
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success', message: 'บันทึกข้อมูลเรียบร้อยแล้ว'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error', message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function getMasterData() {
+  return {
+    green: readMasterSheet(SHEET_GREEN),
+    occ: readMasterSheet(SHEET_OCC)
+  };
+}
+
+function readMasterSheet(sheetName) { 
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName); 
+  if (!sheet) return [];
+  
+  var data = sheet.getDataRange().getValues(); 
+  var result = [];
+  var currentCategory = ""; // ตัวแปรจำหมวดหมู่ล่าสุด รองรับการผสานเซลล์
+  
+  for (var i = 1; i < data.length; i++) { 
+    var category = String(data[i][0] || '').trim(); 
+    var item = String(data[i][1] || '').trim();     
+    var hospType = String(data[i][2] || '').trim(); 
+    
+    // ถ้าพบชื่อองค์ประกอบใหม่ ให้บันทึกไว้
+    if (category !== '') {
+      currentCategory = category;
+    }
+    
+    // บันทึกข้อมูลข้อแก้ไขออกมาแม้คอลัมน์ A จะว่าง (เพราะใช้ currentCategory แทน)
+    if (currentCategory && (item || category)) {
+      result.push({
+        category: currentCategory,
+        item: item,
+        hospType: hospType
+      });
+    }
+  } 
+  return result; 
+}
