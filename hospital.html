@@ -872,7 +872,7 @@ function setupTabSystem(prefix, dataKey, hospSelectId) {
       `).join('');
     }
 
-    updateItemDropdown(prefix, dataKey, checkedCats);
+    updateItemDropdown(prefix, dataKey, checkedCats, hospSelectId);
   };
 
   catList?.addEventListener('change', syncSelection);
@@ -941,7 +941,7 @@ function setupTabSystem(prefix, dataKey, hospSelectId) {
   }
 
 // --- ส่วนที่ 2: วางแทน function updateItemDropdown เดิมที่อยู่ด้านล่าง ---
-function updateItemDropdown(prefix, dataKey, checkedCats) {
+ffunction updateItemDropdown(prefix, dataKey, checkedCats, hospSelectId) {
   const itemList = document.getElementById(`${prefix}-item-list`);
   if (!itemList) return;
 
@@ -952,7 +952,7 @@ function updateItemDropdown(prefix, dataKey, checkedCats) {
     return;
   }
 
-  const hospSelect = document.getElementById('hospital-type') || document.querySelector('select[name="hospital_type"]');
+  const hospSelect = document.getElementById(hospSelectId);
   const selectedType = hospSelect ? hospSelect.value.trim() : '';
   const shortType = selectedType ? selectedType.replace(/โรงพยาบาล/g, '').trim() : '';
 
@@ -1079,213 +1079,6 @@ function updateItemDropdown(prefix, dataKey, checkedCats) {
       Swal.fire('เกิดข้อผิดพลาด', err.toString(), 'error');
     });
   }
-  // ==========================================
-// ฐานข้อมูลเกณฑ์ประเมินดึงสดจาก Google Sheets (สำหรับดึงเกณฑ์ Dynamic)
-// ==========================================
-let rawMasterDataGreen = [];
-let rawMasterDataOcc = [];
-let currentSelectedCats = []; // เก็บรายชื่อหมวดที่โรงพยาบาลติ๊กเลือก
-let currentSelectedItems = []; // เก็บรายชื่อข้อที่โรงพยาบาลติ๊กเลือก
-
-// ค้นหาประเภทโรงพยาบาลที่ล็อกอินอยู่ (เชื่อมกับระบบล็อกอินเดิมของหนูอัตโนมัติ)
-function getCurrentHospitalType() {
-  return window.currentUser?.hospitalType || "รพ.ชุมชน"; // ตัวอย่าง: "รพ.ชุมชน", "รพ.สต.", "รพ.ทั่วไป"
-}
-
-// 1. ฟังก์ชันดึงเกณฑ์ประเมินสด ๆ จาก Google Sheets (ผ่าน Apps Script หลังบ้าน)
-async function fetchStandardMasterData() {
-  // 🔴 หนูสลับเอา Web App URL จริงที่ได้จากการ Deploy สคริปต์หลังบ้านมาแปะใส่ในเครื่องหมายคำพูดนี้นะคะ
-  const webAppScriptUrl = "https://script.google.com/macros/s/AKfycby9t6vY3B6lTx8BIGdI1riw0GhTlMnGWVuqQQQDRG7xMo8smqrLOniahIC0QQloI-Ms/exec"; 
-  
-  try {
-    const response = await fetch(`${webAppScriptUrl}?action=getMasterData`);
-    const data = await response.json();
-    rawMasterDataGreen = data.green || []; // พักเกณฑ์งานกรีน
-    rawMasterDataOcc = data.occ || [];     // พักเกณฑ์งานอาชีวะ
-    
-    // ตั้งดักฟังการสลับประเภทงานมาตรฐาน (เมื่อสลับงาน ให้รีเซ็ตค่าเก่าทิ้งทันที)
-    const stdSelect = document.getElementById("standardType");
-    if (stdSelect) {
-      stdSelect.addEventListener("change", () => {
-        currentSelectedCats = [];
-        currentSelectedItems = [];
-        refreshCategoryTags();
-        refreshItemTags();
-        renderDynamicCategories();
-      });
-    }
-    
-    // แสดงผลรายการหมวดหมู่รอบแรกตามประเภท รพ. ที่ล็อกอินอยู่
-    renderDynamicCategories();
-  } catch (err) {
-    console.error("ไม่สามารถเชื่อมต่อเกณฑ์ประเมินจาก Google Sheets ได้:", err);
-  }
-}
-
-// 2. ฟังก์ชันกรองและวาดรายการ "หมวดหมู่" ตามประเภทโรงพยาบาลที่ล็อกอิน
-function renderDynamicCategories() {
-  const selectedStandard = document.getElementById("standardType")?.value || "green_clean";
-  const userHospType = getCurrentHospitalType();
-  const rawList = selectedStandard === "green_clean" ? rawMasterDataGreen : rawMasterDataOcc;
-  
-  // กรองเกณฑ์ที่ประเภท รพ. (คอลัมน์ C ในเกณฑ์) ตรงกับประเภทหน่วยงานที่ล็อกอินเข้ามา
-  const filteredData = rawList.filter(row => row.hospType.includes(userHospType));
-  const uniqueCats = [...new Set(filteredData.map(row => row.category))];
-  
-  const container = document.getElementById("gc-category-list");
-  if (!container) return;
-  container.innerHTML = "";
-  
-  if (uniqueCats.length === 0) {
-    container.innerHTML = `<span class="text-xs text-text-muted p-2">ไม่มีเกณฑ์ประเมินสำหรับประเภท ${userHospType}</span>`;
-    return;
-  }
-  
-  // วาดรายการ Checkbox ของแต่ละหมวดหมู่ โดยใช้คลาส Tailwind CSS ดั้งเดิมของหนู 100%
-  uniqueCats.forEach((cat, idx) => {
-    const isChecked = currentSelectedCats.includes(cat);
-    const label = document.createElement("label");
-    label.className = "flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors";
-    label.innerHTML = `
-      <input type="checkbox" value="${cat}" class="category-item-cb w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${isChecked ? "checked" : ""}>
-      <span class="text-sm text-text-main">${cat}</span>
-    `;
-    container.appendChild(label);
-    
-    // ตั้งดักเมื่อโรงพยาบาลคลิกติ๊กถูกเลือกหมวดนั้น ๆ
-    const cb = label.querySelector(".category-item-cb");
-    cb.addEventListener("change", () => {
-      if (cb.checked) {
-        currentSelectedCats.push(cat);
-      } else {
-        currentSelectedCats = currentSelectedCats.filter(c => c !== cat);
-        // หากเอาหมวดออก ให้ปลดข้อย่อยที่ผูกกับหมวดนี้ทิ้งไปด้วยเพื่อไม่ให้ขยะค้างในชีต
-        const associatedItems = filteredData.filter(row => row.category === cat).map(row => row.item);
-        currentSelectedItems = currentSelectedItems.filter(item => !associatedItems.includes(item));
-        refreshItemTags();
-      }
-      refreshCategoryTags();
-      renderDynamicItems(filteredData);
-    });
-  });
-}
-
-// 3. ฟังก์ชันสร้างป้าย Tag ค้างในกล่องข้อความเมื่อจิ้มเลือกหมวดหมู่
-function refreshCategoryTags() {
-  const tagBox = document.getElementById("gc-category-tags");
-  if (!tagBox) return;
-  tagBox.innerHTML = "";
-  
-  if (currentSelectedCats.length === 0) {
-    tagBox.innerHTML = `<span class="text-xs text-text-muted">เลือกหมวดที่ต้องการแก้ไข...</span>`;
-    return;
-  }
-  
-  // วาดป้าย Tag สี่เหลี่ยมพาสเทลสวยงามค้างไว้ในช่องสี่เหลี่ยมของหนู
-  currentSelectedCats.forEach(cat => {
-    const displayLabel = cat.split(":")?.trim() || cat; // ตัดเอาคำสั้น เช่น "หมวด 1"
-    const badge = document.createElement("span");
-    badge.className = "inline-flex items-center gap-1.5 bg-[#eaf4ff] text-[#0059a4] border border-[#d1e5f4] text-xs font-semibold px-2 py-0.5 rounded-md";
-    badge.innerHTML = `
-      <span>${displayLabel}</span>
-      <span class="cursor-pointer font-bold text-[#0072ce] hover:text-[#0059a4]" onclick="removeCategoryTag('${cat}')">×</span>
-    `;
-    tagBox.appendChild(badge);
-  });
-}
-
-// 4. ฟังก์ชันวาดรายการ "ข้อย่อย" สัมพันธ์เชื่อมโยงกับหมวดหมู่ที่ถูกติ๊กเลือกด้านซ้าย
-function renderDynamicItems(filteredData) {
-  const container = document.getElementById("gc-item-list");
-  if (!container) return;
-  container.innerHTML = "";
-  
-  if (currentSelectedCats.length === 0) {
-    container.innerHTML = `<div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวดประเมินก่อน</div>`;
-    return;
-  }
-  
-  // กรองเกณฑ์ย่อยเฉพาะภายใต้หมวดหมู่ทั้งหมดที่ผู้ใช้คลิกติ๊กเลือกอยู่
-  const matchedItems = filteredData.filter(row => currentSelectedCats.includes(row.category));
-  
-  matchedItems.forEach((row, idx) => {
-    const isChecked = currentSelectedItems.includes(row.item);
-    const label = document.createElement("label");
-    label.className = "flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors";
-    
-    // ดึงเฉพาะรหัสข้อด้านหน้ามาแสดงตัวหนา และข้อความเกณฑ์ย่อยตามหลังอย่างสวยงาม
-    const itemCode = row.item.split(":")?.trim() || "";
-    const itemText = row.item.split(":").slice(1).join(":")?.trim() || "";
-    label.innerHTML = `
-      <input type="checkbox" value="${row.item}" class="item-sub-cb w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${isChecked ? "checked" : ""}>
-      <span class="text-sm text-text-main"><strong>${itemCode}</strong>: ${itemText}</span>
-    `;
-    container.appendChild(label);
-    
-    const cb = label.querySelector(".item-sub-cb");
-    cb.addEventListener("change", () => {
-      if (cb.checked) {
-        currentSelectedItems.push(row.item);
-      } else {
-        currentSelectedItems = currentSelectedItems.filter(i => i !== row.item);
-      }
-      refreshItemTags();
-    });
-  });
-}
-
-// 5. ฟังก์ชันสร้างป้าย Tag ค้างในกล่องข้อความเมื่อจิ้มเลือกข้อแก้ไขย่อย
-function refreshItemTags() {
-  const tagBox = document.getElementById("gc-item-tags");
-  if (!tagBox) return;
-  tagBox.innerHTML = "";
-  
-  if (currentSelectedItems.length === 0) {
-    tagBox.innerHTML = `<span class="text-xs text-text-muted">เลือกข้อที่ต้องการแก้ไข...</span>`;
-    return;
-  }
-  
-  currentSelectedItems.forEach(item => {
-    const displayLabel = item.split(":")?.trim() || item; // ตัดเอาเฉพาะคำสั้น เช่น "ข้อ 1.1"
-    const badge = document.createElement("span");
-    badge.className = "inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-semibold px-2 py-0.5 rounded-md";
-    badge.innerHTML = `
-      <span>${displayLabel}</span>
-      <span class="cursor-pointer font-bold text-orange-500 hover:text-orange-700" onclick="removeItemTag('${item}')">×</span>
-    `;
-    tagBox.appendChild(badge);
-  });
-}
-
-// ฟังก์ชันตัวช่วยดักยกเลิกการเลือกเมื่อผู้ใช้กดกากบาท (x) บนป้าย Tag ของหมวดหมู่
-window.removeCategoryTag = function(catName) {
-  currentSelectedCats = currentSelectedCats.filter(c => c !== catName);
-  
-  const stdType = document.getElementById("standardType")?.value || "green_clean";
-  const rawList = stdType === "green_clean" ? rawMasterDataGreen : rawMasterDataOcc;
-  const filteredData = rawList.filter(row => row.hospType.includes(getCurrentHospitalType()));
-  const itemsToRemove = filteredData.filter(row => row.category === catName).map(row => row.item);
-  currentSelectedItems = currentSelectedItems.filter(i => !itemsToRemove.includes(i));
-  
-  refreshCategoryTags();
-  refreshItemTags();
-  renderDynamicCategories();
-  renderDynamicItems(filteredData);
-};
-
-// ฟังก์ชันตัวช่วยดักยกเลิกการเลือกเมื่อผู้ใช้กดกากบาท (x) บนป้าย Tag ของข้อแก้ไข
-window.removeItemTag = function(itemName) {
-  currentSelectedItems = currentSelectedItems.filter(i => i !== itemName);
-  refreshItemTags();
-  
-  const stdType = document.getElementById("standardType")?.value || "green_clean";
-  const rawList = stdType === "green_clean" ? rawMasterDataGreen : rawMasterDataOcc;
-  const filteredData = rawList.filter(row => row.hospType.includes(getCurrentHospitalType()));
-  renderDynamicItems(filteredData);
-};
-
-// สั่งดึงและประมวลผลข้อมูลเกณฑ์ประเมินเรียลไทม์ทันทีเมื่อโหลดหน้าจอขึ้นมาครั้งแรก
-document.addEventListener("DOMContentLoaded", fetchStandardMasterData);
   </script>
 </body>
 </html>
