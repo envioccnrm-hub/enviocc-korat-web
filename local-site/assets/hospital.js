@@ -384,10 +384,126 @@
   }
 
   /* =========================================================
+   *  แนบไฟล์หลักฐาน PDF
+   *  เก็บไฟล์ไว้ในหน่วยความจำก่อน แล้วค่อยแปลงเป็น base64 ตอนกดส่ง
+   *  (Apps Script รับได้แต่ JSON จึงส่งไฟล์แนบไปกับ payload เป็น base64)
+   * ======================================================= */
+  var MAX_FILE_MB  = 15;   /* ต่อไฟล์ (ต้องตรงกับ MAX_UPLOAD_MB ใน Code.gs) */
+  var MAX_TOTAL_MB = 25;   /* รวมทุกไฟล์ในหนึ่งรายงาน
+                            * base64 ทำให้ข้อมูลบวมขึ้นราว 1.34 เท่า
+                            * 25 MB จึงกลายเป็น ~34 MB ตอนส่ง ยังไม่เกินลิมิต
+                            * ของ Apps Script ที่รับ POST ได้ 50 MB */
+
+  var picked = { gc: [], occ: [] };
+
+  function fmtSize(bytes) {
+    return bytes < 1024 * 1024
+      ? (bytes / 1024).toFixed(0) + ' KB'
+      : (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function totalBytes(prefix) {
+    return picked[prefix].reduce(function (sum, f) { return sum + f.size; }, 0);
+  }
+
+  /** รับไฟล์ที่เลือกหรือลากมาวาง คัดเฉพาะ PDF และกันไฟล์ใหญ่เกิน */
+  function addFiles(prefix, fileList) {
+    var rejected = [];
+    Array.prototype.slice.call(fileList).forEach(function (f) {
+      if (!(f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) {
+        rejected.push(f.name + ' (ไม่ใช่ PDF)'); return;
+      }
+      if (f.size > MAX_FILE_MB * 1024 * 1024) {
+        rejected.push(f.name + ' (เกิน ' + MAX_FILE_MB + ' MB)'); return;
+      }
+      var dup = picked[prefix].some(function (g) { return g.name === f.name && g.size === f.size; });
+      if (dup) { rejected.push(f.name + ' (แนบไว้แล้ว)'); return; }
+      if (totalBytes(prefix) + f.size > MAX_TOTAL_MB * 1024 * 1024) {
+        rejected.push(f.name + ' (รวมแล้วเกิน ' + MAX_TOTAL_MB + ' MB)'); return;
+      }
+      picked[prefix].push(f);
+    });
+    renderFileList(prefix);
+    if (rejected.length) UI.toast('warning', 'มีไฟล์ที่แนบไม่ได้', rejected.join(', '));
+  }
+
+  function renderFileList(prefix) {
+    var box = $(prefix + '-filelist');
+    if (!box) return;
+    box.innerHTML = picked[prefix].map(function (f, i) {
+      return '<li class="flex items-center gap-2 text-xs bg-primary-light/40 border border-outline-custom rounded-md px-2.5 py-1.5">' +
+        '<span class="material-symbols-outlined text-[16px] text-primary flex-shrink-0">picture_as_pdf</span>' +
+        '<span class="flex-1 truncate text-text-main" title="' + esc(f.name) + '">' + esc(f.name) + '</span>' +
+        '<span class="text-text-muted flex-shrink-0">' + fmtSize(f.size) + '</span>' +
+        '<button type="button" data-rm="' + i + '" aria-label="เอาไฟล์ออก" ' +
+          'class="material-symbols-outlined text-[16px] text-text-muted hover:text-red-500 flex-shrink-0">close</button>' +
+      '</li>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-rm]'), function (b) {
+      b.addEventListener('click', function () {
+        picked[prefix].splice(Number(b.getAttribute('data-rm')), 1);
+        renderFileList(prefix);
+      });
+    });
+  }
+
+  function setupUpload(prefix) {
+    var zone  = $(prefix + '-dropzone');
+    var input = $(prefix + '-file');
+    if (!zone || !input) return;
+
+    zone.addEventListener('click', function () { input.click(); });
+    zone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+    });
+    /* กันคลิกที่ input วิ่งขึ้นไปหา zone แล้วเปิดหน้าต่างเลือกไฟล์ซ้อนสองรอบ */
+    input.addEventListener('click', function (e) { e.stopPropagation(); });
+    input.addEventListener('change', function () {
+      addFiles(prefix, input.files);
+      input.value = '';   /* ล้างค่า เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้ */
+    });
+
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) {
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.add('border-primary', 'bg-primary-light/50');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) {
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.remove('border-primary', 'bg-primary-light/50');
+      });
+    });
+    zone.addEventListener('drop', function (e) {
+      if (e.dataTransfer && e.dataTransfer.files) addFiles(prefix, e.dataTransfer.files);
+    });
+  }
+
+  /** อ่านไฟล์ที่แนบไว้ทั้งหมดเป็น base64 เพื่อส่งขึ้น Apps Script */
+  function readFiles(prefix) {
+    return Promise.all(picked[prefix].map(function (f) {
+      return new Promise(function (resolve, reject) {
+        var r = new FileReader();
+        r.onload  = function () {
+          resolve({
+            name: f.name,
+            mimeType: f.type || 'application/pdf',
+            data: String(r.result).split(',')[1]   /* ตัดหัว data:...;base64, ทิ้ง */
+          });
+        };
+        r.onerror = function () { reject(new Error('อ่านไฟล์ ' + f.name + ' ไม่สำเร็จ')); };
+        r.readAsDataURL(f);
+      });
+    }));
+  }
+
+  /* =========================================================
    *  ส่งรายงาน
    * ======================================================= */
   function bindSubmitButtons() {
     ['gc', 'occ'].forEach(function (p) {
+      setupUpload(p);
       var btn = $(p + '-submit');
       if (btn) btn.addEventListener('click', function () { submit(p); });
       var reset = $(p + '-reset');
@@ -429,16 +545,23 @@
     if (!st.cats.length) missing.push('หมวดที่แก้ไข');
     if (!st.items.length) missing.push('ข้อที่แก้ไข');
     if (!payload.detail) missing.push('รายละเอียดการปรับปรุงแก้ไข');
-    if (!payload.driveLink) missing.push('ลิงก์ Google Drive หลักฐาน');
+    if (!payload.driveLink && !picked[prefix].length) missing.push('ไฟล์หลักฐาน PDF หรือลิงก์ Google Drive');
 
     if (missing.length) {
       UI.toast('warning', 'กรอกข้อมูลไม่ครบ', 'กรุณากรอก: ' + missing.join(', '));
       return;
     }
 
-    UI.loading('กำลังบันทึกข้อมูลลง Google Sheet...');
+    var nFiles = picked[prefix].length;
+    UI.loading(nFiles
+      ? 'กำลังอัปโหลดไฟล์ ' + nFiles + ' ไฟล์ และบันทึกข้อมูล...'
+      : 'กำลังบันทึกข้อมูลลง Google Sheet...');
 
-    API.post(payload)
+    readFiles(prefix)
+      .then(function (files) {
+        payload.files = files;
+        return API.post(payload);
+      })
       .then(function (res) {
         UI.close();
         if (res.status !== 'success') {
@@ -449,6 +572,7 @@
           icon: 'success',
           title: 'ส่งรายงานเรียบร้อย',
           html: 'บันทึกลงชีต <b>' + esc(res.sheet || '') + '</b> แถวที่ ' + esc(res.row || '') +
+                (res.uploaded ? '<br>อัปโหลดไฟล์ขึ้น Google Drive แล้ว <b>' + esc(res.uploaded) + '</b> ไฟล์' : '') +
                 '<br>สถานะปัจจุบัน: <b>' + S.PENDING + '</b>',
           confirmButtonColor: '#0072CE'
         });
@@ -465,6 +589,8 @@
   function resetForm(prefix) {
     state[prefix].cats = [];
     state[prefix].items = [];
+    picked[prefix] = [];
+    renderFileList(prefix);
     ['-year', '-sender', '-phone', '-drive', '-detail'].forEach(function (suffix) {
       var el = $(prefix + suffix);
       if (el) el.value = '';
@@ -735,14 +861,7 @@
     return Object.keys(seen);
   }
 
-  function statusColors() {
-    var c = {};
-    c[S.PENDING]  = '#EAB308';
-    c[S.CHECKING] = '#0072CE';
-    c[S.REVISE]   = '#EF4444';
-    c[S.APPROVED] = '#16A34A';
-    return c;
-  }
+  function statusColors() { return Viz.STATUS_COLORS(); }
 
   function renderDashboard() {
     if (!$('hd-kpi') || !window.Stats) return;

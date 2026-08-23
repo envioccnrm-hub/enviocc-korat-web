@@ -273,12 +273,17 @@
 <div class="mb-6"><label class="block text-sm font-semibold mb-2 text-tertiary">รายละเอียดการปรับปรุงแก้ไข <span class="text-red-500">*</span></label><textarea id="gc-detail" rows="4" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" placeholder="อธิบายสั้น ๆ ว่าแก้ไขอะไรไปบ้าง เช่น จัดทำจุดคัดแยกขยะใหม่ 4 จุด พร้อมป้ายกำกับ และอบรมเจ้าหน้าที่เมื่อ 12 ส.ค. 2568"></textarea><p class="text-[11px] text-text-muted mt-1">ข้อความนี้จะถูกบันทึกลงคอลัมน์ “รายละเอียดการปรับปรุงแก้ไข” ในชีตติดตามงาน</p></div>
 <div class="mb-6">
 <label class="block text-sm font-semibold mb-2 text-tertiary">แนบไฟล์หลักฐาน (PDF) <span class="text-red-500">*</span></label>
+<p class="text-[11px] text-text-muted mb-3">อัปโหลดไฟล์ หรือ วางลิงก์ Google Drive อย่างน้อยหนึ่งอย่าง (จะทำทั้งสองอย่างก็ได้)</p>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 <!-- File Upload Option -->
-<div class="border-2 border-dashed border-outline-custom rounded-lg p-6 flex flex-col items-center justify-center bg-surface hover:bg-primary-light/30 transition-colors cursor-pointer group">
+<div>
+<div class="border-2 border-dashed border-outline-custom rounded-lg p-6 flex flex-col items-center justify-center bg-surface hover:bg-primary-light/30 transition-colors cursor-pointer group" id="gc-dropzone" role="button" tabindex="0" aria-label="เลือกไฟล์ PDF หลักฐาน">
+<input class="sr-only" id="gc-file" type="file" accept="application/pdf,.pdf" multiple>
 <span class="material-symbols-outlined text-3xl text-text-muted group-hover:text-primary mb-2">upload_file</span>
 <p class="text-sm text-text-main font-semibold mb-1">อัปโหลดไฟล์หลักฐาน (PDF)</p>
-<p class="text-[10px] text-text-muted">ลากและวางไฟล์ หรือคลิกเพื่อเลือก</p>
+<p class="text-[10px] text-text-muted">ลากและวางไฟล์ หรือคลิกเพื่อเลือก (PDF ไฟล์ละไม่เกิน 15 MB รวมไม่เกิน 25 MB)</p>
+</div>
+<ul class="mt-2 space-y-1" id="gc-filelist"></ul>
 </div>
 <!-- Google Drive Link Option -->
 <div class="border border-outline-custom rounded-lg p-6 flex flex-col justify-center bg-surface">
@@ -443,12 +448,17 @@
 <div class="mb-6"><label class="block text-sm font-semibold mb-2 text-tertiary">รายละเอียดการปรับปรุงแก้ไข <span class="text-red-500">*</span></label><textarea id="occ-detail" rows="4" class="w-full border border-outline-custom rounded-lg px-4 py-2.5 bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-text-main" placeholder="อธิบายสั้น ๆ ว่าแก้ไขอะไรไปบ้าง เช่น จัดทำจุดคัดแยกขยะใหม่ 4 จุด พร้อมป้ายกำกับ และอบรมเจ้าหน้าที่เมื่อ 12 ส.ค. 2568"></textarea><p class="text-[11px] text-text-muted mt-1">ข้อความนี้จะถูกบันทึกลงคอลัมน์ “รายละเอียดการปรับปรุงแก้ไข” ในชีตติดตามงาน</p></div>
 <div class="mb-6">
 <label class="block text-sm font-semibold mb-2 text-tertiary">แนบไฟล์หลักฐาน (PDF) <span class="text-red-500">*</span></label>
+<p class="text-[11px] text-text-muted mb-3">อัปโหลดไฟล์ หรือ วางลิงก์ Google Drive อย่างน้อยหนึ่งอย่าง (จะทำทั้งสองอย่างก็ได้)</p>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 <!-- File Upload Option -->
-<div class="border-2 border-dashed border-outline-custom rounded-lg p-6 flex flex-col items-center justify-center bg-surface hover:bg-primary-light/30 transition-colors cursor-pointer group">
+<div>
+<div class="border-2 border-dashed border-outline-custom rounded-lg p-6 flex flex-col items-center justify-center bg-surface hover:bg-primary-light/30 transition-colors cursor-pointer group" id="occ-dropzone" role="button" tabindex="0" aria-label="เลือกไฟล์ PDF หลักฐาน">
+<input class="sr-only" id="occ-file" type="file" accept="application/pdf,.pdf" multiple>
 <span class="material-symbols-outlined text-3xl text-text-muted group-hover:text-primary mb-2">upload_file</span>
 <p class="text-sm text-text-main font-semibold mb-1">อัปโหลดไฟล์หลักฐาน (PDF)</p>
-<p class="text-[10px] text-text-muted">ลากและวางไฟล์ หรือคลิกเพื่อเลือก</p>
+<p class="text-[10px] text-text-muted">ลากและวางไฟล์ หรือคลิกเพื่อเลือก (PDF ไฟล์ละไม่เกิน 15 MB รวมไม่เกิน 25 MB)</p>
+</div>
+<ul class="mt-2 space-y-1" id="occ-filelist"></ul>
 </div>
 <!-- Google Drive Link Option -->
 <div class="border border-outline-custom rounded-lg p-6 flex flex-col justify-center bg-surface">

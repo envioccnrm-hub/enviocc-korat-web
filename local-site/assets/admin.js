@@ -335,8 +335,10 @@
     $('dash-item-count').textContent = items.length
       ? 'ถูกส่งแก้ไขทั้งหมด ' + items.length + ' ข้อ'
       : '';
+    /* ชุดข้อมูลเดียว — ความยาวแท่งบอกจำนวนอยู่แล้ว จึงใช้สีเดียว
+       ถ้าไล่สีตามอันดับ ผู้อ่านจะเข้าใจผิดว่าแต่ละแท่งเป็นคนละประเภท */
     $('dash-item').innerHTML = Viz.vbars(items.slice(0, 10), {
-      rainbow: true, maxLen: 16, barWidth: 62,
+      color: Stats.PALETTE[0], maxLen: 16, barWidth: 62,
       emptyText: 'ยังไม่มีข้อที่ถูกส่งแก้ไข'
     });
 
@@ -352,25 +354,18 @@
     renderDistrictTable(rows);
 
     $('dash-hospital').innerHTML = Viz.hbars(Stats.freq(rows, 'hospital', 10), {
-      unit: 'ครั้ง', maxLen: 40, color: '#0072CE',
+      unit: 'ครั้ง', maxLen: 40, color: Stats.PALETTE[0],
       emptyText: 'ยังไม่มีหน่วยงานที่ส่งรายงาน'
     });
 
     var backlog = rows.filter(function (r) { return r.status !== S.APPROVED; });
     $('dash-backlog').innerHTML = Viz.hbars(Stats.freq(backlog, 'hospital', 10), {
-      unit: 'รายการ', maxLen: 40, color: '#F59E0B',
+      unit: 'รายการ', maxLen: 40, color: Stats.PALETTE[3],
       emptyText: 'ไม่มีรายการค้างตรวจ 🎉'
     });
   }
 
-  function statusColors() {
-    var c = {};
-    c[S.PENDING]  = '#EAB308';
-    c[S.CHECKING] = '#0072CE';
-    c[S.REVISE]   = '#EF4444';
-    c[S.APPROVED] = '#16A34A';
-    return c;
-  }
+  function statusColors() { return Viz.STATUS_COLORS(); }
 
   function scopeText() {
     var parts = [

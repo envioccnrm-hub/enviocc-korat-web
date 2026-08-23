@@ -16,6 +16,15 @@ const SHEET_FOLLOW_GREEN = "ติดตามงาน Green & Clean Hospital";
 const SHEET_FOLLOW_OCC   = "ติดตามงาน อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม";
 const SHEET_REGISTRY     = "ทะเบียนรายชื่อโรงพยาบาล";
 
+/* ---------- โฟลเดอร์ Drive สำหรับเก็บไฟล์หลักฐานที่อัปโหลดจากหน้าเว็บ ----------
+ * ถ้าอยากใช้โฟลเดอร์ที่มีอยู่แล้ว ให้ใส่ ID ของโฟลเดอร์นั้นลงใน UPLOAD_FOLDER_ID
+ * (ID คือข้อความยาว ๆ ท้าย URL: drive.google.com/drive/folders/<ID>)
+ * ถ้าเว้นว่างไว้ ระบบจะหา/สร้างโฟลเดอร์ชื่อ UPLOAD_FOLDER_NAME ให้เองอัตโนมัติ
+ * ไฟล์จะถูกแยกเก็บเป็นโฟลเดอร์ย่อยตามชื่อหน่วยงาน */
+const UPLOAD_FOLDER_ID   = "";
+const UPLOAD_FOLDER_NAME = "หลักฐานการแก้ไข (อัปโหลดจากเว็บ)";
+const MAX_UPLOAD_MB      = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
+
 /* ---------- สถานะงาน (ต้องตรงกับ assets/config.js) ---------- */
 const STATUS_PENDING  = "รอตรวจสอบ";
 const STATUS_CHECKING = "ดำเนินการตรวจสอบแล้ว";
@@ -271,10 +280,78 @@ function followSheetName_(workType) {
   return String(workType || '').indexOf('Green') !== -1 ? SHEET_FOLLOW_GREEN : SHEET_FOLLOW_OCC;
 }
 
+/* ============================================================
+ *  4.5) รับไฟล์หลักฐาน (base64) แล้วเก็บลง Google Drive
+ * ========================================================== */
+
+/** โฟลเดอร์หลักที่ใช้เก็บหลักฐาน — ใช้ตาม ID ที่ตั้งไว้ ถ้าไม่ได้ตั้งก็สร้างให้ */
+function uploadFolder_() {
+  if (UPLOAD_FOLDER_ID) return DriveApp.getFolderById(UPLOAD_FOLDER_ID);
+  var it = DriveApp.getFoldersByName(UPLOAD_FOLDER_NAME);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(UPLOAD_FOLDER_NAME);
+}
+
+/** โฟลเดอร์ย่อยรายหน่วยงาน เพื่อไม่ให้ไฟล์ทุกแห่งกองรวมกัน */
+function hospitalFolder_(parent, hospital) {
+  var name = String(hospital || '').trim() || 'ไม่ระบุหน่วยงาน';
+  name = name.replace(/[\/\\]/g, '-');
+  var it = parent.getFoldersByName(name);
+  return it.hasNext() ? it.next() : parent.createFolder(name);
+}
+
+/** ตัดอักขระที่ใช้ตั้งชื่อไฟล์ไม่ได้ออก และกันชื่อยาวเกิน */
+function safeName_(name) {
+  var n = String(name || 'หลักฐาน.pdf').replace(/[\/\\:*?"<>|]/g, '-').trim();
+  return n.length > 120 ? n.slice(0, 110) + '.pdf' : n;
+}
+
+/**
+ * เขียนไฟล์ที่ส่งมาเป็น base64 ลง Drive แล้วคืนลิงก์ของแต่ละไฟล์
+ * ถ้ามีไฟล์ใดบันทึกไม่สำเร็จจะ throw เพื่อให้ทั้งรายการไม่ถูกบันทึกลงชีต
+ * (ผู้ใช้จะได้กดส่งใหม่ ไม่เกิดแถวที่ไม่มีหลักฐานแนบ)
+ */
+function saveFiles_(files, payload) {
+  if (!files || !files.length) return [];
+
+  var folder = hospitalFolder_(uploadFolder_(), payload.hospital);
+  var stamp  = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd-HHmmss');
+  var limit  = MAX_UPLOAD_MB * 1024 * 1024;
+
+  return files.map(function (f, i) {
+    if (!f || !f.data) throw new Error('ไฟล์ลำดับที่ ' + (i + 1) + ' ไม่มีข้อมูล');
+
+    var bytes = Utilities.base64Decode(f.data);
+    if (bytes.length > limit) {
+      throw new Error('ไฟล์ ' + f.name + ' ใหญ่เกิน ' + MAX_UPLOAD_MB + ' MB');
+    }
+
+    var blob = Utilities.newBlob(bytes, f.mimeType || 'application/pdf',
+                                 stamp + '_' + (i + 1) + '_' + safeName_(f.name));
+    var file = folder.createFile(blob);
+
+    /* ให้ สสจ. เปิดดูได้จากลิงก์ในชีตโดยไม่ต้องขอสิทธิ์ทีละไฟล์ */
+    try {
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (shareErr) {
+      /* บางองค์กรปิดการแชร์แบบสาธารณะไว้ — ไฟล์ยังอยู่ครบ เพียงต้องขอสิทธิ์เอง */
+    }
+    return file.getUrl();
+  });
+}
+
 function submitReport(payload) {
   var name = followSheetName_(payload.workType);
   var d = readSheet_(name);
   if (!d.sheet) return { status: 'error', message: 'ไม่พบชีต ' + name };
+
+  /* อัปโหลดไฟล์ก่อนเขียนชีต — ถ้าอัปโหลดพลาดจะไม่มีแถวค้างที่ไม่มีหลักฐาน */
+  var uploadedLinks = saveFiles_(payload.files, payload);
+
+  var allLinks = uploadedLinks.slice();
+  if (payload.driveLink) allLinks.push(payload.driveLink);
+  if (!allLinks.length) {
+    return { status: 'error', message: 'ต้องแนบไฟล์หลักฐาน หรือใส่ลิงก์ Google Drive อย่างน้อยหนึ่งอย่าง' };
+  }
 
   var m = followMap_(d.headers);
   var row = new Array(d.headers.length).fill('');
@@ -290,7 +367,7 @@ function submitReport(payload) {
   put(m.category, (payload.categories || []).join('\n'));
   put(m.item,     (payload.items || []).join('\n'));
   put(m.detail,   payload.detail || '');
-  put(m.link,     payload.driveLink || '');
+  put(m.link,     allLinks.join('\n'));
   put(m.status,   STATUS_PENDING);
   put(m.comment,  '');
   put(m.level,    payload.level || '');
@@ -301,7 +378,9 @@ function submitReport(payload) {
     status: 'success',
     message: 'บันทึกข้อมูลเรียบร้อยแล้ว',
     sheet: name,
-    row: d.sheet.getLastRow()
+    row: d.sheet.getLastRow(),
+    uploaded: uploadedLinks.length,
+    links: allLinks
   };
 }
 
