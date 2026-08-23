@@ -1128,7 +1128,8 @@ function renderDynamicCategories() {
   const filteredData = rawList.filter(row => row.hospType.includes(userHospType));
   const uniqueCats = [...new Set(filteredData.map(row => row.category))];
   
-  const container = document.getElementById("gc-category-list");
+  const containerId = selectedStandard === "green_clean" ? "gc-category-list" : "occ-category-list";
+const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = "";
   
@@ -1168,7 +1169,9 @@ function renderDynamicCategories() {
 
 // 3. ฟังก์ชันสร้างป้าย Tag ค้างในกล่องข้อความเมื่อจิ้มเลือกหมวดหมู่
 function refreshCategoryTags() {
-  const tagBox = document.getElementById("gc-category-tags");
+const selectedStandard = document.getElementById("standardType")?.value || "green_clean";
+const tagBoxId = selectedStandard === "green_clean" ? "gc-category-tags" : "occ-category-tags";
+const tagBox = document.getElementById(tagBoxId);
   if (!tagBox) return;
   tagBox.innerHTML = "";
   
@@ -1192,7 +1195,9 @@ function refreshCategoryTags() {
 
 // 4. ฟังก์ชันวาดรายการ "ข้อย่อย" สัมพันธ์เชื่อมโยงกับหมวดหมู่ที่ถูกติ๊กเลือกด้านซ้าย
 function renderDynamicItems(filteredData) {
-  const container = document.getElementById("gc-item-list");
+  const selectedStandard = document.getElementById("standardType")?.value || "green_clean";
+const containerId = selectedStandard === "green_clean" ? "gc-item-list" : "occ-item-list";
+const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = "";
   
@@ -1232,7 +1237,9 @@ function renderDynamicItems(filteredData) {
 
 // 5. ฟังก์ชันสร้างป้าย Tag ค้างในกล่องข้อความเมื่อจิ้มเลือกข้อแก้ไขย่อย
 function refreshItemTags() {
-  const tagBox = document.getElementById("gc-item-tags");
+  const selectedStandard = document.getElementById("standardType")?.value || "green_clean";
+const tagBoxId = selectedStandard === "green_clean" ? "gc-item-tags" : "occ-item-tags";
+const tagBox = document.getElementById(tagBoxId);
   if (!tagBox) return;
   tagBox.innerHTML = "";
   
