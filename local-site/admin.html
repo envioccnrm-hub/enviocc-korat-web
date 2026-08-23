@@ -43,6 +43,7 @@
 <script src="./assets/config.js"></script>
 <script src="./assets/demo-data.js"></script>
 <script src="./assets/app.js"></script>
+<script src="./assets/stats.js"></script>
 </head>
 
 <body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
@@ -101,6 +102,16 @@
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-tertiary font-headline" id="page-title">ภาพรวมการติดตามทั้งหมด</h2>
         <p class="text-text-muted text-sm mt-1">ตรวจสอบและอนุมัติรายงานการปรับปรุงแก้ไขของโรงพยาบาล — ข้อมูลดึงสดจาก Google Sheet</p>
+      </div>
+
+      <!-- สลับระหว่างตารางรายการกับแดชบอร์ดวิเคราะห์ -->
+      <div class="inline-flex p-1 bg-background border border-outline-custom rounded-xl mb-6">
+        <button id="tab-table" class="pane-tab px-5 py-2 rounded-lg text-sm font-semibold bg-white text-primary shadow-sm flex items-center gap-1" data-pane="table">
+          <span class="material-symbols-outlined text-[18px]">table_rows</span> รายการส่งงาน
+        </button>
+        <button id="tab-dash" class="pane-tab px-5 py-2 rounded-lg text-sm font-semibold text-text-muted flex items-center gap-1" data-pane="dashboard">
+          <span class="material-symbols-outlined text-[18px]">insights</span> แดชบอร์ดวิเคราะห์
+        </button>
       </div>
 
       <!-- การ์ดสถิติ (คลิกเพื่อกรองตามสถานะ) -->
@@ -167,6 +178,7 @@
       </div>
 
       <!-- ตารางรายการ -->
+      <div id="pane-table">
       <div class="bg-white border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
         <div class="flex items-center justify-between px-6 py-4 border-b border-outline-custom">
           <h3 class="font-bold text-tertiary font-headline">รายการส่งงาน <span class="text-text-muted font-normal text-sm" id="row-count"></span></h3>
@@ -200,6 +212,102 @@
           </div>
         </div>
       </div>
+      </div><!-- /pane-table -->
+
+      <!-- ---------- แดชบอร์ดวิเคราะห์ (คำนวณสดจากข้อมูลในชีต) ---------- -->
+      <div id="pane-dashboard" class="hidden">
+
+        <p class="text-xs text-text-muted mb-4 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">calculate</span>
+          ทุกตัวเลขคำนวณสดจากรายการที่ผ่านตัวกรองด้านบน (ไม่รวมตัวกรองสถานะ) — <span id="dash-scope"></span>
+        </p>
+
+        <!-- KPI ภาพรวม -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dash-kpi"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- อันดับหมวด/องค์ประกอบ -->
+          <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-tertiary font-headline mb-1">อันดับหมวด/องค์ประกอบที่ถูกส่งแก้ไขมากที่สุด</h3>
+            <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ “หมวดที่ต้องการแก้ไข” ทุกแถวในชีต (1 แถวเลือกได้หลายหมวด นับให้ครบทุกหมวด)</p>
+            <div id="dash-cat"></div>
+          </div>
+
+          <!-- สัดส่วนระดับผลการประเมิน -->
+          <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-tertiary font-headline mb-1">สัดส่วนระดับผลการประเมินที่ขอรับรอง</h3>
+            <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ “ระดับผลการประเมิน” ของรายการที่ส่งเข้ามา</p>
+            <div id="dash-level"></div>
+            <h4 class="font-semibold text-tertiary text-sm mt-6 mb-3">สถานะการตรวจของ สสจ.</h4>
+            <div id="dash-status"></div>
+          </div>
+        </div>
+
+        <!-- สถิติรายข้อ -->
+        <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm mb-6">
+          <div class="flex flex-wrap items-end justify-between gap-2 mb-1">
+            <h3 class="font-bold text-tertiary font-headline">สถิติการส่งแก้ไขรายข้อ (10 ข้อแรก)</h3>
+            <span class="text-xs text-text-muted" id="dash-item-count"></span>
+          </div>
+          <p class="text-xs text-text-muted mb-5">ข้อที่โรงพยาบาลส่งแก้ไขบ่อยที่สุด = จุดที่ควรจัดอบรม/ทำแนวทางกลางให้ทั้งจังหวัด</p>
+          <div id="dash-item"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- แนวโน้มรายเดือน -->
+          <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-tertiary font-headline mb-1">แนวโน้มการส่งงาน 12 เดือนล่าสุด</h3>
+            <p class="text-xs text-text-muted mb-5">นับตามวันที่ส่งจริงในคอลัมน์ “วันที่ส่ง”</p>
+            <div id="dash-month"></div>
+          </div>
+
+          <!-- ตามประเภทโรงพยาบาล -->
+          <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-tertiary font-headline mb-1">สัดส่วนตามประเภทหน่วยงาน</h3>
+            <p class="text-xs text-text-muted mb-5">จำนวนรายการที่ส่งเข้ามาแยกตามประเภทโรงพยาบาล</p>
+            <div id="dash-type"></div>
+          </div>
+        </div>
+
+        <!-- รายอำเภอ -->
+        <div class="bg-white border border-outline-custom rounded-2xl overflow-hidden shadow-sm mb-6">
+          <div class="px-6 py-4 border-b border-outline-custom">
+            <h3 class="font-bold text-tertiary font-headline">สรุปรายอำเภอ</h3>
+            <p class="text-xs text-text-muted mt-1">อัตราการรับรอง = รายการที่ “รับรองผลเรียบร้อยแล้ว” ÷ รายการทั้งหมดของอำเภอนั้น</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[760px]">
+              <thead>
+                <tr class="bg-background border-b border-outline-custom text-text-muted text-xs font-bold uppercase tracking-wider">
+                  <th class="py-3 px-4">อำเภอ</th>
+                  <th class="py-3 px-4 text-right">หน่วยงานที่ส่ง</th>
+                  <th class="py-3 px-4 text-right">รายการทั้งหมด</th>
+                  <th class="py-3 px-4 text-right">รอตรวจสอบ</th>
+                  <th class="py-3 px-4 text-right">ต้องแก้ไข</th>
+                  <th class="py-3 px-4 text-right">รับรองแล้ว</th>
+                  <th class="py-3 px-4 w-48">อัตราการรับรอง</th>
+                </tr>
+              </thead>
+              <tbody id="dash-district" class="divide-y divide-outline-custom text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- รายโรงพยาบาล -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-tertiary font-headline mb-1">หน่วยงานที่ส่งรายงานมากที่สุด (10 อันดับ)</h3>
+            <p class="text-xs text-text-muted mb-5">จำนวนครั้งที่ส่งรายงานเข้ามาในระบบ</p>
+            <div id="dash-hospital"></div>
+          </div>
+          <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-tertiary font-headline mb-1">หน่วยงานที่ค้างการตรวจมากที่สุด</h3>
+            <p class="text-xs text-text-muted mb-5">รายการที่ยังไม่ “รับรองผลเรียบร้อยแล้ว” — ใช้เป็นคิวงานตรวจของ สสจ.</p>
+            <div id="dash-backlog"></div>
+          </div>
+        </div>
+
+      </div><!-- /pane-dashboard -->
     </section>
 
     <!-- ---------- หน้าจัดการผู้ใช้งาน ---------- -->

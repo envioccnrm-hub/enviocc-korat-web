@@ -8,6 +8,8 @@
   var user = null;
   var allRows = [];       // ข้อมูลดิบทั้งหมดจากชีต
   var view = 'all';       // all | green | occ | users
+  var pane = 'table';     // table | dashboard
+  var registryRows = [];  // ทะเบียนหน่วยงานทั้งจังหวัด (ใช้คำนวณความครอบคลุม)
   var page = 1;
   var PER_PAGE = 15;
 
@@ -27,13 +29,63 @@
     bindNav();
     bindFilters();
     bindStatCards();
+    bindPaneTabs();
     bindUsers();
 
     $('btn-logout').addEventListener('click', function (e) { e.preventDefault(); Auth.logout(); });
     $('btn-sync').addEventListener('click', function () { load(true); });
 
     load(false);
+    loadRegistry();
   });
+
+  /* =========================================================
+   *  สลับ "รายการส่งงาน" ↔ "แดชบอร์ดวิเคราะห์"
+   * ======================================================= */
+  function bindPaneTabs() {
+    Array.prototype.forEach.call(document.querySelectorAll('.pane-tab'), function (btn) {
+      btn.addEventListener('click', function () {
+        pane = btn.getAttribute('data-pane');
+        document.querySelectorAll('.pane-tab').forEach(function (b) {
+          var on = b === btn;
+          b.classList.toggle('bg-white', on);
+          b.classList.toggle('text-primary', on);
+          b.classList.toggle('shadow-sm', on);
+          b.classList.toggle('text-text-muted', !on);
+        });
+        $('pane-table').classList.toggle('hidden', pane !== 'table');
+        $('pane-dashboard').classList.toggle('hidden', pane !== 'dashboard');
+        render();
+      });
+    });
+  }
+
+  /* =========================================================
+   *  ทะเบียนหน่วยงานทั้งจังหวัด — ใช้เป็นตัวหารของ "ความครอบคลุม"
+   *  ถ้าไม่มีชีตทะเบียน จะถอยไปใช้รายชื่อในชีต Login แทน
+   * ======================================================= */
+  function loadRegistry() {
+    API.get('getRegistry', {})
+      .then(function (res) {
+        registryRows = (res && res.data) || [];
+        if (!registryRows.length) return loadRegistryFromUsers();
+        renderDashboard();
+      })
+      .catch(loadRegistryFromUsers);
+  }
+
+  function loadRegistryFromUsers() {
+    return API.getOrDemo('getUsers', {}, window.DEMO.users)
+      .then(function (res) {
+        registryRows = ((res && res.data) || [])
+          .filter(function (u) { return u.role !== 'admin'; })
+          .map(function (u) {
+            return { hospital: u.hospital, district: u.district, hospType: u.type };
+          });
+        renderDashboard();
+      })
+      .catch(function () { /* ไม่มีทะเบียนก็ยังใช้แดชบอร์ดได้ แค่ไม่มีตัวหาร */ });
+  }
 
   /* =========================================================
    *  เมนูซ้าย
@@ -150,9 +202,10 @@
     });
   }
 
-  function filtered() {
+  function filtered(opts) {
+    opts = opts || {};
     var d = $('f-district').value, t = $('f-hosptype').value,
-        y = $('f-year').value, st = $('f-status').value,
+        y = $('f-year').value, st = opts.ignoreStatus ? '' : $('f-status').value,
         q = $('f-search').value.trim().toLowerCase();
 
     return allRows.filter(function (r) {
@@ -194,6 +247,8 @@
 
     $('row-count').textContent = '(' + rows.length + ' รายการ)';
 
+    renderDashboard();
+
     var totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
     if (page > totalPages) page = totalPages;
     var start = (page - 1) * PER_PAGE;
@@ -234,6 +289,169 @@
         if (row) openReview(row);
       });
     });
+  }
+
+  /* =========================================================
+   *  แดชบอร์ดวิเคราะห์ — คำนวณสดจากแถวจริงในชีต
+   *  ขอบเขต = เมนูซ้าย (ทั้งหมด/Green/อาชีวฯ) + ตัวกรองอำเภอ/ประเภท/ปี/คำค้น
+   *  ไม่รวมตัวกรองสถานะ เพราะกราฟต้องเห็นทุกสถานะจึงจะคำนวณสัดส่วนได้
+   * ======================================================= */
+  function renderDashboard() {
+    if (!$('pane-dashboard')) return;
+
+    var rows = filtered({ ignoreStatus: true });
+    var st = Stats.status(rows);
+
+    $('dash-scope').textContent = scopeText() + ' • ' + rows.length + ' รายการ';
+
+    renderKPI(rows, st);
+
+    $('dash-cat').innerHTML = Viz.hbars(Stats.freqMulti(rows, 'categories', 5), {
+      unit: 'ครั้ง', maxLen: 58,
+      emptyText: 'ยังไม่มีรายการส่งแก้ไขในขอบเขตนี้'
+    });
+
+    $('dash-level').innerHTML = Viz.donut(Stats.freq(rows, 'level'), {
+      colors: Viz.LEVEL_COLORS, centerLabel: 'รายการ',
+      emptyText: 'ยังไม่มีการระบุระดับผลการประเมิน'
+    });
+
+    var stItems = [
+      { label: S.PENDING,  count: st.pending },
+      { label: S.CHECKING, count: st.checking },
+      { label: S.REVISE,   count: st.revise },
+      { label: S.APPROVED, count: st.approved }
+    ].map(function (x) {
+      x.pct = st.total ? x.count * 100 / st.total : 0;
+      return x;
+    });
+    $('dash-status').innerHTML = Viz.hbars(stItems, {
+      rank: false, unit: 'รายการ',
+      colors: statusColors(),
+      emptyText: 'ยังไม่มีรายการ'
+    });
+
+    var items = Stats.freqMulti(rows, 'items');
+    $('dash-item-count').textContent = items.length
+      ? 'ถูกส่งแก้ไขทั้งหมด ' + items.length + ' ข้อ'
+      : '';
+    $('dash-item').innerHTML = Viz.vbars(items.slice(0, 10), {
+      rainbow: true, maxLen: 16, barWidth: 62,
+      emptyText: 'ยังไม่มีข้อที่ถูกส่งแก้ไข'
+    });
+
+    $('dash-month').innerHTML = Viz.vbars(Stats.byMonth(rows, 12), {
+      unit: 'รายการ', maxLen: 10, barWidth: 38
+    });
+
+    $('dash-type').innerHTML = Viz.hbars(Stats.freq(rows, 'hospType'), {
+      unit: 'รายการ', maxLen: 40,
+      emptyText: 'ยังไม่มีข้อมูลประเภทหน่วยงาน'
+    });
+
+    renderDistrictTable(rows);
+
+    $('dash-hospital').innerHTML = Viz.hbars(Stats.freq(rows, 'hospital', 10), {
+      unit: 'ครั้ง', maxLen: 40, color: '#0072CE',
+      emptyText: 'ยังไม่มีหน่วยงานที่ส่งรายงาน'
+    });
+
+    var backlog = rows.filter(function (r) { return r.status !== S.APPROVED; });
+    $('dash-backlog').innerHTML = Viz.hbars(Stats.freq(backlog, 'hospital', 10), {
+      unit: 'รายการ', maxLen: 40, color: '#F59E0B',
+      emptyText: 'ไม่มีรายการค้างตรวจ 🎉'
+    });
+  }
+
+  function statusColors() {
+    var c = {};
+    c[S.PENDING]  = '#EAB308';
+    c[S.CHECKING] = '#0072CE';
+    c[S.REVISE]   = '#EF4444';
+    c[S.APPROVED] = '#16A34A';
+    return c;
+  }
+
+  function scopeText() {
+    var parts = [
+      view === 'green' ? 'งาน Green & Clean' :
+      view === 'occ'   ? 'งานอาชีวอนามัยฯ'   : 'ทุกประเภทงาน'
+    ];
+    var d = $('f-district').value, t = $('f-hosptype').value, y = $('f-year').value;
+    if (d) parts.push('อ.' + d);
+    if (t) parts.push(t);
+    if (y) parts.push('ปี ' + y);
+    return parts.join(' • ');
+  }
+
+  /** ตัวหารของความครอบคลุม: หน่วยงานในทะเบียนที่เข้าเงื่อนไขตัวกรองเดียวกัน */
+  function registryDenominator() {
+    var d = $('f-district').value, t = $('f-hosptype').value;
+    return registryRows.filter(function (r) {
+      if (d && String(r.district || '').trim() !== d) return false;
+      if (t && String(r.hospType || '').trim() !== t) return false;
+      return true;
+    }).length;
+  }
+
+  function renderKPI(rows, st) {
+    var submitted = Stats.uniqueCount(rows, 'hospital');
+    var denom = registryDenominator();
+    var coverage = denom ? submitted * 100 / denom : 0;
+
+    $('dash-kpi').innerHTML = [
+      Viz.kpi({
+        label: 'รายการส่งงานทั้งหมด', icon: 'inbox', color: '#0A2540',
+        value: st.total.toLocaleString('th-TH'),
+        sub: 'จาก ' + submitted + ' หน่วยงานที่ส่งเข้ามา'
+      }),
+      Viz.kpi({
+        label: 'อัตราการรับรองผล', icon: 'workspace_premium', color: '#16A34A',
+        value: st.approvedPct.toFixed(1) + '%',
+        sub: 'รับรองแล้ว ' + st.approved + ' จาก ' + st.total + ' รายการ',
+        bar: st.approvedPct, target: 100
+      }),
+      Viz.kpi({
+        label: 'ค้างดำเนินการ', icon: 'pending_actions', color: '#EAB308',
+        value: st.outstanding.toLocaleString('th-TH'),
+        sub: 'รอตรวจ ' + st.pending + ' • ตรวจแล้ว ' + st.checking + ' • ต้องแก้ไข ' + st.revise
+      }),
+      denom
+        ? Viz.kpi({
+            label: 'ความครอบคลุมของหน่วยงาน', icon: 'domain', color: '#0072CE',
+            value: coverage.toFixed(1) + '%',
+            sub: 'ส่งรายงานแล้ว ' + submitted + ' จาก ' + denom + ' แห่งในทะเบียน',
+            bar: coverage, target: 100
+          })
+        : Viz.kpi({
+            label: 'หน่วยงานที่ส่งรายงาน', icon: 'domain', color: '#0072CE',
+            value: submitted.toLocaleString('th-TH'),
+            sub: 'ยังไม่มีทะเบียนหน่วยงานให้เทียบเป็นเปอร์เซ็นต์'
+          })
+    ].join('');
+  }
+
+  function renderDistrictTable(rows) {
+    var body = $('dash-district');
+    var groups = Stats.group(rows, 'district');
+
+    if (!groups.length) {
+      body.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-text-muted">ยังไม่มีข้อมูลให้สรุป</td></tr>';
+      return;
+    }
+
+    body.innerHTML = groups.map(function (g) {
+      return '<tr class="hover:bg-primary-light/30">' +
+        '<td class="py-3 px-4 font-semibold">' + esc(g.label) + '</td>' +
+        '<td class="py-3 px-4 text-right">' + g.hospitalCount + '</td>' +
+        '<td class="py-3 px-4 text-right font-semibold">' + g.total + '</td>' +
+        '<td class="py-3 px-4 text-right text-yellow-status">' + g.pending + '</td>' +
+        '<td class="py-3 px-4 text-right text-red-500">' + g.revise + '</td>' +
+        '<td class="py-3 px-4 text-right text-green-600">' + g.approved + '</td>' +
+        '<td class="py-3 px-4">' + Viz.progress(g.approvedPct, { color: '#16A34A' }) +
+          '<div class="text-[11px] text-text-muted mt-1">' + g.approvedPct.toFixed(1) + '%</div></td>' +
+      '</tr>';
+    }).join('');
   }
 
   /* =========================================================

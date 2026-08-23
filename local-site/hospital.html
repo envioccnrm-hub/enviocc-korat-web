@@ -62,6 +62,7 @@
 <script src="./assets/config.js"></script>
 <script src="./assets/demo-data.js"></script>
 <script src="./assets/app.js"></script>
+<script src="./assets/stats.js"></script>
 </head>
 <body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
 <!-- Top Header -->
@@ -100,7 +101,13 @@
 <nav class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 border-r border-outline-custom z-40 overflow-y-auto bg-primary text-white self-stretch">
 <ul class="flex-1 space-y-2 mt-4" id="sidebar-tabs">
 <li class="">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link bg-white/20 font-bold border-l-4 border-secondary" data-target="tab-green-clean" href="#" onclick="switchTab(event, 'tab-green-clean')">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link bg-white/20 font-bold border-l-4 border-secondary" data-target="tab-dashboard" href="#" onclick="switchTab(event, 'tab-dashboard')">
+<span class="material-symbols-outlined">monitoring</span>
+                    ภาพรวมของฉัน
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link hover:bg-white/10" data-target="tab-green-clean" href="#" onclick="switchTab(event, 'tab-green-clean')">
 <span class="material-symbols-outlined">eco</span>
                     งาน Green &amp; Clean
                 </a>
@@ -127,8 +134,71 @@
 </nav>
 <!-- Main Content Area -->
 <div class="flex-1 flex flex-col overflow-y-auto bg-surface" id="main-content-area">
+<!-- Tab 0: ภาพรวมของฉัน (คำนวณสดจากข้อมูลของหน่วยงานนี้ในชีต) -->
+<main class="flex-1 p-8 lg:p-12 w-full tab-content" id="tab-dashboard">
+<div class="max-w-6xl mx-auto">
+
+<div class="mb-8">
+<h1 class="text-2xl md:text-3xl font-bold mb-2 font-headline text-tertiary">ภาพรวมการดำเนินงานของหน่วยงาน</h1>
+<p class="text-text-muted text-base font-body" id="hd-subtitle">กำลังคำนวณจากข้อมูลจริงในระบบ...</p>
+</div>
+
+<!-- KPI ของหน่วยงาน -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="hd-kpi"></div>
+
+<!-- ความคืบหน้าตามเกณฑ์ แยกตามงาน -->
+<section class="mb-8">
+<h2 class="text-lg font-bold text-tertiary mb-1 font-headline">ความคืบหน้ารายงานแก้ไข แยกตามงาน</h2>
+<p class="text-xs text-text-muted mb-4">ความครอบคลุม = จำนวนข้อที่ท่านส่งแก้ไขแล้ว ÷ จำนวนข้อทั้งหมดตามเกณฑ์ของประเภทหน่วยงานท่าน</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="hd-worktype"></div>
+</section>
+
+<!-- สิ่งที่ต้องทำต่อ -->
+<section class="mb-8" id="hd-todo-wrap">
+<h2 class="text-lg font-bold text-tertiary mb-1 font-headline">สิ่งที่ต้องดำเนินการต่อ</h2>
+<p class="text-xs text-text-muted mb-4">รายการที่ สสจ. ส่งกลับให้แก้ไข หรือยังอยู่ระหว่างรอตรวจ</p>
+<div id="hd-todo"></div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+<!-- หมวดที่ส่งแก้ไขบ่อยที่สุด -->
+<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+<h3 class="font-bold text-tertiary font-headline mb-1">หมวด/องค์ประกอบที่ท่านส่งแก้ไขมากที่สุด</h3>
+<p class="text-xs text-text-muted mb-5">นับจากรายงานทุกฉบับที่หน่วยงานท่านส่งเข้าระบบ</p>
+<div id="hd-cat"></div>
+</div>
+
+<!-- สถานะรายงานของท่าน -->
+<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+<h3 class="font-bold text-tertiary font-headline mb-1">สถานะรายงานของท่าน</h3>
+<p class="text-xs text-text-muted mb-5">สัดส่วนรายงานทั้งหมดที่ส่งเข้าระบบ แยกตามผลการตรวจของ สสจ.</p>
+<div id="hd-status"></div>
+<h4 class="font-semibold text-tertiary text-sm mt-6 mb-3">เทียบกับภาพรวมทั้งจังหวัด</h4>
+<div id="hd-compare" class="text-sm text-text-muted">กำลังดึงค่าเฉลี่ยจังหวัด...</div>
+</div>
+</div>
+
+<!-- ผลการรับรองล่าสุดจากทะเบียน สสจ. -->
+<section class="mb-8">
+<h2 class="text-lg font-bold text-tertiary mb-1 font-headline">ผลการรับรองล่าสุดตามทะเบียน สสจ.</h2>
+<p class="text-xs text-text-muted mb-4">ข้อมูลจากชีต “ทะเบียนรายชื่อโรงพยาบาล” — ใช้เป็นฐานปีที่ประเมินในแบบฟอร์ม</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="hd-registry">
+<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm text-sm text-text-muted">กำลังโหลดทะเบียน...</div>
+</div>
+</section>
+
+<!-- แนวโน้มการส่งงานของหน่วยงาน -->
+<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
+<h3 class="font-bold text-tertiary font-headline mb-1">แนวโน้มการส่งรายงาน 12 เดือนล่าสุด</h3>
+<p class="text-xs text-text-muted mb-5">นับตามวันที่ส่งจริงที่บันทึกไว้ในชีตติดตามงาน</p>
+<div id="hd-month"></div>
+</div>
+
+</div>
+</main>
+
 <!-- Tab 1: Green & Clean -->
-<main class="flex-1 p-8 lg:p-12 w-full tab-content" id="tab-green-clean">
+<main class="flex-1 p-8 lg:p-12 w-full tab-content hidden" id="tab-green-clean">
 <div class="max-w-6xl mx-auto">
 <div class="mb-8">
 <h1 class="text-2xl md:text-3xl font-bold mb-2 font-headline" style="color: rgb(21, 128, 61);">แบบฟอร์มส่งรายงานแก้ไข Green &amp; Clean</h1>
