@@ -1183,7 +1183,7 @@ function refreshCategoryTags() {
   
   // วาดป้าย Tag สี่เหลี่ยมพาสเทลสวยงามค้างไว้ในช่องสี่เหลี่ยมของหนู
   currentSelectedCats.forEach(cat => {
-    const displayLabel = cat.split(":")?.trim() || cat; // ตัดเอาคำสั้น เช่น "หมวด 1"
+    const displayLabel = cat.split(":")[0].trim(); // ตัดเอาคำสั้น เช่น "หมวด 1"
     const badge = document.createElement("span");
     badge.className = "inline-flex items-center gap-1.5 bg-[#eaf4ff] text-[#0059a4] border border-[#d1e5f4] text-xs font-semibold px-2 py-0.5 rounded-md";
     badge.innerHTML = `
@@ -1214,7 +1214,7 @@ function renderDynamicItems(filteredData) {
     label.className = "flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors";
     
     // ดึงเฉพาะรหัสข้อด้านหน้ามาแสดงตัวหนา และข้อความเกณฑ์ย่อยตามหลังอย่างสวยงาม
-    const itemCode = row.item.split(":")?.trim() || "";
+    const itemCode = row.item.split(":")[0].trim();
     const itemText = row.item.split(":").slice(1).join(":")?.trim() || "";
     label.innerHTML = `
       <input type="checkbox" value="${row.item}" class="item-sub-cb w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary" ${isChecked ? "checked" : ""}>
@@ -1246,7 +1246,7 @@ function refreshItemTags() {
   }
   
   currentSelectedItems.forEach(item => {
-    const displayLabel = item.split(":")?.trim() || item; // ตัดเอาเฉพาะคำสั้น เช่น "ข้อ 1.1"
+    const displayLabel = item.split(":")[0].trim(); // ตัดเอาเฉพาะคำสั้น เช่น "ข้อ 1.1"
     const badge = document.createElement("span");
     badge.className = "inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-semibold px-2 py-0.5 rounded-md";
     badge.innerHTML = `
