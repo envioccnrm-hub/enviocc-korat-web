@@ -381,6 +381,10 @@
           return;
         }
 
+        // ถ้า Apps Script ตัวเก่ายังไม่ส่ง อำเภอ/ประเภท กลับมา ให้หยิบจาก
+        // รายชื่อที่โหลดไว้ตอนเปิดหน้า (ชีตเดียวกัน) เพื่อให้หน้าถัดไปกรองเกณฑ์ได้
+        var rec = fullData.filter(function (r) { return r.hospital === hospital; })[0] || {};
+
         // สิทธิ์: ยึดค่าจากชีตเป็นหลัก + เผื่อกรณีชื่อหน่วยงานเป็น สสจ. (เหมือนของเดิม)
         var isAdmin = data.role === 'admin' ||
                       hospital.indexOf('สสจ') !== -1 ||
@@ -391,10 +395,10 @@
           hospitalCode: data.hospitalCode || '',
           username: username || data.contactName || data.hospital || hospital,
           contactName: data.contactName || '',
-          district: data.district || '',
-          hospitalType: data.hospitalType || '',
-          typeCode: data.typeCode || '',
-          typeLabel: data.typeLabel || data.hospitalType || '',
+          district: data.district || rec.district || '',
+          hospitalType: data.hospitalType || rec.type || '',
+          typeCode: data.typeCode || rec.typeCode || '',
+          typeLabel: data.typeLabel || data.hospitalType || rec.type || '',
           role: isAdmin ? 'admin' : 'user',
           loginAt: new Date().toISOString()
         });

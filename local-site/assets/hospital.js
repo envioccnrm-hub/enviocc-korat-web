@@ -48,13 +48,13 @@
     if (hospEl) {
       hospEl.textContent = user.hospital +
         (user.district ? ' • อ.' + user.district : '') +
-        (user.typeLabel ? ' • ' + user.typeLabel : '');
+        ' • ' + myTypeLabel();
     }
   }
 
   /** ใส่ประเภทหน่วยงานลงช่องที่ล็อกไว้ทั้ง 2 แท็บ */
   function applyHospitalType() {
-    var label = user.typeLabel || user.hospitalType || 'ไม่ระบุประเภท';
+    var label = myTypeLabel();
     ['gc', 'occ'].forEach(function (p) {
       var hidden = $(p + '-hospital-type');
       var text = $(p + '-hospital-type-label');
@@ -91,8 +91,35 @@
     return out;
   }
 
+  /**
+   * รหัสประเภทของหน่วยงานที่ล็อกอินอยู่
+   *
+   * ปกติอ่านจากคอลัมน์ "ประเภทหน่วยงาน" ในชีต Login
+   * แต่มี 13 แห่งที่คอลัมน์นั้นเป็น "อปท." หรือเว้นว่าง ทั้งที่ชื่อขึ้นต้นว่า
+   * "โรงพยาบาลส่งเสริมสุขภาพตำบล..." (คือ รพ.สต. ที่ถ่ายโอนไป อปท.)
+   * ถ้าเจอกรณีนี้จะเดาจากชื่อหน่วยงานแทน เพื่อให้ยังเลือกเกณฑ์ รพ.สต. ได้
+   */
   function myTypeCode() {
-    return user.typeCode || typeCodes(user.hospitalType)[0] || '';
+    var code = user.typeCode || typeCodes(user.hospitalType)[0] || '';
+    if (!code || code === 'LOC') {
+      var byName = typeCodes(user.hospital)[0];
+      if (byName) {
+        fallbackUsed = (code === 'LOC');
+        return byName;
+      }
+    }
+    return code;
+  }
+
+  var fallbackUsed = false;
+
+  /** ป้ายประเภทที่แสดงในฟอร์ม */
+  function myTypeLabel() {
+    var LABEL = { CEN: 'รพ.ศูนย์', GEN: 'รพ.ทั่วไป', COM: 'รพ.ชุมชน',
+                  SUB: 'รพ.สต.', OUT: 'รพ.นอก สป.สธ.', LOC: 'อปท.', PHO: 'สสจ.' };
+    var code = myTypeCode();
+    var base = LABEL[code] || user.typeLabel || user.hospitalType || 'ไม่ระบุประเภท';
+    return fallbackUsed ? base + ' (สังกัด อปท.)' : base;
   }
 
   function loadMasterData() {
@@ -104,6 +131,7 @@
     API.getOrDemo('getMasterData', {}, window.DEMO.masterData)
       .then(function (data) {
         masterData = { green: (data && data.green) || [], occ: (data && data.occ) || [] };
+        applyHospitalType();
         ['gc', 'occ'].forEach(function (p) { renderCategories(p); renderSummary(p); });
       })
       .catch(function (err) {
@@ -127,7 +155,7 @@
 
   /** ข้อความเมื่อไม่มีเกณฑ์สำหรับหน่วยงานนี้ */
   function noCriteriaHTML(prefix) {
-    var label = user.typeLabel || user.hospitalType || 'หน่วยงานของท่าน';
+    var label = myTypeLabel();
     var work = prefix === 'gc' ? 'Green & Clean' : 'อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม';
     return '<div class="p-4 text-xs text-text-muted leading-relaxed">' +
            '<p class="font-semibold text-text-main mb-1">ยังไม่มีเกณฑ์ ' + esc(work) + ' สำหรับ ' + esc(label) + '</p>' +
@@ -200,7 +228,7 @@
     div.innerHTML =
       '<span class="material-symbols-outlined text-yellow-status">info</span>' +
       '<div class="text-sm text-text-main">' +
-      '<p class="font-semibold">ยังไม่มีเกณฑ์ประเมินสำหรับ ' + esc(user.typeLabel || user.hospitalType || '-') + '</p>' +
+      '<p class="font-semibold">ยังไม่มีเกณฑ์ประเมินสำหรับ ' + esc(myTypeLabel()) + '</p>' +
       '<p class="text-xs text-text-muted mt-0.5">จึงยังส่งรายงานในหมวดนี้ไม่ได้ กรุณาติดต่อ สสจ.นครราชสีมา</p></div>';
     group.parentNode.insertBefore(div, group);
   }
@@ -317,7 +345,7 @@
     }
     el.textContent = [
       user.hospital,
-      user.typeLabel || user.hospitalType,
+      myTypeLabel(),
       st.cats.map(shortLabel).join(', '),
       '(' + st.items.length + ' ข้อ)'
     ].filter(Boolean).join(' — ');
