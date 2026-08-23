@@ -169,53 +169,36 @@
                 </h2>
 <div class="mb-6"><label class="block text-sm font-semibold mb-3 text-tertiary">ส่งประเมินในระดับ <span class="text-red-500">*</span></label><div class="flex flex-col md:flex-row gap-4"><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="standard"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับมาตรฐาน</span><span class="text-xs text-text-muted">(Standard)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="excellent"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับดีเยี่ยม</span><span class="text-xs text-text-muted">(Excellent)</span></div></label><label class="flex-1 flex items-center gap-3 p-4 border border-outline-custom rounded-lg cursor-pointer hover:bg-primary-light/30 transition-colors bg-surface"><input class="w-4 h-4 text-primary border-outline-custom focus:ring-primary" name="assessment_level_gc" type="radio" value="challenge"><div class="flex flex-col"><span class="text-sm font-semibold text-text-main">ระดับท้าทาย</span><span class="text-xs text-text-muted">(Challenge)</span></div></label></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 <div class="relative group" id="gc-category-group">
-<label class="block text-sm font-semibold mb-2 text-tertiary">หมวดที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
-<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-<div class="flex flex-wrap gap-2 items-center w-full" id="gc-category-tags"></div>
-<span class="material-symbols-outlined text-text-muted">expand_more</span>
-</div>
-<!-- Dropdown Menu -->
-<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
-<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="gc-category-list"><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat1" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 1 CLEAN : การสร้างกระบวนการพัฒนา</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat2" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 2 G : Garbage : การจัดการมูลฝอยทุกประเภท</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat3" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 3 R : Restroom : การพัฒนาห้องส้วมมาตรฐานและการจัดการสิ่งปฏิกูล</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat4" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 4 E : Energy : การจัดการพลังงานและทรัพยากร</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat5" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 5 E : Environment : การจัดการสิ่งแวดล้อมภายในโรงพยาบาล</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat6" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 6 N : Nutrition : การจัดการสุขาภิบาลอาหาร น้ำอุปโภคบริโภค และการดำเนินงานอาหารปลอดภัยในโรงพยาบาล</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat7" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 7 Innovation : การพัฒนานวัตกรรมและงานวิจัยด้าน GREEN</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat8" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">หมวด 8 Network : การสร้างเครือข่ายการพัฒนาด้าน GREEN</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="cat9" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">การพัฒนาสู่ความเป็นเลิศเฉพาะด้าน (ระดับท้าทาย) 3 ด้าน</span>
-            </label></div>
-</div>
+  <label class="block text-sm font-semibold mb-2 text-text-secondary">หมวดที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
+  <div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:ring-primary-light">
+    <!-- ป้าย Tags หมวดหมู่ที่ติ๊กเลือกแล้ว จะมาแสดงค้างในกล่องสี่เหลี่ยมตรงนี้อัตโนมัติ -->
+    <div class="flex flex-wrap gap-2 items-center w-full" id="gc-category-tags">
+      <span class="text-xs text-text-muted">เลือกหมวดที่ต้องการแก้ไข...</span>
+    </div>
+    <span class="material-symbols-outlined text-text-muted">expand_more</span>
+  </div>
+  <!-- Dropdown Menu แสดงรายการหมวดหมู่ดึงสดจากชีต -->
+  <div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+    <div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="gc-category-list">
+      <span class="text-xs text-text-muted p-2" id="gc-category-loading">กำลังดึงเกณฑ์ประเมินจากคลาวด์...</span>
+    </div>
+  </div>
 </div>
 <div class="relative group" id="gc-item-group">
-<label class="block text-sm font-semibold mb-2 text-tertiary">ข้อที่ต้องการแก้ไข <span class="text-red-500">*</span></label>
-<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-<div class="flex flex-wrap gap-2 items-center w-full" id="gc-item-tags"></div>
-<span class="material-symbols-outlined text-text-muted">expand_more</span>
-</div>
-<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
-<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="gc-item-list"><div class="p-2 text-xs text-text-muted">กรุณาเลือกหมวดก่อน</div></div>
-</div>
-</div>
+  <label class="block text-sm font-semibold mb-2 text-text-secondary">ข้อที่ต้องการแก้ไข <span class="text-red-500">*</span></label>
+  <div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:ring-primary-light">
+    <!-- ป้าย Tags ข้อย่อยที่เลือกแล้ว จะมาแสดงค้างค้างในกล่องสี่เหลี่ยมตรงนี้อัตโนมัติ -->
+    <div class="flex flex-wrap gap-2 items-center w-full" id="gc-item-tags">
+      <span class="text-xs text-text-muted">กรุณาเลือกหมวดหมู่ก่อน...</span>
+    </div>
+    <span class="material-symbols-outlined text-text-muted">expand_more</span>
+  </div>
+  <!-- Dropdown Menu แสดงข้อย่อยที่เชื่อมโยงสัมพันธ์กับหมวดที่เลือกด้านซ้าย -->
+  <div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+    <div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="gc-item-list">
+      <div class="p-2 text-xs text-text-muted" id="gc-item-placeholder">กรุณาเลือกหมวดประเมินก่อน</div>
+    </div>
+  </div>
 </div>
 <div class="mb-6">
 <label class="block text-sm font-semibold mb-2 text-tertiary">แนบไฟล์หลักฐาน (PDF) <span class="text-red-500">*</span></label>
