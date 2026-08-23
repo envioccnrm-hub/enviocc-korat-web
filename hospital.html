@@ -417,40 +417,36 @@
 </div>
 </div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 <div class="relative group" id="occ-category-group">
-<label class="block text-sm font-semibold mb-2 text-tertiary">องค์ประกอบที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
-<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-<div class="flex flex-wrap gap-2 items-center w-full" id="occ-category-tags"></div>
-<span class="material-symbols-outlined text-text-muted">expand_more</span>
-</div>
-<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
-<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="occ-category-list"><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="occ_cat1" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">องค์ประกอบที่ 1 : ด้านนโยบาย โครงสร้าง และการจัดการ</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="occ_cat2" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">องค์ประกอบที่ 2 : ด้านการจัดบริการอาชีวอนามัย</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="occ_cat3" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">องค์ประกอบที่ 3 : ด้านการจัดบริการเวชกรรมสิ่งแวดล้อม</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="occ_cat4" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">องค์ประกอบที่ 4 : ด้านการอาชีวอนามัยและเวชกรรมสิ่งแวดล้อมในชุมชน</span>
-            </label><label class="flex items-center gap-3 px-3 py-2 hover:bg-primary-light/50 rounded-md cursor-pointer transition-colors">
-                <input type="checkbox" value="occ_cat5" class="w-4 h-4 rounded text-primary border-outline-custom focus:ring-primary">
-                <span class="text-sm text-text-main">องค์ประกอบที่ 5 : ด้านห้องปฏิบัติการอาชีวเวชศาสตร์และเวชศาสตร์สิ่งแวดล้อม</span>
-            </label></div>
-</div>
+  <label class="block text-sm font-semibold mb-2 text-text-tertiary">องค์ประกอบที่ต้องการส่งแก้ไข <span class="text-red-500">*</span></label>
+  <div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:ring-primary-light">
+    <!-- ป้าย Tags องค์ประกอบที่ถูกติ๊กเลือกแล้ว จะมาแสดงค้างในกล่องสี่เหลี่ยมตรงนี้อัตโนมัติ -->
+    <div class="flex flex-wrap gap-2 items-center w-full" id="occ-category-tags">
+      <span class="text-xs text-text-muted">เลือกองค์ประกอบที่ต้องการแก้ไข...</span>
+    </div>
+    <span class="material-symbols-outlined text-text-muted">expand_more</span>
+  </div>
+  <!-- Dropdown Menu แสดงรายการองค์ประกอบดึงสดจากสเปรดชีตชีต -->
+  <div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+    <div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="occ-category-list">
+      <span class="text-xs text-text-muted p-2" id="occ-category-loading">กำลังดึงเกณฑ์องค์ประกอบจาก Google Sheets...</span>
+    </div>
+  </div>
 </div>
 <div class="relative group" id="occ-item-group">
-<label class="block text-sm font-semibold mb-2 text-tertiary">ข้อที่ต้องการแก้ไข <span class="text-red-500">*</span></label>
-<div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-<div class="flex flex-wrap gap-2 items-center w-full" id="occ-item-tags"></div>
-<span class="material-symbols-outlined text-text-muted">expand_more</span>
-</div>
-<div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
-<div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="occ-item-list"><div class="p-2 text-xs text-text-muted">กรุณาเลือกองค์ประกอบก่อน</div></div>
-</div>
-</div>
+  <label class="block text-sm font-semibold mb-2 text-text-secondary">ข้อที่ต้องการแก้ไข <span class="text-red-500">*</span></label>
+  <div class="w-full border border-outline-custom rounded-lg px-3 py-2 bg-surface min-h-[46px] flex items-center justify-between cursor-pointer focus-within:ring-primary-light">
+    <!-- ป้าย Tags ข้อย่อยฝั่งอาชีวะที่เลือกแล้ว จะมาแสดงค้างในกล่องสี่เหลี่ยมตรงนี้อัตโนมัติ -->
+    <div class="flex flex-wrap gap-2 items-center w-full" id="occ-item-tags">
+      <span class="text-xs text-text-muted">กรุณาเลือกองค์ประกอบก่อน...</span>
+    </div>
+    <span class="material-symbols-outlined text-text-muted">expand_more</span>
+  </div>
+  <!-- Dropdown Menu แสดงข้อย่อยที่เชื่อมโยงสัมพันธ์กับองค์ประกอบที่เลือกด้านซ้าย -->
+  <div class="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-custom rounded-lg shadow-lg z-20 hidden group-hover:block overflow-hidden">
+    <div class="max-h-60 overflow-y-auto p-2 flex flex-col gap-1" id="occ-item-list">
+      <div class="p-2 text-xs text-text-muted" id="occ-item-placeholder">กรุณาเลือกองค์ประกอบประเมินก่อน</div>
+    </div>
+  </div>
 </div>
 <div class="mb-6">
 <label class="block text-sm font-semibold mb-2 text-tertiary">แนบไฟล์หลักฐาน (PDF) <span class="text-red-500">*</span></label>
