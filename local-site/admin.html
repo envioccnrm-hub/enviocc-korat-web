@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ระบบติดตามมาตรฐานโรงพยาบาล - ผู้ดูแลระบบ (สสจ.)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#0072CE",
+          "primary-hover": "#00569E",
+          "primary-light": "#E6F2FF",
+          "secondary": "#76BC21",
+          "tertiary": "#0A2540",
+          "background": "#f1f8e9",
+          "surface": "#FFFFFF",
+          "outline-custom": "#E2E8F0",
+          "text-main": "#0F172A",
+          "text-muted": "#64748B",
+          "yellow-status": "#EAB308"
+        },
+        fontFamily: {
+          "headline": ["Montserrat", "Sarabun", "sans-serif"],
+          "body": ["Sarabun", "sans-serif"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: Sarabun, sans-serif; }
+  .stat-card { transition: transform .15s, box-shadow .15s; }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+  .stat-card.active { outline: 2px solid #0072CE; outline-offset: 2px; }
+</style>
+<script src="./assets/config.js"></script>
+<script src="./assets/demo-data.js"></script>
+<script src="./assets/app.js"></script>
+</head>
+
+<body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
+
+<!-- ===== Header ===== -->
+<header class="flex justify-between items-center h-20 px-6 shadow-md w-full flex-shrink-0 z-50 sticky top-0" style="background-color:#f1f8e9">
+  <div class="flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+      <span class="material-symbols-outlined text-primary text-3xl">local_hospital</span>
+    </div>
+    <div>
+      <h1 class="text-base md:text-lg font-headline font-bold text-primary leading-tight">ระบบติดตามการปรับปรุงแก้ไขหลังการประเมินมาตรฐานโรงพยาบาล</h1>
+      <p class="text-text-muted text-sm mt-0.5">สำนักงานสาธารณสุขจังหวัดนครราชสีมา • หน้าผู้ดูแลระบบ</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <button id="btn-sync" class="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm">
+      <span class="material-symbols-outlined text-[18px]">sync</span> ซิงค์ข้อมูลเดี๋ยวนี้
+    </button>
+    <div class="flex flex-col items-end px-2">
+      <p class="text-sm font-semibold text-text-main leading-tight" id="user-display-name">-</p>
+      <p class="text-[12px] text-primary" id="user-display-hosp">-</p>
+    </div>
+    <div class="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center border border-outline-custom">
+      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+    </div>
+  </div>
+</header>
+
+<div class="flex flex-1 h-[calc(100vh-80px)]">
+
+  <!-- ===== Sidebar ===== -->
+  <nav class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 z-40 overflow-y-auto bg-primary text-white">
+    <p class="text-[11px] uppercase tracking-wider text-white/60 px-4 mb-2 mt-2">เมนูหลัก</p>
+    <ul class="flex-1 space-y-2">
+      <li><a href="#" data-view="all" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white bg-white/20 font-bold border-l-4 border-secondary">
+        <span class="material-symbols-outlined">dashboard</span> ภาพรวมทั้งหมด</a></li>
+      <li><a href="#" data-view="green" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white hover:bg-white/10">
+        <span class="material-symbols-outlined">eco</span> งาน Green &amp; Clean</a></li>
+      <li><a href="#" data-view="occ" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white hover:bg-white/10">
+        <span class="material-symbols-outlined">health_and_safety</span> งานอาชีวอนามัยฯ</a></li>
+      <li><a href="#" data-view="users" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white hover:bg-white/10">
+        <span class="material-symbols-outlined">manage_accounts</span> จัดการผู้ใช้งาน</a></li>
+    </ul>
+    <div class="mt-auto pt-4 border-t border-white/20">
+      <a href="#" id="btn-logout" class="flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-lg transition-colors text-white cursor-pointer">
+        <span class="material-symbols-outlined">logout</span> ออกจากระบบ</a>
+    </div>
+  </nav>
+
+  <!-- ===== Main ===== -->
+  <main class="flex-1 overflow-y-auto bg-surface p-6 lg:p-10">
+
+    <!-- ---------- หน้ารายการส่งงาน ---------- -->
+    <section id="view-submissions">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-tertiary font-headline" id="page-title">ภาพรวมการติดตามทั้งหมด</h2>
+        <p class="text-text-muted text-sm mt-1">ตรวจสอบและอนุมัติรายงานการปรับปรุงแก้ไขของโรงพยาบาล — ข้อมูลดึงสดจาก Google Sheet</p>
+      </div>
+
+      <!-- การ์ดสถิติ (คลิกเพื่อกรองตามสถานะ) -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8" id="stat-cards">
+        <div class="stat-card active cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="">
+          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px]">inbox</span> รายการส่งงานทั้งหมด</div>
+          <p class="text-3xl font-bold text-tertiary mt-2" id="stat-total">-</p>
+        </div>
+        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="รอตรวจสอบ">
+          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px] text-yellow-status">hourglass_empty</span> รอตรวจสอบ</div>
+          <p class="text-3xl font-bold text-yellow-status mt-2" id="stat-pending">-</p>
+        </div>
+        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="ดำเนินการตรวจสอบแล้ว">
+          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px] text-blue-600">fact_check</span> ตรวจสอบแล้ว</div>
+          <p class="text-3xl font-bold text-blue-600 mt-2" id="stat-checking">-</p>
+        </div>
+        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="ต้องแก้ไขเพิ่มเติม">
+          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px] text-red-500">warning</span> ต้องแก้ไขเพิ่มเติม</div>
+          <p class="text-3xl font-bold text-red-500 mt-2" id="stat-revise">-</p>
+        </div>
+        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="รับรองผลเรียบร้อยแล้ว">
+          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px] text-green-600">workspace_premium</span> รับรองผลแล้ว</div>
+          <p class="text-3xl font-bold text-green-600 mt-2" id="stat-approved">-</p>
+        </div>
+      </div>
+
+      <!-- แถบตัวกรอง -->
+      <div class="bg-white border border-outline-custom rounded-2xl p-5 shadow-sm mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-text-muted mb-1">อำเภอ</label>
+            <select id="f-district" class="w-full border border-outline-custom rounded-lg px-3 py-2 text-sm"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-muted mb-1">ประเภทโรงพยาบาล</label>
+            <select id="f-hosptype" class="w-full border border-outline-custom rounded-lg px-3 py-2 text-sm"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-muted mb-1">ปีที่ประเมิน</label>
+            <select id="f-year" class="w-full border border-outline-custom rounded-lg px-3 py-2 text-sm"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-muted mb-1">สถานะ</label>
+            <select id="f-status" class="w-full border border-outline-custom rounded-lg px-3 py-2 text-sm">
+              <option value="">ทั้งหมด</option>
+              <option>รอตรวจสอบ</option>
+              <option>ดำเนินการตรวจสอบแล้ว</option>
+              <option>ต้องแก้ไขเพิ่มเติม</option>
+              <option>รับรองผลเรียบร้อยแล้ว</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-muted mb-1">ค้นหา (ชื่อ รพ. / หมวด / ข้อ)</label>
+            <input id="f-search" type="text" placeholder="พิมพ์คำค้น..." class="w-full border border-outline-custom rounded-lg px-3 py-2 text-sm">
+          </div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2 mt-4">
+          <button id="btn-clear" class="px-4 py-2 border border-outline-custom text-text-muted rounded-lg text-sm font-semibold hover:bg-gray-50">ล้างตัวกรอง</button>
+          <button id="btn-export" class="px-4 py-2 border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary-light flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">download</span> ส่งออก CSV</button>
+          <button id="btn-search" class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-hover flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">search</span> ค้นหา</button>
+        </div>
+      </div>
+
+      <!-- ตารางรายการ -->
+      <div class="bg-white border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-outline-custom">
+          <h3 class="font-bold text-tertiary font-headline">รายการส่งงาน <span class="text-text-muted font-normal text-sm" id="row-count"></span></h3>
+          <span class="text-xs text-text-muted" id="last-sync"></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[1000px]">
+            <thead>
+              <tr class="bg-background border-b border-outline-custom text-text-muted text-xs font-bold uppercase tracking-wider">
+                <th class="py-3 px-4">ลำดับ</th>
+                <th class="py-3 px-4">วันที่ส่ง</th>
+                <th class="py-3 px-4">อำเภอ</th>
+                <th class="py-3 px-4">ชื่อโรงพยาบาล</th>
+                <th class="py-3 px-4">ประเภทงาน</th>
+                <th class="py-3 px-4">หมวด / ข้อที่แก้ไข</th>
+                <th class="py-3 px-4">ระดับที่ขอ</th>
+                <th class="py-3 px-4">สถานะปัจจุบัน</th>
+                <th class="py-3 px-4 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-outline-custom text-sm">
+              <tr><td colspan="9" class="py-10 text-center text-text-muted">กำลังโหลดข้อมูลจาก Google Sheet...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-6 py-4 border-t border-outline-custom text-sm text-text-muted">
+          <span id="page-info">-</span>
+          <div class="flex gap-2">
+            <button id="btn-prev" class="px-3 py-1.5 border border-outline-custom rounded-lg hover:bg-gray-50">ก่อนหน้า</button>
+            <button id="btn-next" class="px-3 py-1.5 border border-outline-custom rounded-lg hover:bg-gray-50">ถัดไป</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- หน้าจัดการผู้ใช้งาน ---------- -->
+    <section id="view-users" class="hidden">
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-tertiary font-headline">จัดการผู้ใช้งาน</h2>
+          <p class="text-text-muted text-sm mt-1">ข้อมูลจากชีต "Login รายชื่อผู้ใช้งาน" — เพิ่ม/แก้ไข/ลบ แล้วบันทึกกลับเข้าชีตทันที</p>
+        </div>
+        <button id="btn-add-user" class="px-5 py-2.5 bg-secondary text-white rounded-lg text-sm font-semibold hover:opacity-90 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">person_add</span> เพิ่มผู้ใช้งาน</button>
+      </div>
+      <div class="bg-white border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr class="bg-background border-b border-outline-custom text-text-muted text-xs font-bold uppercase tracking-wider">
+                <th class="py-3 px-4">อำเภอ</th>
+                <th class="py-3 px-4">ประเภท</th>
+                <th class="py-3 px-4">ชื่อโรงพยาบาล / หน่วยงาน</th>
+                <th class="py-3 px-4">สิทธิ์</th>
+                <th class="py-3 px-4 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="users-body" class="divide-y divide-outline-custom text-sm">
+              <tr><td colspan="5" class="py-10 text-center text-text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="./assets/admin.js"></script>
+</body>
+</html>

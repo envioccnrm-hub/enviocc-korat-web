@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ตรวจสอบการเชื่อมต่อ Google Sheet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet">
+<style>
+  body { font-family: Sarabun, sans-serif; }
+  pre { white-space: pre-wrap; word-break: break-all; }
+</style>
+<script src="./assets/config.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 p-6 md:p-10">
+<div class="max-w-4xl mx-auto">
+
+  <h1 class="text-2xl font-bold text-slate-900 mb-1">ตรวจสอบการเชื่อมต่อ Google Sheet</h1>
+  <p class="text-slate-500 text-sm mb-6">กดปุ่มทีละข้อจากบนลงล่าง ถ้าขึ้น ✅ ครบทุกข้อ แปลว่าเว็บพร้อมใช้งานจริง</p>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">URL ของ Apps Script (อ่านจาก assets/config.js)</label>
+    <input id="api-url" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono" value="">
+    <p class="text-xs text-slate-500 mt-2">แก้ในช่องนี้เพื่อทดสอบชั่วคราวได้ แต่ของจริงต้องไปแก้ที่ <code class="bg-slate-100 px-1 rounded">assets/config.js</code></p>
+  </div>
+
+  <div id="tests" class="space-y-3"></div>
+
+  <div class="mt-8 bg-amber-50 border border-amber-300 rounded-xl p-5">
+    <h2 class="font-bold text-amber-900 flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined">edit_note</span> ทดสอบ "บันทึกลงชีตจริง"
+    </h2>
+    <p class="text-sm text-amber-900/80 mb-3">
+      ปุ่มนี้จะเขียนข้อมูลทดสอบ 1 แถวลงชีต
+      <strong>ติดตามงาน Green &amp; Clean Hospital</strong> จริง ๆ (ชื่อผู้ส่งจะเป็น "ทดสอบระบบ — ลบได้")
+      ใช้เพื่อยืนยันว่าปุ่มบันทึกในหน้าโรงพยาบาลทำงาน แล้วค่อยลบแถวนั้นทิ้งได้เลย
+    </p>
+    <button id="btn-write" class="px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700">
+      เขียนแถวทดสอบลงชีต
+    </button>
+    <pre id="write-result" class="mt-3 text-xs bg-white border border-amber-200 rounded-lg p-3 hidden"></pre>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var urlInput = document.getElementById('api-url');
+  urlInput.value = window.APP_CONFIG.API_URL;
+
+  var TESTS = [
+    { id: 'ping', action: 'ping', title: '1. เชื่อมต่อ API ได้ไหม',
+      hint: 'ถ้าไม่ผ่าน = URL ผิด หรือยังไม่ได้ Deploy / ตั้ง Who has access เป็น Anyone',
+      check: function (d) { return d && d.status === 'success'; },
+      note: function (d) { return 'ตอบกลับ: ' + (d.message || '-'); } },
+
+    { id: 'dropdowns', action: 'getDropdowns', title: '2. ดึงรายชื่อ อำเภอ / โรงพยาบาล (หน้า Login)',
+      hint: 'อ่านจากชีต "Login รายชื่อผู้ใช้งาน"',
+      check: function (d) { return d && d.districts && d.districts.length; },
+      note: function (d) { return 'พบ ' + d.districts.length + ' อำเภอ, ' + d.hospitals.length + ' หน่วยงาน'; } },
+
+    { id: 'master', action: 'getMasterData', title: '3. ดึงเกณฑ์ประเมิน หมวด/ข้อ (หน้าโรงพยาบาล)',
+      hint: 'อ่านจากชีต Master_Data_Green และ Master_Data_Occ',
+      check: function (d) { return d && (d.green || d.occ); },
+      note: function (d) { return 'Green ' + (d.green || []).length + ' ข้อ, อาชีวฯ ' + (d.occ || []).length + ' ข้อ'; } },
+
+    { id: 'subs', action: 'getSubmissions', title: '4. ดึงรายการส่งงาน (หน้า Admin) ← ต้องใช้ Code.gs ตัวใหม่',
+      hint: 'ถ้าไม่ผ่าน = ยังไม่ได้เอา Code.gs ตัวใหม่ไปวางแล้ว Deploy ใหม่',
+      check: function (d) { return d && d.status === 'success' && d.data; },
+      note: function (d) { return 'พบ ' + d.data.length + ' รายการในชีตติดตามงาน'; } },
+
+    { id: 'users', action: 'getUsers', title: '5. ดึงรายชื่อผู้ใช้งาน (หน้าจัดการผู้ใช้) ← ต้องใช้ Code.gs ตัวใหม่',
+      hint: 'ถ้าไม่ผ่าน = ยังไม่ได้ Deploy Code.gs ตัวใหม่',
+      check: function (d) { return d && d.status === 'success' && d.data; },
+      note: function (d) { return 'พบ ' + d.data.length + ' ผู้ใช้งาน'; } },
+
+    { id: 'registry', action: 'getRegistry', title: '6. ดึงทะเบียนผลการรับรองรายโรงพยาบาล ← Code.gs ตัวใหม่',
+      hint: 'อ่านจากชีต "ทะเบียนรายชื่อโรงพยาบาล" ใช้เติมปีที่ประเมินให้อัตโนมัติ',
+      check: function (d) { return d && d.status === 'success' && d.data; },
+      note: function (d) { return 'พบ ' + d.data.length + ' โรงพยาบาลในทะเบียน'; } },
+
+    { id: 'docs', action: 'getDocuments', title: '7. ดึงคลังคู่มือ/เอกสาร ← Code.gs ตัวใหม่',
+      hint: 'หาแท็บที่มีคอลัมน์ FileUrl ให้อัตโนมัติ ใช้ในแท็บ "คู่มือและเอกสาร"',
+      check: function (d) { return d && d.status === 'success' && d.data; },
+      note: function (d) { return 'พบ ' + d.data.length + ' เอกสาร (แท็บ ' + (d.sheet || '-') + ')'; } }
+  ];
+
+  var box = document.getElementById('tests');
+
+  TESTS.forEach(function (t) {
+    var card = document.createElement('div');
+    card.className = 'bg-white border border-slate-200 rounded-xl p-4';
+    card.innerHTML =
+      '<div class="flex items-start justify-between gap-4">' +
+        '<div class="flex-1">' +
+          '<p class="font-semibold text-slate-800">' + t.title + '</p>' +
+          '<p class="text-xs text-slate-500 mt-0.5">' + t.hint + '</p>' +
+          '<p class="text-sm mt-2 hidden" id="res-' + t.id + '"></p>' +
+        '</div>' +
+        '<button class="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-semibold hover:bg-slate-700 shrink-0">ทดสอบ</button>' +
+      '</div>' +
+      '<pre class="mt-3 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-3 hidden" id="raw-' + t.id + '"></pre>';
+    box.appendChild(card);
+
+    card.querySelector('button').addEventListener('click', function () {
+      run(t, card.querySelector('button'));
+    });
+  });
+
+  function show(id, ok, text) {
+    var el = document.getElementById('res-' + id);
+    el.className = 'text-sm mt-2 font-semibold ' + (ok ? 'text-green-600' : 'text-red-600');
+    el.textContent = (ok ? '✅ ผ่าน — ' : '❌ ไม่ผ่าน — ') + text;
+    el.classList.remove('hidden');
+  }
+
+  function raw(id, text) {
+    var el = document.getElementById('raw-' + id);
+    el.textContent = String(text).slice(0, 600);
+    el.classList.remove('hidden');
+  }
+
+  function run(t, btn) {
+    btn.disabled = true;
+    btn.textContent = 'กำลังทดสอบ...';
+
+    var url = urlInput.value.trim() + '?action=' + t.action;
+
+    fetch(url, { method: 'GET', redirect: 'follow' })
+      .then(function (r) { return r.text().then(function (txt) { return { ok: r.ok, status: r.status, txt: txt }; }); })
+      .then(function (r) {
+        raw(t.id, r.txt);
+        if (!r.ok) { show(t.id, false, 'เซิร์ฟเวอร์ตอบ HTTP ' + r.status + ' (URL น่าจะผิด)'); return; }
+
+        var data;
+        try { data = JSON.parse(r.txt); }
+        catch (e) {
+          show(t.id, false, 'ได้คำตอบที่ไม่ใช่ JSON — แปลว่า Apps Script ที่ Deploy อยู่ยังเป็นโค้ดตัวเก่า');
+          return;
+        }
+        if (t.check(data)) show(t.id, true, t.note(data));
+        else show(t.id, false, data.message || 'รูปแบบข้อมูลไม่ถูกต้อง');
+      })
+      .catch(function (err) {
+        show(t.id, false, 'ต่อไม่ติด: ' + err.message + ' (ตรวจ Who has access = Anyone)');
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = 'ทดสอบอีกครั้ง';
+      });
+  }
+
+  /* ---------- ทดสอบเขียนลงชีตจริง ---------- */
+  document.getElementById('btn-write').addEventListener('click', function () {
+    if (!confirm('จะเขียนข้อมูลทดสอบ 1 แถวลงชีตจริง ยืนยันหรือไม่?')) return;
+
+    var btn = this;
+    var out = document.getElementById('write-result');
+    btn.disabled = true;
+    btn.textContent = 'กำลังบันทึก...';
+    out.classList.remove('hidden');
+    out.textContent = 'กำลังส่ง...';
+
+    fetch(urlInput.value.trim(), {
+      method: 'POST',
+      redirect: 'follow',
+      body: JSON.stringify({
+        action: 'submitReport',
+        workType: 'งาน Green & Clean',
+        hospital: 'โรงพยาบาลทดสอบ',
+        district: 'ทดสอบ',
+        hospType: 'รพ.ชุมชน',
+        year: '2568',
+        hospitalCode: '00000',
+        senderName: 'ทดสอบระบบ — ลบได้',
+        phone: '000-000-0000',
+        level: 'ระดับมาตรฐาน',
+        categories: ['หมวดทดสอบ'],
+        items: ['ข้อทดสอบ 1.1'],
+        detail: 'แถวทดสอบจากหน้า test.html — ลบทิ้งได้',
+        driveLink: 'https://drive.google.com/'
+      })
+    })
+      .then(function (r) { return r.text(); })
+      .then(function (txt) {
+        out.textContent = txt;
+        try {
+          var d = JSON.parse(txt);
+          if (d.status === 'success') {
+            out.textContent = '✅ บันทึกสำเร็จ — ลงที่ชีต "' + d.sheet + '" แถวที่ ' + d.row +
+                              '\nเปิด Google Sheet ดูได้เลย แล้วลบแถวนี้ทิ้งได้';
+          }
+        } catch (e) {
+          out.textContent = '❌ ได้คำตอบที่ไม่ใช่ JSON (Apps Script ยังเป็นตัวเก่า):\n' + txt.slice(0, 300);
+        }
+      })
+      .catch(function (err) { out.textContent = '❌ ผิดพลาด: ' + err.message; })
+      .finally(function () { btn.disabled = false; btn.textContent = 'เขียนแถวทดสอบลงชีต'; });
+  });
+})();
+</script>
+</body>
+</html>
