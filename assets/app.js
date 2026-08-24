@@ -121,13 +121,36 @@
         });
       };
 
+      /* ทางสำรอง: ส่งคำสั่งเดิมผ่าน GET
+         POST ของ Apps Script ถูก redirect ข้ามโดเมนก่อนถึงปลายทาง บางเบราว์เซอร์
+         (Safari เป็นหลัก) บล็อกจังหวะนั้นแล้วขึ้น "Load failed" ทั้งที่ GET ใช้ได้ปกติ
+         ใช้ได้เฉพาะคำขอที่สั้นพอ — แนบไฟล์ base64 จะยาวเกินความยาว URL ที่รับได้ */
+      var viaGet = function () {
+        var json = JSON.stringify(body);
+        if (json.length > 6000) throw new Error('ข้อมูลยาวเกินกว่าจะส่งด้วยวิธีสำรองได้');
+        return API.fetchWithTimeout(
+          CFG.API_URL + '?action=' + encodeURIComponent(body.action || '') +
+          '&payload=' + encodeURIComponent(json),
+          { method: 'GET', redirect: 'follow' },
+          opts && opts.timeout
+        ).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        });
+      };
+
       return send()
         .catch(function (err) {
-          /* เน็ตสะดุดชั่วคราวเกิดได้บ่อยกับ Apps Script (คำขอถูก redirect ข้ามโดเมน)
-             ลองซ้ำให้อีกหนึ่งครั้งก่อน แทนที่จะให้ผู้ใช้กรอกใหม่ทั้งหมด */
+          /* ลองซ้ำหนึ่งครั้งก่อน เผื่อเป็นแค่เน็ตสะดุดชั่วคราว */
           if (!API.isNetworkError(err)) throw err;
-          console.warn('[API] คำขอล้มระดับเครือข่าย กำลังลองใหม่:', err.message);
-          return new Promise(function (ok) { setTimeout(ok, 1200); }).then(send);
+          console.warn('[API] POST ล้มระดับเครือข่าย กำลังลองใหม่:', err.message);
+          return new Promise(function (ok) { setTimeout(ok, 1000); }).then(send);
+        })
+        .catch(function (err) {
+          /* ยังไม่ผ่านอีก แปลว่าไม่ใช่เน็ตสะดุด แต่เป็นที่ตัว POST เอง → เปลี่ยนไปใช้ GET */
+          if (!API.isNetworkError(err)) throw err;
+          console.warn('[API] เปลี่ยนไปส่งด้วย GET แทน');
+          return viaGet();
         })
         .catch(function (err) {
           if (!API.isNetworkError(err)) throw err;

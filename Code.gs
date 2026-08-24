@@ -42,7 +42,7 @@ const STATUS_APPROVED = "รับรองผลเรียบร้อยแ�
 const TOKEN_TTL_HOURS = 12;
 
 /* เลขรุ่นของโค้ด — เรียก ?action=ping เพื่อดูว่าที่ deploy อยู่เป็นรุ่นไหน */
-const CODE_VERSION = '2026-08-24d';
+const CODE_VERSION = '2026-08-24e';
 
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
@@ -291,6 +291,20 @@ function doGet(e) {
       /* --- เฉพาะ สสจ. --- */
       case 'getUsers':       requireAdmin_(p); return json(getUsers());
       case 'ping':           return json({ status: 'success', message: 'API ทำงานปกติ', version: CODE_VERSION, time: new Date() });
+
+      /* --- ทางสำรองของคำสั่งเขียนข้อมูล ---
+         POST ของ Apps Script ถูก redirect ข้ามโดเมนก่อนถึงปลายทาง
+         บางเบราว์เซอร์ (เช่น Safari) บล็อกจังหวะนั้นแล้วขึ้นว่า "Load failed"
+         ทั้งที่ GET ใช้ได้ปกติ จึงเปิดให้เรียกคำสั่งเดียวกันผ่าน GET ได้
+         โดยส่งข้อมูลมาเป็น JSON ก้อนเดียวในพารามิเตอร์ payload
+         การตรวจสิทธิ์ใช้ชุดเดียวกับ POST ทุกประการ ไม่ได้หย่อนลง */
+      case 'login':
+      case 'submitReport':
+      case 'updateStatus':
+      case 'saveUser':
+      case 'deleteUser':
+      case 'saveSettings':
+        return handleWrite_(parsePayload_(p));
       default:               return json({ status: 'success', message: 'API ทำงานปกติ', version: '2.0' });
     }
   } catch (err) {
@@ -304,20 +318,8 @@ function doPost(e) {
     if (e && e.postData && e.postData.contents) payload = JSON.parse(e.postData.contents);
     var action = payload.action || (e && e.parameter && e.parameter.action) || '';
 
-    switch (action) {
-      /* --- เปิดสาธารณะ --- */
-      case 'login':        return json(doLogin(payload));
-
-      /* --- ต้องล็อกอิน --- */
-      case 'submitReport': return json(submitReport(payload));
-
-      /* --- เฉพาะ สสจ. --- */
-      case 'updateStatus': requireAdmin_(payload); return json(updateStatus(payload));
-      case 'saveUser':     requireAdmin_(payload); return json(saveUser(payload));
-      case 'saveSettings': requireAdmin_(payload); return json(saveSettings(payload));
-      case 'deleteUser':   requireAdmin_(payload); return json(deleteUser(payload));
-      default:             return json({ status: 'error', message: 'ไม่รู้จักคำสั่ง: ' + action });
-    }
+    payload.action = action;
+    return handleWrite_(payload);
   } catch (err) {
     return json(errorPayload_(err));
   }
@@ -360,6 +362,37 @@ function saveSettings(payload) {
   PropertiesService.getScriptProperties()
     .setProperty(SETTINGS_KEY, JSON.stringify(incoming));
   return { status: 'success', message: 'บันทึกเป้าหมาย KPI เรียบร้อยแล้ว', data: incoming };
+}
+
+/** แปลงพารามิเตอร์จาก GET ให้เป็น payload เดียวกับที่ POST ส่งมา */
+function parsePayload_(p) {
+  var payload = {};
+  if (p.payload) {
+    try { payload = JSON.parse(p.payload); } catch (e) { payload = {}; }
+  }
+  /* ค่าที่ส่งแยกมาเป็นพารามิเตอร์ตรง ๆ ก็รับได้ */
+  Object.keys(p).forEach(function (k) {
+    if (k !== 'payload' && payload[k] === undefined) payload[k] = p[k];
+  });
+  return payload;
+}
+
+/** คำสั่งที่เขียนข้อมูล — ใช้ร่วมกันทั้ง GET และ POST สิทธิ์เหมือนกันทุกประการ */
+function handleWrite_(payload) {
+  switch (payload.action || '') {
+    /* --- เปิดสาธารณะ --- */
+    case 'login':        return json(doLogin(payload));
+
+    /* --- ต้องล็อกอิน --- */
+    case 'submitReport': return json(submitReport(payload));
+
+    /* --- เฉพาะ สสจ. --- */
+    case 'updateStatus': requireAdmin_(payload); return json(updateStatus(payload));
+    case 'saveUser':     requireAdmin_(payload); return json(saveUser(payload));
+    case 'saveSettings': requireAdmin_(payload); return json(saveSettings(payload));
+    case 'deleteUser':   requireAdmin_(payload); return json(deleteUser(payload));
+    default:             return json({ status: 'error', message: 'ไม่รู้จักคำสั่ง: ' + payload.action });
+  }
 }
 
 function json(obj) {
