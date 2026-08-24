@@ -806,7 +806,21 @@
         .catch(function (err) {
           UI.close();
           if (err && err.authError) return;
-          UI.toast('error', 'เกิดข้อผิดพลาด', err.message);
+
+          /* ต่อเซิร์ฟเวอร์ไม่ได้ = ยังไม่ได้บันทึก ต้องบอกให้ชัดว่ากดใหม่ได้เลย
+             และไม่ปิดป็อปอัพ เพื่อไม่ให้สิ่งที่เลือกไว้หายไป */
+          Swal.fire({
+            icon: 'error',
+            title: err && err.networkError ? 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' : 'บันทึกไม่สำเร็จ',
+            html: '<p style="margin-bottom:10px">' + esc(err.message || '') + '</p>' +
+                  (err && err.networkError
+                    ? '<p style="font-size:13px;color:#64748B">ระบบลองส่งซ้ำให้แล้วแต่ยังไม่สำเร็จ ' +
+                      'ตรวจสัญญาณอินเทอร์เน็ตแล้วกด "บันทึกผล" ใหม่อีกครั้ง</p>'
+                    : '') +
+                  '<p style="font-size:13px;color:#64748B;margin-top:10px">' +
+                  'สิ่งที่เลือกไว้ยังอยู่ครบ ยังไม่มีอะไรถูกบันทึกลงชีต</p>',
+            confirmButtonColor: '#0072CE'
+          });
         });
     });
   }

@@ -93,6 +93,16 @@
         .then(API.guard);
     },
 
+    /**
+     * error ระดับเครือข่าย: fetch โยน TypeError โดยข้อความต่างกันไปตามเบราว์เซอร์
+     * Safari = "Load failed" / Chrome = "Failed to fetch" / Firefox = "NetworkError..."
+     * แปลว่าคำขอไปไม่ถึงเซิร์ฟเวอร์ ไม่ใช่เซิร์ฟเวอร์ตอบว่าผิด
+     */
+    isNetworkError: function (err) {
+      var m = String((err && err.message) || err);
+      return /Load failed|Failed to fetch|NetworkError|network error/i.test(m);
+    },
+
     /** opts.timeout = กำหนดเวลารอเองได้ (ใช้ตอนแนบไฟล์ซึ่งนานกว่าปกติ) */
     post: function (payload, opts) {
       var body = {};
@@ -100,14 +110,32 @@
       var tk = API.token();
       if (tk) body.token = tk;
 
-      return API.fetchWithTimeout(CFG.API_URL, {
-        method: 'POST',
-        redirect: 'follow',
-        body: JSON.stringify(body)   // ตั้งใจไม่ใส่ headers — ดูหมายเหตุด้านบน
-      }, opts && opts.timeout).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      }).then(API.guard);
+      var send = function () {
+        return API.fetchWithTimeout(CFG.API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          body: JSON.stringify(body)   // ตั้งใจไม่ใส่ headers — ดูหมายเหตุด้านบน
+        }, opts && opts.timeout).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        });
+      };
+
+      return send()
+        .catch(function (err) {
+          /* เน็ตสะดุดชั่วคราวเกิดได้บ่อยกับ Apps Script (คำขอถูก redirect ข้ามโดเมน)
+             ลองซ้ำให้อีกหนึ่งครั้งก่อน แทนที่จะให้ผู้ใช้กรอกใหม่ทั้งหมด */
+          if (!API.isNetworkError(err)) throw err;
+          console.warn('[API] คำขอล้มระดับเครือข่าย กำลังลองใหม่:', err.message);
+          return new Promise(function (ok) { setTimeout(ok, 1200); }).then(send);
+        })
+        .catch(function (err) {
+          if (!API.isNetworkError(err)) throw err;
+          var e = new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (' + ((err && err.message) || err) + ')');
+          e.networkError = true;
+          throw e;
+        })
+        .then(API.guard);
     },
 
     /** GET ที่มีข้อมูลตัวอย่างสำรอง เอาไว้ดูหน้าเว็บตอนยังไม่ได้ deploy */
