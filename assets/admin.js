@@ -11,7 +11,6 @@
   var view = 'green';     // green | occ | manual | users
   var levelFilter = '';   // กรองเฉพาะระดับผลการรับรอง (ใช้กับกล่องรับรองผล)
   var pane = 'table';     // table | dashboard
-  var registryRows = [];  // ทะเบียนหน่วยงานทั้งจังหวัด (ใช้คำนวณความครอบคลุม)
   var page = 1;
   var PER_PAGE = 15;
 
@@ -62,7 +61,6 @@
     $('btn-sync').addEventListener('click', function () { load(true); });
 
     load(false);
-    loadRegistry();
   });
 
   /* =========================================================
@@ -90,33 +88,6 @@
         render();
       });
     });
-  }
-
-  /* =========================================================
-   *  ทะเบียนหน่วยงานทั้งจังหวัด — ใช้เป็นตัวหารของ "ความครอบคลุม"
-   *  ถ้าไม่มีชีตทะเบียน จะถอยไปใช้รายชื่อในชีต Login แทน
-   * ======================================================= */
-  function loadRegistry() {
-    API.get('getRegistry', {})
-      .then(function (res) {
-        registryRows = (res && res.data) || [];
-        if (!registryRows.length) return loadRegistryFromUsers();
-        renderDashboard();
-      })
-      .catch(loadRegistryFromUsers);
-  }
-
-  function loadRegistryFromUsers() {
-    return API.getOrDemo('getUsers', {}, window.DEMO.users)
-      .then(function (res) {
-        registryRows = ((res && res.data) || [])
-          .filter(function (u) { return u.role !== 'admin'; })
-          .map(function (u) {
-            return { hospital: u.hospital, district: u.district, hospType: u.type };
-          });
-        renderDashboard();
-      })
-      .catch(function () { /* ไม่มีทะเบียนก็ยังใช้แดชบอร์ดได้ แค่ไม่มีตัวหาร */ });
   }
 
   /* =========================================================
@@ -474,15 +445,6 @@
     return parts.join(' • ');
   }
 
-  /** ตัวหารของความครอบคลุม: หน่วยงานในทะเบียนที่เข้าเงื่อนไขตัวกรองเดียวกัน */
-  function registryDenominator() {
-    var d = $('f-district').value, t = $('f-hosptype').value;
-    return registryRows.filter(function (r) {
-      if (d && String(r.district || '').trim() !== d) return false;
-      if (t && String(r.hospType || '').trim() !== t) return false;
-      return true;
-    }).length;
-  }
 
   function renderKPI(rows, st) {
     /* ไม่แสดง "รายการส่งงานทั้งหมด" เพราะมีกล่องนี้ในแท็บตรวจรับรองแล้ว

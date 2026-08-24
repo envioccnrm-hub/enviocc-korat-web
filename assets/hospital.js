@@ -844,7 +844,7 @@
     { key: 'PENDING'  },
     { key: 'REVISE'   },
     { key: 'CHECKING' },
-    { key: 'APPROVED', sub: '[มาตรฐาน / ดีเยี่ยม / ท้าทาย]' }
+    { key: 'APPROVED' }
   ];
 
   function stepIndex(status) {
@@ -862,6 +862,16 @@
 
     var CO = (window.APP_CONFIG && window.APP_CONFIG.STATUS_COLORS) || {};
     var active = stepIndex(latest && latest.status);
+
+    /* ป้ายใต้ขั้น "รับรองผลการประเมิน"
+       - ถ้ารับรองแล้ว โชว์ระดับที่ได้จริง ผู้ใช้จะได้รู้ผลทันทีจากแถบสถานะ
+       - ถ้ายังไม่รับรอง โชว์รายการระดับที่เป็นไปได้ของสายงานนั้น
+         (เดิมเขียนตายเป็นของ Green ทำให้แท็บอาชีวอนามัยฯ แสดงระดับผิดสายงาน) */
+    var levels = (CFG.LEVELS && (prefix === 'gc' ? CFG.LEVELS.green : CFG.LEVELS.occ)) || [];
+    var approvedLevel = latest && latest.status === S.APPROVED ? String(latest.level || '').trim() : '';
+    var lastSub = approvedLevel
+      ? approvedLevel
+      : '[' + levels.map(function (L) { return L.replace(/^ระดับ/, ''); }).join(' / ') + ']';
 
     /* เส้นเชื่อม: ช่วงที่ผ่านมาแล้วใช้สีของขั้นก่อนหน้า ที่เหลือเป็นสีเทา */
     var lines = STEPS.slice(1).map(function (_, i) {
@@ -887,7 +897,10 @@
              '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 border-surface" ' + dot + '>' +
              '<span class="material-symbols-outlined text-sm">' + c.icon + '</span></div>' +
              '<p ' + txt + '>' + esc(c.label) +
-               (st.sub ? '<br><span class="text-[10px] font-normal">' + st.sub + '</span>' : '') +
+               (st.key === 'APPROVED'
+                 ? '<br><span class="text-[10px] ' + (approvedLevel ? 'font-bold' : 'font-normal') + '">' +
+                   esc(lastSub) + '</span>'
+                 : '') +
              '</p></div>';
     }).join('');
 
@@ -918,6 +931,12 @@
         '<div class="flex items-center gap-2 text-green-700">' +
         '<span class="material-symbols-outlined">workspace_premium</span>' +
         '<h3 class="font-bold text-lg font-headline">รับรองผลการประเมินเรียบร้อยแล้ว</h3></div>' +
+        /* เดิมบอกแต่หมายเหตุ ไม่บอกว่าได้ระดับอะไร ทั้งที่เป็นสิ่งที่ผู้ใช้อยากรู้ที่สุด */
+        (latest.level
+          ? '<p class="text-base font-bold" style="color:' +
+            ((CFG.STATUS_COLORS && CFG.STATUS_COLORS.APPROVED.hex) || '#7C3AED') + '">' +
+            'ระดับที่ได้รับการรับรอง: ' + esc(latest.level) + '</p>'
+          : '') +
         '<p class="text-text-main text-sm whitespace-pre-line">' + esc(latest.comment || 'เอกสารครบถ้วน') + '</p>';
       return;
     }
