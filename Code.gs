@@ -17,16 +17,13 @@ const SHEET_FOLLOW_OCC   = "ติดตามงาน อาชีวอนา
 const SHEET_REGISTRY     = "ทะเบียนรายชื่อโรงพยาบาล";
 
 /* ---------- โฟลเดอร์ Drive สำหรับเก็บไฟล์หลักฐานที่อัปโหลดจากหน้าเว็บ ----------
- * แยกโฟลเดอร์ตามประเภทงาน: Green & Clean และ อาชีวอนามัยฯ
+ * ถ้าอยากใช้โฟลเดอร์ที่มีอยู่แล้ว ให้ใส่ ID ของโฟลเดอร์นั้นลงใน UPLOAD_FOLDER_ID
  * (ID คือข้อความยาว ๆ ท้าย URL: drive.google.com/drive/folders/<ID>)
+ * ถ้าเว้นว่างไว้ ระบบจะหา/สร้างโฟลเดอร์ชื่อ UPLOAD_FOLDER_NAME ให้เองอัตโนมัติ
  * ไฟล์จะถูกแยกเก็บเป็นโฟลเดอร์ย่อยตามชื่อหน่วยงาน */
-const UPLOAD_FOLDER_GREEN_ID   = "1n3A4TMzsG5aL5FRzX3HN0E0V4TnjWqtU";
-const UPLOAD_FOLDER_GREEN_NAME = "รวมไฟล์ PDF งานแก้ไข Green & Clean";
-
-const UPLOAD_FOLDER_OCC_ID     = "1vd3CTraIlZrZN01ONsXc54MYZ1uHuCVa";
-const UPLOAD_FOLDER_OCC_NAME   = "รวมไฟล์ PDF งานแก้ไข อาชีวอนามัยฯ";
-
-const MAX_UPLOAD_MB            = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
+const UPLOAD_FOLDER_ID   = "";
+const UPLOAD_FOLDER_NAME = "หลักฐานการแก้ไข (อัปโหลดจากเว็บ)";
+const MAX_UPLOAD_MB      = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
 
 /* ---------- สถานะงาน (ต้องตรงกับ assets/config.js) ---------- */
 const STATUS_PENDING  = "รอตรวจสอบ";
