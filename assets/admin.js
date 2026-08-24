@@ -9,6 +9,7 @@
   var user = null;
   var allRows = [];       // ข้อมูลดิบทั้งหมดจากชีต
   var view = 'green';     // green | occ | manual | users
+  var levelFilter = '';   // กรองเฉพาะระดับผลการรับรอง (ใช้กับกล่องรับรองผล)
   var pane = 'table';     // table | dashboard
   var registryRows = [];  // ทะเบียนหน่วยงานทั้งจังหวัด (ใช้คำนวณความครอบคลุม)
   var page = 1;
@@ -227,6 +228,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('.stat-card'), function (card) {
       card.addEventListener('click', function () {
         var st = card.getAttribute('data-status');
+        levelFilter = '';                 /* เปลี่ยนกล่อง = เริ่มนับใหม่ */
         $('f-status').value = st;
         setActiveCard(st);
         page = 1;
@@ -272,6 +274,7 @@
       if (t && r.hospType !== t) return false;
       if (y && String(r.year) !== y) return false;
       if (st && r.status !== st) return false;
+      if (!opts.ignoreLevel && levelFilter && r.level !== levelFilter) return false;
       if (q) {
         var hay = [r.hospital, r.district, r.categories, r.items, r.senderName, r.level]
           .join(' ').toLowerCase();
@@ -303,6 +306,7 @@
 
     $('row-count').textContent = '(' + rows.length + ' รายการ)';
 
+    renderApprovedChart();
     renderDashboard();
     renderLevels();
 
@@ -356,7 +360,7 @@
   function renderDashboard() {
     if (!$('pane-dashboard')) return;
 
-    var rows = filtered({ ignoreStatus: true });
+    var rows = filtered({ ignoreStatus: true, ignoreLevel: true });
     var st = Stats.status(rows);
 
     $('dash-scope').textContent = scopeText() + ' • ' + rows.length + ' รายการ';
@@ -935,6 +939,68 @@
     });
 
     box.innerHTML = cards.join('');
+  }
+
+
+  /**
+   * กราฟสัดส่วนระดับผลการรับรอง — ขึ้นเฉพาะตอนเลือกกล่อง "รับรองผลการประเมิน"
+   * ข้อความข้างกราฟกดได้ เพื่อกรองตารางด้านล่างให้เหลือเฉพาะระดับนั้น
+   */
+  function renderApprovedChart() {
+    var box = $('approved-chart');
+    if (!box || !window.Viz) return;
+
+    var on = $('f-status').value === S.APPROVED;
+    box.classList.toggle('hidden', !on);
+    if (!on) { levelFilter = ''; return; }
+
+    /* กราฟต้องแสดงครบทุกระดับเสมอ จึงไม่สนตัวกรองระดับที่ผู้ใช้คลิกอยู่ */
+    var rows = filtered({ ignoreStatus: true, ignoreLevel: true }).filter(function (r) {
+      return r.status === S.APPROVED;
+    });
+
+    var k = view === 'occ' ? 'occ' : 'green';
+    var levels = CFG.LEVELS[k] || [];
+
+    /* หน่วยงานเดียวกันในระดับเดียวกัน นับครั้งเดียว */
+    var seen = {}, count = {};
+    levels.forEach(function (L) { count[L] = 0; });
+    rows.forEach(function (r) {
+      if (levels.indexOf(r.level) === -1) return;
+      var id = r.hospital + '|' + r.level;
+      if (seen[id]) return;
+      seen[id] = 1;
+      count[r.level]++;
+    });
+
+    var items = levels
+      .map(function (L) { return { label: L, count: count[L] }; })
+      .filter(function (x) { return x.count > 0; });
+
+    $('approved-donut').innerHTML = items.length
+      ? Viz.donut(items, {
+          colors: Viz.LEVEL_COLORS, centerLabel: 'แห่ง', unit: 'แห่ง',
+          clickable: true, emptyText: 'ยังไม่มีหน่วยงานที่ผ่านการรับรอง'
+        })
+      : '<p class="text-sm text-text-muted">ยังไม่มีหน่วยงานที่ผ่านการรับรองในขอบเขตนี้</p>';
+
+    /* ผูกคลิกที่ข้อความข้างกราฟ */
+    Array.prototype.forEach.call($('approved-donut').querySelectorAll('[data-slice]'), function (el) {
+      el.addEventListener('click', function () {
+        var L = el.getAttribute('data-slice');
+        levelFilter = (levelFilter === L) ? '' : L;   /* คลิกซ้ำ = ยกเลิก */
+        page = 1;
+        render();
+      });
+      if (el.getAttribute('data-slice') === levelFilter) {
+        el.style.background = '#EDE9FE';
+        el.style.fontWeight = '700';
+      }
+    });
+
+    var clear = $('approved-clear');
+    clear.classList.toggle('hidden', !levelFilter);
+    clear.onclick = function () { levelFilter = ''; page = 1; render(); };
   }
 
   /* =========================================================

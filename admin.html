@@ -185,6 +185,17 @@
 
       <!-- ตารางรายการ -->
       <div id="pane-table">
+
+      <!-- สรุประดับผลของกลุ่ม "รับรองผลการประเมิน" (ขึ้นเมื่อเลือกกล่องนั้น) -->
+      <div id="approved-chart" class="hidden bg-white border border-outline-custom rounded-2xl p-6 shadow-sm mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+          <h3 class="font-bold font-headline" style="color:#7C3AED">สัดส่วนระดับผลการรับรอง</h3>
+          <button id="approved-clear" class="hidden text-xs text-primary hover:underline font-semibold">ล้างตัวกรองระดับ</button>
+        </div>
+        <p class="text-xs text-text-muted mb-5">คลิกที่ระดับข้างกราฟ เพื่อกรองตารางด้านล่างให้เหลือเฉพาะหน่วยงานในระดับนั้น</p>
+        <div id="approved-donut"></div>
+      </div>
+
       <div class="bg-white border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
         <div class="flex items-center justify-between px-6 py-4 border-b border-outline-custom">
           <h3 class="font-bold font-headline" id="table-title" style="color:#0072CE">รายการส่งงานทั้งหมด <span class="text-text-muted font-normal text-sm" id="row-count"></span></h3>

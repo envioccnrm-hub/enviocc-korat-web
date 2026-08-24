@@ -245,10 +245,14 @@
         '</div>' +
         '<div class="flex-1 w-full space-y-2">' + items.map(function (it, i) {
           var color = (opts.colors && opts.colors[it.label]) || PALETTE[i % PALETTE.length];
-          return '<div class="flex items-center gap-2 text-sm">' +
+          /* opts.clickable = ให้ข้อความข้างกราฟกดได้ ผู้เรียกไปดักคลิกที่ data-slice เอง */
+          var hit = opts.clickable
+            ? ' data-slice="' + esc(it.label) + '" class="flex items-center gap-2 text-sm cursor-pointer rounded px-1 -mx-1 hover:bg-primary-light/60 transition-colors"'
+            : ' class="flex items-center gap-2 text-sm"';
+          return '<div' + hit + (opts.clickable ? ' title="คลิกเพื่อกรองตารางเฉพาะ ' + esc(it.label) + '"' : '') + '>' +
             '<span class="w-3 h-3 rounded-sm flex-shrink-0" style="background:' + color + '"></span>' +
-            '<span class="flex-1 truncate text-text-main" title="' + esc(it.label) + '">' + esc(short(it.label, 30)) + '</span>' +
-            '<span class="font-semibold text-text-main whitespace-nowrap">' + it.count +
+            '<span class="flex-1 truncate text-text-main">' + esc(short(it.label, 30)) + '</span>' +
+            '<span class="font-semibold text-text-main whitespace-nowrap">' + it.count + ' ' + esc(opts.unit || '') +
               ' (' + (it.count * 100 / total).toFixed(1) + '%)</span>' +
           '</div>';
         }).join('') + '</div>' +
