@@ -730,12 +730,17 @@
       var sel = $$('rv-level');
       var passedCheck = state.status === S.CHECKING || state.status === S.APPROVED;
 
-      var mark = function (el, on, hex) {
-        el.style.background = on ? hex : '#94A3B8';
-        el.style.boxShadow  = on ? '0 0 0 4px ' + hex + '33' : 'none';
+      /* done = ขั้นที่ผ่านมาแล้ว (ติดสีค้างไว้)
+         now  = ขั้นที่เป็นสถานะปัจจุบันจริง ๆ (ติดสี + มีวงรอบเน้น)
+         พอรับรองผลแล้ว ปุ่ม "ดำเนินการตรวจสอบแล้ว" ต้องยังติดอยู่
+         เพราะขั้นนั้นทำไปแล้ว ไม่ใช่ถูกยกเลิก */
+      var mark = function (el, done, now, hex) {
+        el.style.background = done ? hex : '#94A3B8';
+        el.style.boxShadow  = now  ? '0 0 0 4px ' + hex + '33' : 'none';
+        el.style.opacity    = done && !now ? '0.85' : '1';
       };
-      mark($$('rv-revise'), state.status === S.REVISE, CO.REVISE.hex);
-      mark($$('rv-check'),  state.status === S.CHECKING, CO.CHECKING.hex);
+      mark($$('rv-revise'), state.status === S.REVISE, state.status === S.REVISE, CO.REVISE.hex);
+      mark($$('rv-check'),  passedCheck, state.status === S.CHECKING, CO.CHECKING.hex);
 
       /* ขั้นที่ 2: เลือกระดับได้ต่อเมื่อกด "ดำเนินการตรวจสอบแล้ว" ไปแล้ว */
       sel.disabled = !passedCheck;
@@ -744,14 +749,15 @@
 
       /* ขั้นที่ 3: รับรองผลได้ต่อเมื่อเลือกระดับแล้ว */
       var canApprove = passedCheck && !!state.level;
+      var approved = state.status === S.APPROVED;
       var ap = $$('rv-approve');
       ap.disabled = !canApprove;
-      ap.style.opacity = canApprove ? '1' : '0.5';
-      ap.style.cursor  = canApprove ? '' : 'not-allowed';
-      mark(ap, state.status === S.APPROVED, CO.APPROVED.hex);
+      ap.style.cursor = canApprove ? '' : 'not-allowed';
+      mark(ap, approved, approved, CO.APPROVED.hex);
+      if (!canApprove) ap.style.opacity = '0.5';
 
       $$('rv-hint').textContent =
-        state.status === S.APPROVED ? 'รับรองผลแล้ว — กด "บันทึกผล" เพื่อส่งกลับ Google Sheets'
+        approved ? 'ตรวจสอบแล้วและรับรองผลระดับ "' + state.level + '" — กด "บันทึกผล" เพื่อส่งกลับ Google Sheets'
         : !passedCheck              ? 'ตรวจหลักฐานก่อน แล้วกด "ดำเนินการตรวจสอบแล้ว" จึงจะเลือกระดับการรับรองได้'
         : !state.level              ? 'เลือกระดับการรับรอง แล้วจึงกด "รับรองผลเรียบร้อยแล้ว" ได้'
         :                             'พร้อมรับรองผล — กดปุ่ม "รับรองผลเรียบร้อยแล้ว"';
