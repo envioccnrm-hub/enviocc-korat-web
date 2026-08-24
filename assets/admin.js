@@ -4,7 +4,8 @@
 (function () {
   'use strict';
 
-  var S = window.APP_CONFIG.STATUS;
+  var CFG = window.APP_CONFIG;
+  var S = CFG.STATUS;
   var user = null;
   var allRows = [];       // ข้อมูลดิบทั้งหมดจากชีต
   var view = 'all';       // all | green | occ | users
@@ -457,63 +458,220 @@
     return String(text || '').replace(/\n?—\s.*$/, '').trim();
   }
 
+  /* =========================================================
+   *  ป็อปอัพตรวจงาน — โครงหน้าตาตามไฟล์ต้นแบบ
+   *  ต่อข้อมูลจริงจาก Google Sheets และบังคับลำดับการทำงาน:
+   *    ตรวจหลักฐาน > กด "ดำเนินการตรวจสอบแล้ว" > เลือกระดับ > รับรองผล
+   *  ก่อนถึงขั้นไหน ปุ่มขั้นถัดไปจะยังกดไม่ได้
+   * ======================================================= */
+
+  /** แตกข้อความหลายบรรทัดในเซลล์เดียวเป็นรายการ */
+  function lines(text) {
+    return String(text == null ? '' : text)
+      .split(/[\r\n]+|\s*;\s*/)
+      .map(function (x) { return x.trim(); })
+      .filter(function (x) { return x.length > 0; });
+  }
+
+  /** เลขนำหน้าของหมวด/ข้อ ใช้จับคู่ข้อเข้ากับหมวดของมัน เช่น "ข้อ 1.1" -> "1" */
+  function leadNo(text) {
+    var m = String(text).match(/(\d+)/);
+    return m ? m[1] : '';
+  }
+
   function openReview(r) {
-    var opt = function (v) {
-      return '<option value="' + esc(v) + '"' + (r.status === v ? ' selected' : '') + '>' + esc(v) + '</option>';
-    };
-    var info = function (label, value) {
-      return '<div><dt class="text-text-muted">' + label + '</dt>' +
-             '<dd class="font-semibold text-text-main">' + esc(value || '-') + '</dd></div>';
+    var isGreen   = String(r.workType || '').indexOf('Green') !== -1;
+    var levels    = (CFG.LEVELS && (isGreen ? CFG.LEVELS.green : CFG.LEVELS.occ)) || [];
+    var groupWord = isGreen ? 'หมวด' : 'องค์ประกอบ';
+    var CO        = CFG.STATUS_COLORS;
+
+    /* ---- สถานะภายในป็อปอัพ ---- */
+    var state = {
+      status:  r.status || S.PENDING,
+      level:   r.level || '',
+      comment: stripSignature(r.comment)
     };
 
-    Swal.fire({
-      title: 'ตรวจงาน: ' + r.hospital,
-      width: 720,
-      confirmButtonText: 'บันทึกผลการตรวจ',
-      confirmButtonColor: '#0072CE',
-      showCancelButton: true,
-      cancelButtonText: 'ปิด',
-      html:
-        '<div class="text-left text-sm" style="font-family:Sarabun,sans-serif">' +
-          '<dl class="grid grid-cols-2 gap-3 mb-4">' +
-            info('อำเภอ', r.district) +
-            info('รหัสโรงพยาบาล', r.hospitalCode) +
-            info('ประเภทโรงพยาบาล', r.hospType) +
-            info('ประเภทงาน', r.workType) +
-            info('ปีที่ประเมิน', r.year) +
-            info('ผู้ส่ง', r.senderName) +
-            info('เบอร์โทรศัพท์', r.phone) +
-            info('ระดับที่ขอรับรอง', r.level) +
-            info('วันที่ส่ง', UI.thaiDate(r.submittedAt)) +
-          '</dl>' +
-          '<div class="mb-3"><div class="text-text-muted">หมวดที่แก้ไข</div>' +
-            '<div class="font-semibold">' + esc(r.categories || '-') + '</div></div>' +
-          '<div class="mb-3"><div class="text-text-muted">ข้อที่แก้ไข</div>' +
-            '<div class="font-semibold">' + esc(r.items || '-') + '</div></div>' +
-          '<div class="mb-3"><div class="text-text-muted">รายละเอียดการปรับปรุงแก้ไข</div>' +
-            '<div class="font-semibold" style="white-space:pre-line">' + esc(r.detail || '-') + '</div></div>' +
-          '<div class="mb-4"><div class="text-text-muted">หลักฐานประกอบ</div>' +
+    /* ---- จัดหมวดกับข้อให้เป็นต้นไม้ ตามเลขนำหน้า ---- */
+    var cats  = lines(r.categories);
+    var items = lines(r.items);
+    var tree  = cats.map(function (c) {
+      var no = leadNo(c);
+      return { label: c, children: items.filter(function (it) { return leadNo(it) === no; }) };
+    });
+    var orphan = items.filter(function (it) {
+      return !cats.some(function (c) { return leadNo(c) === leadNo(it); });
+    });
+    if (orphan.length) tree.push({ label: groupWord + 'อื่น ๆ', children: orphan });
+
+    var checkRow = function (label, child, idx) {
+      var id = 'rv-chk-' + idx;
+      return '<div class="flex items-start gap-3' + (child ? ' ml-8' : '') + '">' +
+        '<input id="' + id + '" type="checkbox" class="mt-1 ' + (child ? 'w-4 h-4' : 'w-5 h-5') +
+          ' rounded border-slate-300 cursor-pointer" style="accent-color:#0059a4">' +
+        '<label for="' + id + '" class="cursor-pointer ' +
+          (child ? 'text-sm text-slate-700' : 'font-bold text-base text-[#0a1e28]') + '">' +
+          esc(label) + '</label></div>';
+    };
+
+    var n = 0, treeHTML = '';
+    tree.forEach(function (g) {
+      treeHTML += checkRow(g.label, false, n++);
+      g.children.forEach(function (c) { treeHTML += checkRow(c, true, n++); });
+    });
+    if (!treeHTML) treeHTML = '<p class="text-sm text-slate-500">ไม่ได้ระบุ' + groupWord + '/ข้อที่แก้ไข</p>';
+
+    var infoCell = function (label, value) {
+      return '<div class="space-y-1"><p class="text-xs font-bold text-slate-500">' + label + '</p>' +
+             '<p class="text-base md:text-lg font-medium text-[#0a1e28]">' + esc(value || '-') + '</p></div>';
+    };
+
+    var badge = isGreen
+      ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#aaf457] text-[#406e00] border border-green-300">งาน: Green &amp; Clean Hospital</span>'
+      : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300">งาน: อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</span>';
+
+    /* ---- ประกอบร่างป็อปอัพ ---- */
+    var wrap = document.createElement('div');
+    wrap.className = 'fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 overflow-y-auto';
+    wrap.innerHTML =
+      '<div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto" id="rv-card">' +
+
+        '<div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-[#e9f5ff] shrink-0">' +
+          '<div class="flex flex-wrap items-center gap-2">' +
+            '<h2 class="text-xl md:text-2xl font-bold text-[#0a1e28] leading-tight">ตรวจงานและดูรายละเอียด - ' +
+              '<span class="text-[#0059a4]">' + esc(r.hospital) + '</span></h2>' + badge +
+          '</div>' +
+          '<button type="button" id="rv-x" class="text-slate-500 hover:text-slate-800">' +
+            '<span class="material-symbols-outlined">close</span></button>' +
+        '</div>' +
+
+        '<div class="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800">' +
+          '<div class="p-4 bg-[#f8fafc] rounded-xl border border-slate-200">' +
+            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">' +
+              infoCell('อำเภอ', r.district) + infoCell('ประเภทโรงพยาบาล', r.hospType) +
+              infoCell('ปีที่ประเมิน', r.year) + infoCell('ระดับที่ส่งประเมิน', r.level) +
+            '</div>' +
+            '<div class="space-y-4 pt-2 border-t border-slate-200">' +
+              '<h3 class="text-base font-bold text-[#0059a4]">' + groupWord + 'และข้อที่ต้องการแก้ไข</h3>' +
+              '<p class="text-xs text-slate-500 -mt-2">ติ๊กเพื่อทำเครื่องหมายว่าตรวจรายการนั้นแล้ว (ช่วยกันตรวจตกหล่น ไม่ถูกบันทึกลงชีต)</p>' +
+              '<div class="space-y-2">' + treeHTML + '</div>' +
+            '</div>' +
+          '</div>' +
+
+          (r.detail
+            ? '<div class="p-4 bg-[#f8fafc] rounded-xl border border-slate-200">' +
+                '<h3 class="text-base font-bold text-[#0059a4] mb-2">รายละเอียดการปรับปรุงแก้ไข</h3>' +
+                '<p class="text-sm whitespace-pre-line">' + esc(r.detail) + '</p></div>'
+            : '') +
+
+          '<div class="flex justify-center">' +
             (r.driveLink
-              ? '<a href="' + esc(r.driveLink) + '" target="_blank" rel="noopener" style="color:#0072CE;text-decoration:underline">เปิดลิงก์ Google Drive</a>'
-              : '<span>ไม่ได้แนบลิงก์</span>') + '</div>' +
-          '<hr class="my-4">' +
-          '<label class="block font-semibold mb-1">ผลการตรวจ</label>' +
-          '<select id="sw-status" class="swal2-select" style="display:block;width:100%;margin:0 0 12px">' +
-            opt(S.PENDING) + opt(S.CHECKING) + opt(S.REVISE) + opt(S.APPROVED) +
-          '</select>' +
-          '<label class="block font-semibold mb-1">ความเห็น / ข้อแนะนำถึงโรงพยาบาล</label>' +
-          '<textarea id="sw-comment" class="swal2-textarea" style="display:block;width:100%;margin:0" rows="3" ' +
-            'placeholder="เช่น กรุณาแนบผลตรวจคุณภาพน้ำทิ้งย้อนหลัง 3 เดือน">' + esc(stripSignature(r.comment)) + '</textarea>' +
-        '</div>',
-      preConfirm: function () {
-        return {
-          status: document.getElementById('sw-status').value,
-          comment: document.getElementById('sw-comment').value.trim()
-        };
-      }
-    }).then(function (result) {
-      if (!result.isConfirmed) return;
+              ? '<a href="' + esc(r.driveLink.split(/[\r\n]+/)[0]) + '" target="_blank" rel="noreferrer" ' +
+                'class="inline-flex items-center px-6 py-3 bg-[#0072ce] text-white rounded-lg font-bold hover:bg-[#0059a4] transition-all shadow-md gap-2">' +
+                '<span class="material-symbols-outlined">folder_open</span>คลิกเปิดดูไฟล์หลักฐาน (PDF / Google Drive)</a>'
+              : '<span class="text-sm text-slate-500">โรงพยาบาลยังไม่ได้แนบหลักฐาน</span>') +
+          '</div>' +
 
+          '<div class="space-y-3 border-t border-slate-200 pt-4">' +
+            '<label class="font-bold text-slate-700 block text-sm">สถานะการตรวจสอบ</label>' +
+            '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+              '<button type="button" id="rv-revise" class="w-full px-4 py-3 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-sm">' +
+                '<span class="material-symbols-outlined text-xl">error_outline</span>ต้องแก้ไขเพิ่มเติม</button>' +
+              '<button type="button" id="rv-check" class="w-full px-4 py-3 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-sm">' +
+                '<span class="material-symbols-outlined text-xl">check_circle</span>ดำเนินการตรวจสอบแล้ว</button>' +
+            '</div>' +
+            '<p class="text-xs text-slate-500" id="rv-hint"></p>' +
+          '</div>' +
+
+          '<div class="space-y-2">' +
+            '<label class="font-bold text-slate-700 block text-sm">ระดับการรับรอง (Certification Level)</label>' +
+            '<div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">' +
+              '<select id="rv-level" class="flex-1 p-3 bg-white border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-[#0059a4] outline-none">' +
+                '<option value="">เลือกระดับการรับรอง...</option>' +
+                levels.map(function (L) {
+                  return '<option value="' + esc(L) + '"' + (state.level === L ? ' selected' : '') + '>' + esc(L) + '</option>';
+                }).join('') +
+              '</select>' +
+              '<button type="button" id="rv-approve" class="px-6 py-3 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-sm">' +
+                '<span class="material-symbols-outlined text-xl">verified</span>รับรองผลเรียบร้อยแล้ว</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div>' +
+            '<label class="font-bold text-slate-700 block text-sm mb-1.5">หมายเหตุ / ข้อเสนอแนะส่งถึงโรงพยาบาล</label>' +
+            '<textarea id="rv-comment" class="w-full p-3 bg-[#f8fafc] border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-[#0059a4] outline-none min-h-[90px] resize-y" ' +
+              'placeholder="ระบุข้อเสนอแนะ รายละเอียดที่ต้องแก้ไขเพิ่มเติม">' + esc(state.comment) + '</textarea>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-[#f8fafc] shrink-0">' +
+          '<button type="button" id="rv-cancel" class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition-colors">ยกเลิก</button>' +
+          '<button type="button" id="rv-save" class="px-8 py-2 text-white rounded-lg font-bold transition-colors shadow-md flex items-center gap-1.5" style="background:' + CO.CHECKING.hex + '">' +
+            '<span class="material-symbols-outlined text-lg">save</span>บันทึกผล</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(wrap);
+    var $$ = function (id) { return wrap.querySelector('#' + id); };
+    var close = function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); };
+
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+    $$('rv-card').addEventListener('click', function (e) { e.stopPropagation(); });
+    $$('rv-x').addEventListener('click', close);
+    $$('rv-cancel').addEventListener('click', close);
+
+    /* ---- วาดสถานะปุ่มตามลำดับที่บังคับไว้ ---- */
+    function paint() {
+      var sel = $$('rv-level');
+      var passedCheck = state.status === S.CHECKING || state.status === S.APPROVED;
+
+      var mark = function (el, on, hex) {
+        el.style.background = on ? hex : '#94A3B8';
+        el.style.boxShadow  = on ? '0 0 0 4px ' + hex + '33' : 'none';
+      };
+      mark($$('rv-revise'), state.status === S.REVISE, CO.REVISE.hex);
+      mark($$('rv-check'),  state.status === S.CHECKING, CO.CHECKING.hex);
+
+      /* ขั้นที่ 2: เลือกระดับได้ต่อเมื่อกด "ดำเนินการตรวจสอบแล้ว" ไปแล้ว */
+      sel.disabled = !passedCheck;
+      sel.style.opacity = passedCheck ? '1' : '0.5';
+      sel.style.cursor  = passedCheck ? '' : 'not-allowed';
+
+      /* ขั้นที่ 3: รับรองผลได้ต่อเมื่อเลือกระดับแล้ว */
+      var canApprove = passedCheck && !!state.level;
+      var ap = $$('rv-approve');
+      ap.disabled = !canApprove;
+      ap.style.opacity = canApprove ? '1' : '0.5';
+      ap.style.cursor  = canApprove ? '' : 'not-allowed';
+      mark(ap, state.status === S.APPROVED, CO.APPROVED.hex);
+
+      $$('rv-hint').textContent =
+        state.status === S.APPROVED ? 'รับรองผลแล้ว — กด "บันทึกผล" เพื่อส่งกลับ Google Sheets'
+        : !passedCheck              ? 'ตรวจหลักฐานก่อน แล้วกด "ดำเนินการตรวจสอบแล้ว" จึงจะเลือกระดับการรับรองได้'
+        : !state.level              ? 'เลือกระดับการรับรอง แล้วจึงกด "รับรองผลเรียบร้อยแล้ว" ได้'
+        :                             'พร้อมรับรองผล — กดปุ่ม "รับรองผลเรียบร้อยแล้ว"';
+    }
+
+    $$('rv-revise').addEventListener('click', function () {
+      state.status = S.REVISE; state.level = ''; $$('rv-level').value = ''; paint();
+    });
+    $$('rv-check').addEventListener('click', function () { state.status = S.CHECKING; paint(); });
+    $$('rv-level').addEventListener('change', function () { state.level = this.value; paint(); });
+    $$('rv-approve').addEventListener('click', function () {
+      if (this.disabled) return;
+      state.status = S.APPROVED; paint();
+    });
+
+    paint();
+
+    /* ---- บันทึกกลับ Google Sheets ---- */
+    $$('rv-save').addEventListener('click', function () {
+      state.comment = $$('rv-comment').value.trim();
+
+      if (state.status === S.APPROVED && !state.level) {
+        UI.toast('warning', 'ยังเลือกระดับไม่ครบ', 'กรุณาเลือกระดับการรับรองก่อนบันทึก');
+        return;
+      }
       if (API.demoMode) {
         UI.toast('info', 'โหมดตัวอย่าง', 'ยังต่อ Google Sheet ไม่ได้ จึงบันทึกลงชีตจริงไม่ได้');
         return;
@@ -524,21 +682,25 @@
         action: 'updateStatus',
         sheet: r.sheet,
         row: r.row,
-        status: result.value.status,
-        comment: result.value.comment,
+        status: state.status,
+        level: state.level,          /* เดิมไม่เคยส่งค่านี้ ระดับจึงไม่ถูกบันทึก */
+        comment: state.comment,
         reviewer: user.username || user.hospital
       })
         .then(function (res) {
           UI.close();
           if (res.status !== 'success') {
-            UI.toast('error', 'บันทึกไม่สำเร็จ', res.message || '');
+            UI.toast('error', 'บันทึกไม่สำเร็จ', res.message || 'ไม่ทราบสาเหตุ');
             return;
           }
-          UI.toast('success', 'บันทึกเรียบร้อย', 'อัปเดตสถานะใน Google Sheet แล้ว');
+          close();
+          UI.toast('success', 'บันทึกเรียบร้อย',
+            'อัปเดตเป็น "' + state.status + '"' + (state.level ? ' ระดับ ' + state.level : '') + ' แล้ว');
           load(false);
         })
         .catch(function (err) {
           UI.close();
+          if (err && err.authError) return;
           UI.toast('error', 'เกิดข้อผิดพลาด', err.message);
         });
     });

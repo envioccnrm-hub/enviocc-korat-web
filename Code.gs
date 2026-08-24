@@ -645,7 +645,22 @@ function updateStatus(payload) {
                   .map(function (h) { return String(h).trim(); });
   var m = followMap_(headers);
 
-  if (m.status >= 0) sh.getRange(rowNo, m.status + 1).setValue(payload.status || STATUS_CHECKING);
+  if (m.status < 0) {
+    return { status: 'error',
+             message: 'ไม่พบคอลัมน์ "สถานะ" ในชีต ' + name + ' จึงบันทึกผลไม่ได้' };
+  }
+  sh.getRange(rowNo, m.status + 1).setValue(payload.status || STATUS_CHECKING);
+
+  /* ระดับการรับรอง — เดิมไม่เคยถูกเขียนลงชีตเลย ค่าที่ผู้ตรวจเลือกจึงหายไปเงียบ ๆ
+     เขียนเฉพาะตอนที่ส่งค่ามา เพื่อไม่ไปลบระดับเดิมตอนแค่เปลี่ยนสถานะ */
+  if (payload.level) {
+    if (m.level < 0) {
+      return { status: 'error',
+               message: 'ไม่พบคอลัมน์ "ระดับผลการประเมิน" ในชีต ' + name +
+                        ' จึงบันทึกระดับการรับรองไม่ได้' };
+    }
+    sh.getRange(rowNo, m.level + 1).setValue(payload.level);
+  }
 
   if (m.comment >= 0) {
     // ต่อท้ายชื่อผู้ตรวจกับวันที่ไว้ในช่องหมายเหตุ เพราะชีตไม่มีคอลัมน์แยก
@@ -655,7 +670,13 @@ function updateStatus(payload) {
     sh.getRange(rowNo, m.comment + 1).setValue(note ? note + '\n— ' + who + ' (' + stamp + ')' : '');
   }
 
-  return { status: 'success', message: 'บันทึกผลการตรวจเรียบร้อยแล้ว' };
+  return {
+    status: 'success',
+    message: 'บันทึกผลการตรวจเรียบร้อยแล้ว',
+    row: rowNo,
+    savedStatus: payload.status || STATUS_CHECKING,
+    savedLevel: payload.level || ''
+  };
 }
 
 /* ============================================================
