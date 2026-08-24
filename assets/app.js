@@ -193,15 +193,29 @@
       });
     },
 
-    /** สี + ไอคอนของแต่ละสถานะ ใช้ร่วมกันทั้ง 2 หน้า */
-    statusStyle: function (status) {
+    /** แปลงข้อความสถานะในชีต เป็นคีย์ของ STATUS_COLORS */
+    statusKey: function (status) {
       var S = CFG.STATUS;
-      switch (status) {
-        case S.APPROVED: return { cls: 'bg-green-500/10 text-green-700 border-green-500/30', icon: 'workspace_premium' };
-        case S.CHECKING: return { cls: 'bg-blue-500/10 text-blue-700 border-blue-500/30',   icon: 'fact_check' };
-        case S.REVISE:   return { cls: 'bg-red-500/10 text-red-600 border-red-500/30',      icon: 'warning' };
-        default:         return { cls: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/30', icon: 'hourglass_empty' };
-      }
+      if (status === S.APPROVED) return 'APPROVED';
+      if (status === S.CHECKING) return 'CHECKING';
+      if (status === S.REVISE)   return 'REVISE';
+      if (status === S.PENDING)  return 'PENDING';
+      return status ? 'PENDING' : 'NONE';
+    },
+
+    /**
+     * สี + ไอคอนของสถานะ — อ่านจาก APP_CONFIG.STATUS_COLORS แหล่งเดียว
+     * รับได้ทั้งข้อความสถานะจากชีต และคีย์ตรง ๆ เช่น 'ALL' / 'NONE'
+     */
+    statusColor: function (statusOrKey) {
+      var map = CFG.STATUS_COLORS || {};
+      return map[statusOrKey] || map[UI.statusKey(statusOrKey)] || map.PENDING;
+    },
+
+    /** เผื่อโค้ดเดิมที่ยังเรียก statusStyle อยู่ */
+    statusStyle: function (status) {
+      var c = UI.statusColor(status);
+      return { cls: c.badge, icon: c.icon, hex: c.hex };
     },
 
     statusBadge: function (status) {
