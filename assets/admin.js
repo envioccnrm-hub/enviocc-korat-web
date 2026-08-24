@@ -34,11 +34,26 @@
     bindPaneTabs();
     bindUsers();
     bindKpi();
+
+    /* แท็บคู่มือของ สสจ. — ลิงก์และเบอร์ติดต่ออ่านจาก config แก้ที่เดียว */
+    var ml = $('admin-manual-link');
+    if (ml && CFG.ADMIN_MANUAL_URL) ml.href = CFG.ADMIN_MANUAL_URL;
+    var cl = $('admin-contact-line');
+    if (cl) cl.textContent = CFG.CONTACT_LINE || '';
+
     applyView();
     setActiveCard('');
 
     var lvYear = $('lv-year');
-    if (lvYear) lvYear.addEventListener('change', renderLevels);
+    if (lvYear) {
+      lvYear.addEventListener('input', renderLevels);
+      lvYear.addEventListener('change', renderLevels);
+    }
+    var lvAll = $('lv-year-all');
+    if (lvAll) lvAll.addEventListener('click', function () {
+      if (lvYear) lvYear.value = '';
+      renderLevels();
+    });
 
     /* ค่า KPI ต้องมาก่อนวาดแท็บสรุประดับ จึงโหลดเสร็จแล้วค่อยวาดซ้ำ */
     loadSettings().then(function () { renderKpiForms(); renderLevels(); });
@@ -367,10 +382,23 @@
 
     renderKPI(rows, st);
 
+    /* หมวด (Green) / องค์ประกอบ (อาชีวอนามัยฯ) — คำเรียกต่างกันตามสายงาน */
+    var word = view === 'occ' ? 'องค์ประกอบ' : 'หมวด';
+    $('dash-cat-title').textContent = 'อันดับ' + word + 'ที่ถูกส่งแก้ไขมากที่สุด';
+    $('dash-catpie-title').textContent = 'สัดส่วนการแก้ไขของทุก' + word;
+    $('dash-catpie-sub').textContent = 'แต่ละ' + word + 'คิดเป็นกี่ % ของการส่งแก้ไขทั้งหมด';
+
+    /* 5 อันดับแรก */
     $('dash-cat').innerHTML = Viz.hbars(Stats.freqMulti(rows, 'categories', 5), {
       unit: 'ครั้ง', maxLen: 58,
       emptyText: 'ยังไม่มีรายการส่งแก้ไขในขอบเขตนี้'
     });
+
+    /* แผนภูมิวงกลมของทุกหมวด/องค์ประกอบ เห็นภาพรวมว่าหมวดไหนหนักจริง */
+    var allCats = Stats.freqMulti(rows, 'categories');
+    $('dash-cat-pie').innerHTML = allCats.length
+      ? Viz.donut(allCats, { centerLabel: 'ครั้ง', unit: 'ครั้ง' })
+      : '<p class="text-sm text-text-muted">ยังไม่มีข้อมูล</p>';
 
     $('dash-level').innerHTML = Viz.donut(Stats.freq(rows, 'level'), {
       colors: Viz.LEVEL_COLORS, centerLabel: 'รายการ',
@@ -396,6 +424,12 @@
     $('dash-item-count').textContent = items.length
       ? 'ถูกส่งแก้ไขทั้งหมด ' + items.length + ' ข้อ'
       : '';
+
+    /* 5 อันดับแรก แยกออกมาให้อ่านง่าย ไม่ต้องไล่หาในกราฟแท่งยาว ๆ */
+    $('dash-item-top').innerHTML = Viz.hbars(items.slice(0, 5), {
+      unit: 'ครั้ง', maxLen: 58,
+      emptyText: 'ยังไม่มีข้อที่ถูกส่งแก้ไข'
+    });
     /* ชุดข้อมูลเดียว — ความยาวแท่งบอกจำนวนอยู่แล้ว จึงใช้สีเดียว
        ถ้าไล่สีตามอันดับ ผู้อ่านจะเข้าใจผิดว่าแต่ละแท่งเป็นคนละประเภท */
     $('dash-item').innerHTML = Viz.vbars(items, {
@@ -451,18 +485,12 @@
   }
 
   function renderKPI(rows, st) {
-    var submitted = Stats.uniqueCount(rows, 'hospital');
-    var denom = registryDenominator();
-    var coverage = denom ? submitted * 100 / denom : 0;
-
+    /* ไม่แสดง "รายการส่งงานทั้งหมด" เพราะมีกล่องนี้ในแท็บตรวจรับรองแล้ว
+       และไม่แสดง "ความครอบคลุมของหน่วยงาน" เพราะจำนวนหน่วยงานทั้งจังหวัด
+       ไม่ได้คงที่ตามทะเบียน จึงคิดเป็นเปอร์เซ็นต์ให้ถูกต้องไม่ได้ */
     $('dash-kpi').innerHTML = [
       Viz.kpi({
-        label: 'รายการส่งงานทั้งหมด', icon: 'inbox', color: '#0A2540',
-        value: st.total.toLocaleString('th-TH'),
-        sub: 'จาก ' + submitted + ' หน่วยงานที่ส่งเข้ามา'
-      }),
-      Viz.kpi({
-        label: 'อัตราการรับรองผล', icon: 'workspace_premium', color: '#16A34A',
+        label: 'อัตราการรับรองผล', icon: 'workspace_premium', color: '#7C3AED',
         value: st.approvedPct.toFixed(1) + '%',
         sub: 'รับรองแล้ว ' + st.approved + ' จาก ' + st.total + ' รายการ',
         bar: st.approvedPct, target: 100
@@ -472,18 +500,11 @@
         value: st.outstanding.toLocaleString('th-TH'),
         sub: 'รอตรวจ ' + st.pending + ' • ตรวจแล้ว ' + st.checking + ' • ต้องแก้ไข ' + st.revise
       }),
-      denom
-        ? Viz.kpi({
-            label: 'ความครอบคลุมของหน่วยงาน', icon: 'domain', color: '#0072CE',
-            value: coverage.toFixed(1) + '%',
-            sub: 'ส่งรายงานแล้ว ' + submitted + ' จาก ' + denom + ' แห่งในทะเบียน',
-            bar: coverage, target: 100
-          })
-        : Viz.kpi({
-            label: 'หน่วยงานที่ส่งรายงาน', icon: 'domain', color: '#0072CE',
-            value: submitted.toLocaleString('th-TH'),
-            sub: 'ยังไม่มีทะเบียนหน่วยงานให้เทียบเป็นเปอร์เซ็นต์'
-          })
+      Viz.kpi({
+        label: 'หน่วยงานที่ส่งรายงาน', icon: 'domain', color: '#0072CE',
+        value: Stats.uniqueCount(rows, 'hospital').toLocaleString('th-TH'),
+        sub: 'นับจากรายการที่ผ่านตัวกรองด้านบน'
+      })
     ].join('');
   }
 
@@ -879,17 +900,15 @@
    *  แผนภูมิที่ 1 = สัดส่วนรวมทุกระดับ
    *  แผนภูมิถัดไป = แต่ละระดับเทียบกับเป้าหมาย KPI
    * ------------------------------------------------------- */
+  /** เสนอปีที่มีอยู่จริงเป็นตัวเลือกช่วยพิมพ์ แต่ผู้ใช้พิมพ์ปีอื่นเองได้ */
   function fillLevelYears() {
-    var sel = $('lv-year');
-    if (!sel) return;
+    var list = $('lv-year-list');
+    if (!list) return;
     var years = {};
-    allRows.forEach(function (r) { if (r.year) years[r.year] = 1; });
-    var cur = sel.value;
-    sel.innerHTML = '<option value="">ทุกปี</option>' +
-      Object.keys(years).sort().reverse().map(function (y) {
-        return '<option value="' + esc(y) + '">' + esc(y) + '</option>';
-      }).join('');
-    sel.value = cur;
+    allRows.forEach(function (r) { if (r.year) years[String(r.year).trim()] = 1; });
+    list.innerHTML = Object.keys(years).sort().reverse().map(function (y) {
+      return '<option value="' + esc(y) + '"></option>';
+    }).join('');
   }
 
   function renderLevels() {
@@ -899,7 +918,7 @@
     var k = view === 'occ' ? 'occ' : 'green';
     var meta = WORK_META[k];
     var levels = CFG.LEVELS[k] || [];
-    var year = $('lv-year') ? $('lv-year').value : '';
+    var year = $('lv-year') ? String($('lv-year').value).trim() : '';
 
     $('lv-title').textContent = 'สรุประดับผลการประเมินสะสมทั้งจังหวัด — ' + meta.label;
     $('lv-title').style.color = meta.color;
@@ -922,7 +941,10 @@
     });
 
     var total = levels.reduce(function (a, L) { return a + count[L]; }, 0);
-    var denom = registryDenominator() || total || 1;
+    /* เดิมหารด้วยจำนวนหน่วยงานในทะเบียน ซึ่งไม่ตรงความจริง (จังหวัดมีมากกว่านั้น
+       และแยกประเภทกันอีก) จึงเปลี่ยนมานับจากหน่วยงานที่ผ่านการรับรองจริงในชีต
+       เป็นฐาน แล้วบอกให้ชัดว่าเทียบกับอะไร ไม่ไปอ้างตัวเลขทั้งจังหวัดที่ไม่รู้จริง */
+    var denom = total || 1;
 
     /* --- แผนภูมิรวม --- */
     var items = levels.map(function (L) {
@@ -948,8 +970,8 @@
 
       cards.push('<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">' +
         '<h4 class="font-bold text-tertiary font-headline mb-1">' + esc(L) + '</h4>' +
-        '<p class="text-xs text-text-muted mb-4">' + got + ' แห่ง จากทั้งจังหวัด ' + denom + ' แห่ง' +
-          ' = ' + pct.toFixed(1) + '%</p>' +
+        '<p class="text-xs text-text-muted mb-4"><b>' + got + ' แห่ง</b> — คิดเป็น ' + pct.toFixed(1) +
+          '% ของหน่วยงานที่ผ่านการรับรองในงานนี้ (' + denom + ' แห่ง)</p>' +
         (target != null
           ? Viz.progress(pct, { color: Viz.LEVEL_COLORS[L] || meta.color, target: target }) +
             '<p class="text-xs mt-2 ' + (pct >= target ? 'text-green-700' : 'text-text-muted') + '">' +

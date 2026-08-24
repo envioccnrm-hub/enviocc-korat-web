@@ -243,17 +243,19 @@
         </p>
 
         <!-- KPI ภาพรวม -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dash-kpi"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8" id="dash-kpi"></div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <!-- อันดับหมวด/องค์ประกอบ -->
           <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
-            <h3 class="font-bold text-tertiary font-headline mb-1">อันดับหมวด/องค์ประกอบที่ถูกส่งแก้ไขมากที่สุด</h3>
-            <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ “หมวดที่ต้องการแก้ไข” ทุกแถวในชีต (1 แถวเลือกได้หลายหมวด นับให้ครบทุกหมวด)</p>
+            <h3 class="font-bold text-tertiary font-headline mb-1" id="dash-cat-title">อันดับหมวดที่ถูกส่งแก้ไขมากที่สุด</h3>
+            <p class="text-xs text-text-muted mb-5">5 อันดับแรก นับจากทุกรายการที่ผ่านตัวกรองด้านบน</p>
             <div id="dash-cat"></div>
+            <h4 class="font-semibold text-tertiary text-sm mt-6 mb-1" id="dash-catpie-title">สัดส่วนการแก้ไขของทุกหมวด</h4>
+            <p class="text-xs text-text-muted mb-4" id="dash-catpie-sub">แต่ละหมวดคิดเป็นกี่ % ของการส่งแก้ไขทั้งหมด</p>
+            <div id="dash-cat-pie"></div>
           </div>
 
-          <!-- สัดส่วนระดับผลการประเมิน -->
           <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
             <h3 class="font-bold text-tertiary font-headline mb-1">สัดส่วนระดับผลการประเมินที่ขอรับรอง</h3>
             <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ “ระดับผลการประเมิน” ของรายการที่ส่งเข้ามา</p>
@@ -266,10 +268,13 @@
         <!-- สถิติรายข้อ -->
         <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm mb-6">
           <div class="flex flex-wrap items-end justify-between gap-2 mb-1">
-            <h3 class="font-bold text-tertiary font-headline">สถิติการส่งแก้ไขรายข้อ (ทุกข้อ)</h3>
+            <h3 class="font-bold text-tertiary font-headline">อันดับข้อที่ถูกส่งแก้ไขมากที่สุด</h3>
             <span class="text-xs text-text-muted" id="dash-item-count"></span>
           </div>
           <p class="text-xs text-text-muted mb-5">ข้อที่โรงพยาบาลส่งแก้ไขบ่อยที่สุด = จุดที่ควรจัดอบรม/ทำแนวทางกลางให้ทั้งจังหวัด — แสดงครบทุกข้อ เรียงจากมากไปน้อย เลื่อนดูทางขวาได้</p>
+          <div id="dash-item-top"></div>
+          <h4 class="font-semibold text-tertiary text-sm mt-8 mb-1">จำนวนครั้งที่ถูกส่งแก้ไข แยกรายข้อ (ทุกข้อ)</h4>
+          <p class="text-xs text-text-muted mb-4">เลื่อนดูทางขวาได้ เรียงจากมากไปน้อย</p>
           <div id="dash-item"></div>
         </div>
 
@@ -338,7 +343,14 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-text-muted mb-1">ปีที่ประเมิน</label>
-            <select id="lv-year" class="border border-outline-custom rounded-lg px-3 py-2 text-sm"><option value="">ทุกปี</option></select>
+            <div class="flex items-center gap-2">
+              <input id="lv-year" type="text" inputmode="numeric" maxlength="4"
+                     class="w-28 border border-outline-custom rounded-lg px-3 py-2 text-sm"
+                     placeholder="เช่น 2568" list="lv-year-list">
+              <datalist id="lv-year-list"></datalist>
+              <button id="lv-year-all" class="px-3 py-2 text-sm rounded-lg border border-outline-custom hover:bg-primary-light/40 transition-colors">ทุกปี</button>
+            </div>
+            <p class="text-[11px] text-text-muted mt-1">พิมพ์เฉพาะตัวเลขปี พ.ศ. หรือกด "ทุกปี" เพื่อดูรวมทุกปี</p>
           </div>
         </div>
         <div id="lv-charts" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -347,127 +359,46 @@
 
     <!-- ---------- คู่มือการใช้งาน (เนื้อหาชุดเดียวกับหน้าโรงพยาบาล) ---------- -->
     <section id="view-manual" class="hidden">
-<div class="max-w-6xl mx-auto space-y-12">
-<!-- Page Header -->
-<div class="space-y-2 border-b border-outline-custom pb-6">
-<h1 class="text-4xl font-headline font-bold text-primary">คู่มือการใช้งานและเอกสารอ้างอิง</h1>
-<p class="text-lg font-body text-text-muted">เอกสารและคู่มือต่างๆ สำหรับใช้ประกอบการประเมินมาตรฐานโรงพยาบาล</p>
-</div>
-<!-- Section 1: Documents and Manuals -->
-<section>
-<h2 class="text-2xl font-headline font-semibold text-text-main mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">description</span>
-                        เอกสารและคู่มือ
-                    </h2>
-<div id="doc-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Card 1 -->
-<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col group h-full">
-<div class="w-20 h-20 rounded-lg bg-primary-light flex items-center justify-center mb-1 text-primary group-hover:bg-primary group-hover:text-white transition-colors mx-auto"><img alt="คู่มือการใช้งาน" class="w-full h-full object-contain rounded-lg" src="./logo3.png"></div>
-<h3 class="text-lg font-headline font-semibold text-text-main mb-1 flex-grow text-center">คู่มือการใช้งานระบบ<div class="">สำหรับโรงพยาบาล</div></h3>
-<a href="https://drive.google.com/drive/folders/1-qhHBjju_gZULiI_Ov_n2p5iXgIZS1qn?usp=sharing" target="_blank" class="mt-auto w-full py-2.5 px-4 rounded-lg bg-primary-light text-primary font-label font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">download</span>Download / View</a>
-</div>
-<!-- Card 2 -->
-<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col group h-full">
-<div class="w-20 h-20 rounded-lg bg-secondary-light flex items-center justify-center mb-4 text-secondary group-hover:bg-secondary group-hover:text-white transition-colors mx-auto"><img alt="Green &amp; Clean Logo" class="w-full h-full object-contain rounded-lg" src="./logo4.png"></div>
-<h3 class="text-lg font-headline font-semibold text-text-main mb-3 flex-grow justify-center" style="text-align: center; color: rgb(0, 0, 0);">เกณฑ์การประเมินตามมาตรฐาน<br class="">Green &amp; Clean</h3>
-<a href="https://drive.google.com/drive/folders/1j3pTmnWivXo9-7_ZGPG4dIDPhNKT-rle?usp=sharing" target="_blank" class="mt-auto w-full py-2.5 px-4 rounded-lg bg-primary-light text-primary font-label font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">download</span>Download / View</a>
-</div>
-<!-- Card 3 -->
-<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col group h-full">
-<div class="w-20 h-20 rounded-lg bg-primary-light flex items-center justify-center mb-4 transition-colors mx-auto"><img alt="Occupational Health Logo" class="w-full h-full object-contain rounded-lg" src="./logo5.png"></div>
-<h3 class="text-lg font-headline font-semibold text-text-main mb-3 flex-grow text-center">เกณฑ์การประเมินมาตรฐาน<div class="">การจัดบริการอาชีวอนามัย</div><div class="">และเวชกรรมสิ่งแวดล้อม</div></h3>
-<a href="https://drive.google.com/drive/mobile/folders/1jiSCLKkpxcU5psxw4Enka1qv4hYVZUQM" target="_blank" class="mt-auto w-full py-2.5 px-4 rounded-lg bg-primary-light text-primary font-label font-semibold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"><span class="material-symbols-outlined text-sm">download</span>Download / View</a>
-</div>
-</div>
-</section>
-<!-- Section 2: Contact Info -->
-<section>
-<h2 class="text-2xl font-headline font-semibold text-text-main mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">contact_support</span>
-                        ช่องทางติดต่อเจ้าหน้าที่
-                    </h2>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<!-- Group 1: Green & Clean -->
-<div class="bg-background rounded-xl p-6 border border-outline-custom">
-<h3 class="text-xl font-headline font-semibold text-secondary mb-4 flex items-center gap-2 border-b border-secondary/20 pb-2">
-<span class="material-symbols-outlined">eco</span>
-                                งาน Green &amp; Clean
-                            </h3>
-<ul class="space-y-4">
-<li class="flex items-start gap-3">
-<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
-<span class="material-symbols-outlined text-sm">person</span>
-</div>
-<div>
-<p class="font-headline font-semibold text-text-main">นายชัยภัทร ธีรชาญไชย</p>
-<p class="text-sm text-text-muted font-label mb-1">นักสาธารณสุขชำนาญการ</p>
-<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>097-353-9594</p>
-</div>
-</li>
-<li class="flex items-start gap-3">
-<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
-<span class="material-symbols-outlined text-sm">person</span>
-</div>
-<div>
-<p class="font-headline font-semibold text-text-main">นายภัทรธร สมัครสมาน</p>
-<p class="text-sm text-text-muted font-label mb-1">นักสาธารณสุขปฏิบัติการ</p>
-<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>082-156-1962</p>
-</div>
-</li>
-<li class="flex items-start gap-3">
-<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
-<span class="material-symbols-outlined text-sm">person</span>
-</div>
-<div>
-<p class="font-headline font-semibold text-text-main">นางสาวผไทมาศ เปรื่องปรีชาศักดิ์</p>
-<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขปฏิบัติการ</p>
-<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>084-961-1035</p>
-</div>
-</li>
-</ul>
-</div>
-<!-- Group 2: Occupational Health -->
-<div class="bg-background rounded-xl p-6 border border-outline-custom">
-<h3 class="text-xl font-headline font-semibold text-tertiary mb-4 flex items-center gap-2 border-b border-tertiary/20 pb-2" style="color: rgb(249, 115, 22);">
-<span class="material-symbols-outlined">health_and_safety</span>
-                                งานอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม
-                            </h3>
-<ul class="space-y-4">
-<li class="flex items-start gap-3">
-<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
-<span class="material-symbols-outlined text-sm">person</span>
-</div>
-<div>
-<p class="font-headline font-semibold text-text-main">นายสุขเกษม หลาวทอง</p>
-<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขชำนาญการ</p>
-<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>085-044-4147</p>
-</div>
-</li>
-<li class="flex items-start gap-3">
-<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
-<span class="material-symbols-outlined text-sm">person</span>
-</div>
-<div>
-<p class="font-headline font-semibold text-text-main">นายวรายุ สุมาลา</p>
-<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขปฏิบัติการ</p>
-<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>082-818-1991</p>
-</div>
-</li>
-<li class="flex items-start gap-3">
-<div class="mt-1 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-primary shadow-sm border border-outline-custom">
-<span class="material-symbols-outlined text-sm">person</span>
-</div>
-<div>
-<p class="font-headline font-semibold text-text-main">นางสาววิชุณี หัสรังค์</p>
-<p class="text-sm text-text-muted font-label mb-1">นักวิชาการสาธารณสุขปฏิบัติการ</p>
-<p class="text-sm text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">call</span>080-394-1959</p>
-</div>
-</li>
-</ul>
-</div>
-</div>
-</section>
-</div>
+      <div class="bg-white border-b border-slate-200 -mx-6 lg:-mx-10 px-6 lg:px-10 py-4 mb-6 shadow-sm">
+        <h2 class="text-[22px] font-bold" style="color:#0059a4">คู่มือการใช้งานสำหรับผู้ดูแลระบบ (สสจ.)</h2>
+        <p class="text-xs text-text-muted mt-0.5">คู่มือและแนวทางการใช้งานระบบรับรองและติดตามการประเมินมาตรฐานสิ่งแวดล้อมและอาชีวอนามัย สสจ.นครราชสีมา</p>
+      </div>
+
+      <div class="space-y-6 max-w-4xl mx-auto w-full">
+        <a id="admin-manual-link" href="#" target="_blank" rel="noopener"
+           class="group bg-white hover:bg-[#f1f8ff] border-2 border-outline-custom hover:border-[#0059a4] rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 transition-all shadow-sm">
+          <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-red-600 text-3xl">picture_as_pdf</span>
+          </div>
+          <div class="space-y-1.5 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h4 class="font-bold text-slate-900 group-hover:text-[#0059a4] text-lg sm:text-xl transition-colors">คู่มือการใช้งานระบบรับรองและติดตามการประเมินมาตรฐานฯ</h4>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-red-100 text-red-700 border-red-200">PDF / Google Drive</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">คลิกเพื่อเปิดดูเอกสารคู่มือการใช้งานระบบฉบับเต็มผ่าน Google Drive</p>
+            <div class="flex items-center gap-2 text-[11px] text-slate-400">
+              <span>สำนักงานสาธารณสุขจังหวัดนครราชสีมา</span><span>•</span><span>ปีงบประมาณ 2567</span>
+            </div>
+          </div>
+          <div class="self-end sm:self-center shrink-0">
+            <span class="px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 bg-[#0059a4] group-hover:bg-[#004785] text-white transition-all shadow-sm">
+              <span class="material-symbols-outlined text-lg">open_in_new</span> คลิกเพื่อดูคู่มือ
+            </span>
+          </div>
+        </a>
+
+        <div class="bg-[#eaf4ff] border border-blue-200/80 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-[#0059a4] text-white flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined">support_agent</span>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-800">ต้องการความช่วยเหลือเพิ่มเติม หรือสอบถามการใช้งาน?</p>
+              <p class="text-xs text-slate-600 mt-0.5" id="admin-contact-line"></p>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ---------- หน้าจัดการผู้ใช้งาน ---------- -->
