@@ -337,7 +337,7 @@
       : '';
     /* ชุดข้อมูลเดียว — ความยาวแท่งบอกจำนวนอยู่แล้ว จึงใช้สีเดียว
        ถ้าไล่สีตามอันดับ ผู้อ่านจะเข้าใจผิดว่าแต่ละแท่งเป็นคนละประเภท */
-    $('dash-item').innerHTML = Viz.vbars(items.slice(0, 10), {
+    $('dash-item').innerHTML = Viz.vbars(items, {
       color: Stats.PALETTE[0], maxLen: 16, barWidth: 62,
       emptyText: 'ยังไม่มีข้อที่ถูกส่งแก้ไข'
     });

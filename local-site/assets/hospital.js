@@ -732,10 +732,11 @@
 
   var STEPS = [
     { label: 'ยังไม่ส่งข้อมูลแก้ไข', icon: 'edit_note' },
-    { label: 'รอตรวจสอบ',            icon: 'hourglass_empty' },
+    { label: 'รอการตรวจสอบ',        icon: 'hourglass_empty' },
     { label: 'ต้องแก้ไขเพิ่มเติม',     icon: 'warning' },
-    { label: 'ดำเนินการตรวจสอบแล้ว',  icon: 'fact_check' },
-    { label: 'รับรองผลการประเมิน',    icon: 'workspace_premium' }
+    { label: 'ดำเนินการตรวจสอบ',     icon: 'fact_check' },
+    { label: 'รับรองผลการประเมิน',    icon: 'workspace_premium',
+      sub: '[มาตรฐาน / ดีเยี่ยม / ท้าทาย]' }
   ];
 
   function stepIndex(status) {
@@ -768,7 +769,9 @@
       return '<div class="relative z-10 flex flex-col items-center flex-1">' +
              '<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 border-surface shadow-sm ' + color + '">' +
              '<span class="material-symbols-outlined text-sm">' + s.icon + '</span></div>' +
-             '<p class="text-xs text-center mt-4 ' + textColor + '">' + s.label + '</p></div>';
+             '<p class="text-xs text-center leading-tight whitespace-nowrap mt-4 ' + textColor + '">' + s.label +
+               (s.sub ? '<br><span class="text-[10px] font-normal">' + s.sub + '</span>' : '') +
+             '</p></div>';
     }).join('');
 
     box.innerHTML =
