@@ -15,8 +15,16 @@
   var API = {
     demoMode: false,
 
+    /** token ที่ได้ตอนล็อกอิน — ทุกคำสั่งต้องแนบไป ไม่งั้น Apps Script ปฏิเสธ */
+    token: function () {
+      var u = Auth.get();
+      return (u && u.token) || '';
+    },
+
     url: function (action, params) {
       var u = CFG.API_URL + '?action=' + encodeURIComponent(action);
+      var tk = API.token();
+      if (tk) u += '&token=' + encodeURIComponent(tk);
       Object.keys(params || {}).forEach(function (k) {
         if (params[k] !== undefined && params[k] !== null && params[k] !== '') {
           u += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
@@ -25,28 +33,63 @@
       return u;
     },
 
+    /**
+     * เซสชันหมดอายุ หรือถูกปฏิเสธสิทธิ์ → ล้างข้อมูลแล้วเด้งไปล็อกอินใหม่
+     * ทำที่ชั้นนี้ที่เดียว ทุกหน้าจึงได้พฤติกรรมเดียวกันโดยไม่ต้องเขียนซ้ำ
+     */
+    guard: function (res) {
+      if (res && res.status === 'error' &&
+          (res.code === 'AUTH_REQUIRED' || res.code === 'FORBIDDEN')) {
+        Auth.clear();
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'warning',
+            title: res.code === 'FORBIDDEN' ? 'ไม่มีสิทธิ์ใช้งาน' : 'เซสชันหมดอายุ',
+            text: res.message || 'กรุณาเข้าสู่ระบบใหม่',
+            confirmButtonColor: '#0072CE'
+          }).then(function () { window.location.replace('./index.html'); });
+        } else {
+          window.location.replace('./index.html');
+        }
+        var e = new Error(res.message || 'ต้องเข้าสู่ระบบใหม่');
+        e.authError = true;
+        throw e;
+      }
+      return res;
+    },
+
     get: function (action, params) {
       return fetch(API.url(action, params), { method: 'GET', redirect: 'follow' })
         .then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.json();
-        });
+        })
+        .then(API.guard);
     },
 
     post: function (payload) {
+      var body = {};
+      Object.keys(payload || {}).forEach(function (k) { body[k] = payload[k]; });
+      var tk = API.token();
+      if (tk) body.token = tk;
+
       return fetch(CFG.API_URL, {
         method: 'POST',
         redirect: 'follow',
-        body: JSON.stringify(payload)   // ตั้งใจไม่ใส่ headers — ดูหมายเหตุด้านบน
+        body: JSON.stringify(body)   // ตั้งใจไม่ใส่ headers — ดูหมายเหตุด้านบน
       }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
-      });
+      }).then(API.guard);
     },
 
     /** GET ที่มีข้อมูลตัวอย่างสำรอง เอาไว้ดูหน้าเว็บตอนยังไม่ได้ deploy */
     getOrDemo: function (action, params, demoValue) {
       return API.get(action, params).catch(function (err) {
+        /* ปัญหาเรื่องสิทธิ์ต้องเด้งไปล็อกอิน ห้ามกลบด้วยข้อมูลตัวอย่าง
+           ส่วนปัญหาเชื่อมต่อ (ยังไม่ได้ deploy) ยังใช้ข้อมูลตัวอย่างได้เหมือนเดิม
+           หน้าล็อกอินเรียก getDropdowns ตอนยังไม่มี token จึงต้องผ่านทางนี้ได้ */
+        if (err && err.authError) throw err;
         if (!CFG.ALLOW_DEMO_FALLBACK) throw err;
         console.warn('[demo] ต่อ API ไม่ได้ (' + action + '):', err.message);
         API.demoMode = true;

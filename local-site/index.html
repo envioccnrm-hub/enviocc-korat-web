@@ -386,11 +386,17 @@
         var rec = fullData.filter(function (r) { return r.hospital === hospital; })[0] || {};
 
         // สิทธิ์: ยึดค่าจากชีตเป็นหลัก + เผื่อกรณีชื่อหน่วยงานเป็น สสจ. (เหมือนของเดิม)
-        var isAdmin = data.role === 'admin' ||
-                      hospital.indexOf('สสจ') !== -1 ||
-                      hospital.indexOf('สาธารณสุขจังหวัด') !== -1;
+        /* ถ้าต่อ Apps Script ได้ (มี token) ให้ยึดสิทธิ์ที่เซิร์ฟเวอร์ตัดสินเท่านั้น
+           การเดาจากชื่อหน่วยงานใช้เฉพาะโหมดตัวอย่างที่ยังไม่มี token */
+        var isAdmin = data.token
+          ? data.role === 'admin'
+          : (data.role === 'admin' ||
+             hospital.indexOf('สสจ') !== -1 ||
+             hospital.indexOf('สาธารณสุขจังหวัด') !== -1);
 
         Auth.set({
+          /* กุญแจยืนยันตัวตนกับ Apps Script ทุกคำสั่งหลังจากนี้ */
+          token: data.token || '',
           hospital: data.hospital || hospital,
           hospitalCode: data.hospitalCode || '',
           username: username || data.contactName || data.hospital || hospital,

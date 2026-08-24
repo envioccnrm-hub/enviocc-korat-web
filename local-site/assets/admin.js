@@ -660,7 +660,9 @@
           district: document.getElementById('u-district').value.trim(),
           type: document.getElementById('u-type').value.trim(),
           hospital: hospital,
-          password: pwd || (u ? u.password : ''),
+          /* เว้นว่าง = คงรหัสเดิม ฝั่ง Apps Script อ่านของเดิมจากชีตให้เอง
+             หน้าเว็บจึงไม่ต้องรู้รหัสผ่านของใครเลย */
+          password: pwd,
           role: document.getElementById('u-role').value
         };
       }

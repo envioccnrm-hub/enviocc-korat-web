@@ -31,6 +31,9 @@ const STATUS_CHECKING = "ดำเนินการตรวจสอบแล�
 const STATUS_REVISE   = "ต้องแก้ไขเพิ่มเติม";
 const STATUS_APPROVED = "รับรองผลเรียบร้อยแล้ว";
 
+/* ---------- อายุของ token หลังล็อกอิน (ชั่วโมง) ---------- */
+const TOKEN_TTL_HOURS = 12;
+
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
  * เพราะแต่ละชีตเขียนคนละแบบ เช่น
@@ -68,6 +71,105 @@ function typeCodes_(text) {
 }
 
 /* ============================================================
+ *  ตรวจสิทธิ์ — หัวใจของการกั้นข้อมูล
+ *
+ *  เดิมทุก action เชื่อค่าที่หน้าเว็บส่งมาล้วน ๆ ใครรู้ URL /exec
+ *  ก็เรียกดูข้อมูลทุกโรงพยาบาลได้ ตอนนี้ทุก action (ยกเว้นหน้าล็อกอิน)
+ *  ต้องแนบ token ที่ออกให้ตอนล็อกอิน และ "ขอบเขตข้อมูล" ถูกบังคับจาก
+ *  token ไม่ใช่จากพารามิเตอร์ที่ส่งมา
+ *
+ *  token เป็นแบบมีลายเซ็น (HMAC) จึงไม่ต้องเก็บฝั่งเซิร์ฟเวอร์
+ *  แก้ไขเนื้อในไม่ได้เพราะลายเซ็นจะไม่ตรง และหมดอายุเองตาม TOKEN_TTL_HOURS
+ * ========================================================== */
+
+/** กุญแจสำหรับเซ็น token — สร้างครั้งเดียวแล้วเก็บไว้ใน Script Properties */
+function tokenSecret_() {
+  var props = PropertiesService.getScriptProperties();
+  var k = props.getProperty('TOKEN_SECRET');
+  if (!k) {
+    k = Utilities.getUuid() + Utilities.getUuid();
+    props.setProperty('TOKEN_SECRET', k);
+  }
+  return k;
+}
+
+function sign_(data) {
+  return Utilities.base64EncodeWebSafe(
+    Utilities.computeHmacSha256Signature(data, tokenSecret_()));
+}
+
+/** ออก token ให้หลังล็อกอินสำเร็จ */
+function issueToken_(sess) {
+  var body = Utilities.base64EncodeWebSafe(JSON.stringify({
+    r: sess.role,
+    h: sess.hospital,
+    e: Date.now() + TOKEN_TTL_HOURS * 3600 * 1000
+  }));
+  return body + '.' + sign_(body);
+}
+
+/** อ่าน token คืน null ถ้าปลอม/แก้ไข/หมดอายุ */
+function readToken_(token) {
+  var t = String(token || '');
+  var dot = t.indexOf('.');
+  if (dot < 1) return null;
+
+  var body = t.slice(0, dot), sig = t.slice(dot + 1);
+  if (sign_(body) !== sig) return null;          /* ลายเซ็นไม่ตรง = ถูกแก้หรือปลอม */
+
+  var rec;
+  try {
+    rec = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(body)).getDataAsString());
+  } catch (err) { return null; }
+
+  if (!rec || !rec.e || rec.e < Date.now()) return null;   /* หมดอายุ */
+  return { role: rec.r, hospital: String(rec.h || '') };
+}
+
+/** ต้องล็อกอินก่อน */
+function requireAuth_(p) {
+  var sess = readToken_(p && p.token);
+  if (!sess) throw new Error('AUTH_REQUIRED');
+  return sess;
+}
+
+/** เฉพาะ สสจ. เท่านั้น */
+function requireAdmin_(p) {
+  var sess = requireAuth_(p);
+  if (sess.role !== 'admin') throw new Error('FORBIDDEN');
+  return sess;
+}
+
+/**
+ * สร้างพารามิเตอร์การกรองที่ "เชื่อถือได้"
+ * ถ้าไม่ใช่ สสจ. จะบังคับ hospital เป็นของตัวเองเสมอ
+ * ต่อให้หน้าเว็บส่งชื่อโรงพยาบาลอื่นมาก็ไม่มีผล
+ */
+function scoped_(p) {
+  var sess = requireAuth_(p);
+  var out = {};
+  ['workType', 'hospital', 'district', 'year', 'status'].forEach(function (k) {
+    if (p[k]) out[k] = p[k];
+  });
+  if (sess.role !== 'admin') out.hospital = sess.hospital;
+  return out;
+}
+
+/**
+ * ขอบเขตของสถิติรวม
+ * หน้าโรงพยาบาลต้องใช้ค่าเฉลี่ยทั้งจังหวัดมาเทียบกับตัวเอง จึงไม่บังคับ
+ * ให้เหลือแต่ของตัวเอง แต่ก็ไม่ยอมให้เจาะดูสถิติของโรงพยาบาลอื่นเป็นราย ๆ
+ * (ผลลัพธ์เป็นตัวเลขรวมล้วน ไม่มีชื่อผู้ส่ง เบอร์โทร หรือลิงก์หลักฐาน)
+ */
+function statsScope_(p) {
+  var sess = requireAuth_(p);
+  if (sess.role === 'admin') return p;
+  var out = {};
+  if (p.workType) out.workType = p.workType;
+  return out;
+}
+
+/* ============================================================
  *  ROUTER
  * ========================================================== */
 
@@ -75,18 +177,23 @@ function doGet(e) {
   var p = (e && e.parameter) || {};
   try {
     switch (p.action || '') {
+      /* --- เปิดสาธารณะ: หน้าล็อกอินต้องใช้ก่อนจะมี token --- */
       case 'getDropdowns':   return json(getDropdowns());
-      case 'getMasterData':  return json(getMasterData());
-      case 'getSubmissions': return json(getSubmissions(p));
-      case 'getStats':       return json(getStats(p));
-      case 'getUsers':       return json(getUsers());
-      case 'getRegistry':    return json(getRegistry(p));
-      case 'getDocuments':   return json(getDocuments());
+
+      /* --- ต้องล็อกอิน --- */
+      case 'getMasterData':  requireAuth_(p); return json(getMasterData());
+      case 'getDocuments':   requireAuth_(p); return json(getDocuments());
+      case 'getSubmissions': return json(getSubmissions(scoped_(p)));
+      case 'getRegistry':    return json(getRegistry(scoped_(p)));
+      case 'getStats':       return json(getStats(statsScope_(p)));
+
+      /* --- เฉพาะ สสจ. --- */
+      case 'getUsers':       requireAdmin_(p); return json(getUsers());
       case 'ping':           return json({ status: 'success', message: 'API ทำงานปกติ', version: '2.0', time: new Date() });
       default:               return json({ status: 'success', message: 'API ทำงานปกติ', version: '2.0' });
     }
   } catch (err) {
-    return json({ status: 'error', message: String(err) });
+    return json(errorPayload_(err));
   }
 }
 
@@ -97,16 +204,35 @@ function doPost(e) {
     var action = payload.action || (e && e.parameter && e.parameter.action) || '';
 
     switch (action) {
+      /* --- เปิดสาธารณะ --- */
       case 'login':        return json(doLogin(payload));
+
+      /* --- ต้องล็อกอิน --- */
       case 'submitReport': return json(submitReport(payload));
-      case 'updateStatus': return json(updateStatus(payload));
-      case 'saveUser':     return json(saveUser(payload));
-      case 'deleteUser':   return json(deleteUser(payload));
+
+      /* --- เฉพาะ สสจ. --- */
+      case 'updateStatus': requireAdmin_(payload); return json(updateStatus(payload));
+      case 'saveUser':     requireAdmin_(payload); return json(saveUser(payload));
+      case 'deleteUser':   requireAdmin_(payload); return json(deleteUser(payload));
       default:             return json({ status: 'error', message: 'ไม่รู้จักคำสั่ง: ' + action });
     }
   } catch (err) {
-    return json({ status: 'error', message: String(err) });
+    return json(errorPayload_(err));
   }
+}
+
+/** แปลง error ให้หน้าเว็บรู้ว่าเป็นเรื่องสิทธิ์ จะได้เด้งไปล็อกอินใหม่ได้ถูก */
+function errorPayload_(err) {
+  var msg = String(err && err.message || err);
+  if (msg.indexOf('AUTH_REQUIRED') !== -1) {
+    return { status: 'error', code: 'AUTH_REQUIRED',
+             message: 'เซสชันหมดอายุหรือยังไม่ได้เข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่' };
+  }
+  if (msg.indexOf('FORBIDDEN') !== -1) {
+    return { status: 'error', code: 'FORBIDDEN',
+             message: 'บัญชีนี้ไม่มีสิทธิ์ใช้คำสั่งนี้' };
+  }
+  return { status: 'error', message: msg };
 }
 
 function json(obj) {
@@ -189,9 +315,13 @@ function doLogin(payload) {
     // สสจ. หรือช่องสิทธิ์เขียนว่า Admin = ผู้ดูแลระบบ
     var isAdmin = /^admin$/i.test(rawRole) || codes.indexOf('PHO') !== -1;
 
+    var role = isAdmin ? 'admin' : 'user';
+
     return {
       status: 'success',
-      role: isAdmin ? 'admin' : 'user',
+      role: role,
+      /* token นี้คือสิ่งที่ใช้ยืนยันตัวตนกับทุกคำสั่งหลังจากนี้ */
+      token: issueToken_({ role: role, hospital: name }),
       hospital: name,
       hospitalCode: pass,                        // รหัสโรงพยาบาล = รหัสผ่านในชีตนี้
       district: String(r[0] || '').trim(),
@@ -340,6 +470,10 @@ function saveFiles_(files, payload) {
 }
 
 function submitReport(payload) {
+  /* ต้องล็อกอิน และถ้าไม่ใช่ สสจ. จะส่งในนามหน่วยงานอื่นไม่ได้ */
+  var sess = requireAuth_(payload);
+  if (sess.role !== 'admin') payload.hospital = sess.hospital;
+
   var name = followSheetName_(payload.workType);
   var d = readSheet_(name);
   if (!d.sheet) return { status: 'error', message: 'ไม่พบชีต ' + name };
@@ -603,7 +737,9 @@ function getUsers() {
       district: String(r[0] || '').trim(),
       type: String(r[1] || '').trim(),
       hospital: hospital,
-      password: String(r[3] || '').trim(),
+      /* ไม่ส่งรหัสผ่านกลับออกไปเด็ดขาด — หน้าเว็บไม่มีอะไรต้องใช้ค่านี้
+         การแก้ไขผู้ใช้โดยเว้นช่องรหัสผ่านว่าง จัดการที่ saveUser ให้แล้ว */
+      hasPassword: !!String(r[3] || '').trim(),
       rawRole: rawRole,
       role: /^admin$/i.test(rawRole) ? 'admin' : 'user',
       contactName: String(r[5] || '').trim()
@@ -621,16 +757,25 @@ function saveUser(payload) {
 
   // เก็บคำเดิมในชีต (Hospital / Admin) ไม่เปลี่ยนรูปแบบที่พี่ใช้อยู่
   var roleText = payload.role === 'admin' ? 'Admin' : 'Hospital';
+  var rowNo = parseInt(payload.row, 10);
+  var pass = String(payload.password || '').trim();
+
+  /* แก้ไขผู้ใช้เดิมแล้วเว้นช่องรหัสผ่านว่าง = คงรหัสเดิมไว้
+     (อ่านจากชีตตรงนี้ ไม่ต้องให้หน้าเว็บส่งรหัสเดิมกลับมา) */
+  if (!pass && rowNo && rowNo >= 2 && rowNo <= sh.getLastRow()) {
+    pass = String(sh.getRange(rowNo, 4).getValue() || '').trim();
+  }
+  if (!pass) return { status: 'error', message: 'กรุณาตั้งรหัสผ่าน' };
+
   var values = [
     String(payload.district || '').trim(),
     String(payload.type || '').trim(),
     hospital,
-    String(payload.password || '').trim(),
+    pass,
     roleText,
     String(payload.contactName || '').trim()
   ];
 
-  var rowNo = parseInt(payload.row, 10);
   if (rowNo && rowNo >= 2 && rowNo <= sh.getLastRow()) {
     sh.getRange(rowNo, 1, 1, 6).setValues([values]);
     return { status: 'success', message: 'แก้ไขผู้ใช้งานเรียบร้อยแล้ว', row: rowNo };
