@@ -8,7 +8,7 @@
   var S = CFG.STATUS;
   var user = null;
   var allRows = [];       // ข้อมูลดิบทั้งหมดจากชีต
-  var view = 'all';       // all | green | occ | users
+  var view = 'green';     // green | occ | manual | users
   var pane = 'table';     // table | dashboard
   var registryRows = [];  // ทะเบียนหน่วยงานทั้งจังหวัด (ใช้คำนวณความครอบคลุม)
   var page = 1;
@@ -32,6 +32,15 @@
     bindStatCards();
     bindPaneTabs();
     bindUsers();
+    bindKpi();
+    applyView();
+    setActiveCard('');
+
+    var lvYear = $('lv-year');
+    if (lvYear) lvYear.addEventListener('change', renderLevels);
+
+    /* ค่า KPI ต้องมาก่อนวาดแท็บสรุประดับ จึงโหลดเสร็จแล้วค่อยวาดซ้ำ */
+    loadSettings().then(function () { renderKpiForms(); renderLevels(); });
 
     $('btn-logout').addEventListener('click', function (e) { e.preventDefault(); Auth.logout(); });
     $('btn-sync').addEventListener('click', function () { load(true); });
@@ -54,8 +63,14 @@
           b.classList.toggle('shadow-sm', on);
           b.classList.toggle('text-text-muted', !on);
         });
-        $('pane-table').classList.toggle('hidden', pane !== 'table');
-        $('pane-dashboard').classList.toggle('hidden', pane !== 'dashboard');
+        ['table', 'dashboard', 'levels'].forEach(function (name) {
+          var el = $('pane-' + name);
+          if (el) el.classList.toggle('hidden', pane !== name);
+        });
+        /* กล่องสถิติกับแถบตัวกรองใช้เฉพาะแท็บตรวจรับรอง */
+        var onTable = pane === 'table';
+        if ($('stat-cards')) $('stat-cards').classList.toggle('hidden', !onTable);
+        if ($('filter-bar')) $('filter-bar').classList.toggle('hidden', !onTable);
         render();
       });
     });
@@ -105,18 +120,40 @@
         view = a.getAttribute('data-view');
         page = 1;
 
-        var isUsers = view === 'users';
-        $('view-submissions').classList.toggle('hidden', isUsers);
-        $('view-users').classList.toggle('hidden', !isUsers);
-
-        $('page-title').textContent =
-          view === 'green' ? 'ติดตามงาน Green & Clean Hospital' :
-          view === 'occ'   ? 'ติดตามงานอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม' :
-                             'ภาพรวมการติดตามทั้งหมด';
-
-        if (isUsers) loadUsers(); else render();
+        applyView();
+        if (view === 'users') loadUsers();
+        else if (view !== 'manual') render();
       });
     });
+  }
+
+  /**
+   * จัดหน้าตามแท็บหลักที่เลือก
+   * สลับ section ที่แสดง เปลี่ยนชื่อ/สีหัวข้อ และเปลี่ยนคำว่า หมวด/องค์ประกอบ
+   * ให้ตรงกับสายงาน (Green ใช้ "หมวด" / อาชีวอนามัยฯ ใช้ "องค์ประกอบ")
+   */
+  function applyView() {
+    var isUsers  = view === 'users';
+    var isManual = view === 'manual';
+    var isWork   = !isUsers && !isManual;
+
+    $('view-submissions').classList.toggle('hidden', !isWork);
+    $('view-users').classList.toggle('hidden', !isUsers);
+    if ($('view-manual')) $('view-manual').classList.toggle('hidden', !isManual);
+    if (!isWork) return;
+
+    var green = view === 'green';
+    $('page-title').textContent = green
+      ? 'ติดตามงาน Green & Clean Hospital'
+      : 'ติดตามงานอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม';
+    /* สีหัวข้อตามสายงาน: Green เขียว / อาชีวอนามัยฯ ส้ม */
+    $('page-title').style.color = green ? '#3d6a00' : '#EA580C';
+
+    if ($('tab-dash-label')) {
+      $('tab-dash-label').textContent = green
+        ? 'วิเคราะห์หมวดและข้อที่แก้ไขมากที่สุด'
+        : 'วิเคราะห์องค์ประกอบและข้อที่แก้ไขมากที่สุด';
+    }
   }
 
   /* =========================================================
@@ -129,6 +166,7 @@
       .then(function (res) {
         allRows = (res && res.data) || [];
         fillFilterOptions();
+        fillLevelYears();
         render();
         $('last-sync').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH');
         if (showToast) {
@@ -197,10 +235,27 @@
     });
   }
 
+  /** คีย์สีของกล่องสถิติแต่ละใบ ('' = รายการทั้งหมด) */
+  function cardKey(status) {
+    return !status            ? 'ALL'
+         : status === S.PENDING  ? 'PENDING'
+         : status === S.CHECKING ? 'CHECKING'
+         : status === S.REVISE   ? 'REVISE'
+         : status === S.APPROVED ? 'APPROVED' : 'ALL';
+  }
+
   function setActiveCard(status) {
     document.querySelectorAll('.stat-card').forEach(function (c) {
       c.classList.toggle('active', c.getAttribute('data-status') === status);
     });
+
+    /* หัวตารางต้องบอกว่ากำลังดูอะไรอยู่ ทั้งชื่อและสีต้องตรงกับกล่องที่คลิก */
+    var c = CFG.STATUS_COLORS[cardKey(status)];
+    var h = $('table-title');
+    if (h && c) {
+      h.style.color = c.hex;
+      h.childNodes[0].nodeValue = c.label + ' ';
+    }
   }
 
   function filtered(opts) {
@@ -249,6 +304,7 @@
     $('row-count').textContent = '(' + rows.length + ' รายการ)';
 
     renderDashboard();
+    renderLevels();
 
     var totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
     if (page > totalPages) page = totalPages;
@@ -504,109 +560,110 @@
     });
     if (orphan.length) tree.push({ label: groupWord + 'อื่น ๆ', children: orphan });
 
+    /* ---- แถวติ๊ก: หมวด/องค์ประกอบเป็นตัวหนา ข้อย่อยเยื้องเข้าไป (ตามต้นแบบ) ---- */
     var checkRow = function (label, child, idx) {
       var id = 'rv-chk-' + idx;
-      return '<div class="flex items-start gap-3' + (child ? ' ml-8' : '') + '">' +
-        '<input id="' + id + '" type="checkbox" class="mt-1 ' + (child ? 'w-4 h-4' : 'w-5 h-5') +
-          ' rounded border-slate-300 cursor-pointer" style="accent-color:#0059a4">' +
-        '<label for="' + id + '" class="cursor-pointer ' +
-          (child ? 'text-sm text-slate-700' : 'font-bold text-base text-[#0a1e28]') + '">' +
-          esc(label) + '</label></div>';
+      return child
+        ? '<div class="flex items-center gap-3 ml-8">' +
+            '<input id="' + id + '" type="checkbox" class="w-4 h-4 rounded border-gray-300" style="accent-color:#0059a4">' +
+            '<label for="' + id + '" class="text-gray-700 cursor-pointer">' + esc(label) + '</label></div>'
+        : '<div class="flex items-start gap-3">' +
+            '<input id="' + id + '" type="checkbox" class="mt-1 w-5 h-5 rounded border-gray-300" style="accent-color:#0059a4">' +
+            '<label for="' + id + '" class="font-bold text-lg text-gray-800 block cursor-pointer">' + esc(label) + '</label></div>';
     };
 
     var n = 0, treeHTML = '';
     tree.forEach(function (g) {
-      treeHTML += checkRow(g.label, false, n++);
-      g.children.forEach(function (c) { treeHTML += checkRow(c, true, n++); });
+      treeHTML += '<div class="space-y-2">' + checkRow(g.label, false, n++) +
+                  g.children.map(function (c) { return checkRow(c, true, n++); }).join('') + '</div>';
     });
-    if (!treeHTML) treeHTML = '<p class="text-sm text-slate-500">ไม่ได้ระบุ' + groupWord + '/ข้อที่แก้ไข</p>';
+    if (!treeHTML) treeHTML = '<p class="text-gray-500">ไม่ได้ระบุ' + groupWord + '/ข้อที่แก้ไข</p>';
 
-    var infoCell = function (label, value) {
-      return '<div class="space-y-1"><p class="text-xs font-bold text-slate-500">' + label + '</p>' +
-             '<p class="text-base md:text-lg font-medium text-[#0a1e28]">' + esc(value || '-') + '</p></div>';
+    var infoCell = function (label, value, strong) {
+      return '<div class="space-y-1"><p class="text-sm font-bold text-gray-500 mb-1">' + label + '</p>' +
+             '<p class="text-lg ' + (strong ? 'text-[#0059a4] font-bold' : 'text-gray-800') + '">' +
+             esc(value || '-') + '</p></div>';
     };
 
     var badge = isGreen
-      ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#aaf457] text-[#406e00] border border-green-300">งาน: Green &amp; Clean Hospital</span>'
-      : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300">งาน: อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</span>';
+      ? '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold bg-[#D1F2DD] text-green-800 border border-green-200">งาน: Green &amp; Clean Hospital</span>'
+      : '<span class="mt-2 block w-fit items-center px-2.5 py-0.5 rounded-full text-sm font-bold bg-orange-500 text-white border border-orange-600">งาน: อาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</span>';
 
-    /* ---- ประกอบร่างป็อปอัพ ---- */
+    /* ---- ประกอบร่างป็อปอัพ (โครงและคลาสตามไฟล์ต้นแบบ) ---- */
     var wrap = document.createElement('div');
-    wrap.className = 'fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 overflow-y-auto';
+    wrap.className = 'fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4';
     wrap.innerHTML =
-      '<div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto" id="rv-card">' +
+      '<div class="bg-white w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]" id="rv-card">' +
 
-        '<div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-[#e9f5ff] shrink-0">' +
-          '<div class="flex flex-wrap items-center gap-2">' +
-            '<h2 class="text-xl md:text-2xl font-bold text-[#0a1e28] leading-tight">ตรวจงานและดูรายละเอียด - ' +
-              '<span class="text-[#0059a4]">' + esc(r.hospital) + '</span></h2>' + badge +
-          '</div>' +
-          '<button type="button" id="rv-x" class="text-slate-500 hover:text-slate-800">' +
-            '<span class="material-symbols-outlined">close</span></button>' +
+        '<div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 shrink-0">' +
+          '<h2 class="text-xl md:text-2xl font-bold text-gray-800 leading-tight">' +
+            'ตรวจงานและดูรายละเอียด - <span class="text-[#0059a4]">' + esc(r.hospital) + '</span>' + badge +
+          '</h2>' +
+          '<button type="button" id="rv-x" class="p-2 hover:bg-gray-200 rounded-full transition-colors shrink-0">' +
+            '<span class="material-symbols-outlined text-gray-500">close</span></button>' +
         '</div>' +
 
-        '<div class="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800">' +
-          '<div class="p-4 bg-[#f8fafc] rounded-xl border border-slate-200">' +
-            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">' +
+        '<div class="p-6 overflow-y-auto space-y-6 flex-1">' +
+          '<div class="p-4 bg-gray-50 rounded-lg border border-gray-200">' +
+            '<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">' +
               infoCell('อำเภอ', r.district) + infoCell('ประเภทโรงพยาบาล', r.hospType) +
-              infoCell('ปีที่ประเมิน', r.year) + infoCell('ระดับที่ส่งประเมิน', r.level) +
+              infoCell('ปีที่ประเมิน', r.year) + infoCell('ระดับที่ส่งประเมิน', r.level, true) +
             '</div>' +
-            '<div class="space-y-4 pt-2 border-t border-slate-200">' +
-              '<h3 class="text-base font-bold text-[#0059a4]">' + groupWord + 'และข้อที่ต้องการแก้ไข</h3>' +
-              '<p class="text-xs text-slate-500 -mt-2">ติ๊กเพื่อทำเครื่องหมายว่าตรวจรายการนั้นแล้ว (ช่วยกันตรวจตกหล่น ไม่ถูกบันทึกลงชีต)</p>' +
-              '<div class="space-y-2">' + treeHTML + '</div>' +
+            '<div class="space-y-4">' +
+              '<h3 class="text-lg font-bold mb-2 text-[#0059a4]' +
+                (isGreen ? '' : ' border-b border-gray-200 pb-2') + '">' +
+                groupWord + 'และข้อที่ต้องการแก้ไข</h3>' +
+              '<p class="text-xs text-gray-500 -mt-2">ติ๊กเพื่อทำเครื่องหมายว่าตรวจรายการนั้นแล้ว (ช่วยกันตรวจตกหล่น ไม่ถูกบันทึกลงชีต)</p>' +
+              treeHTML +
             '</div>' +
           '</div>' +
 
           (r.detail
-            ? '<div class="p-4 bg-[#f8fafc] rounded-xl border border-slate-200">' +
-                '<h3 class="text-base font-bold text-[#0059a4] mb-2">รายละเอียดการปรับปรุงแก้ไข</h3>' +
-                '<p class="text-sm whitespace-pre-line">' + esc(r.detail) + '</p></div>'
+            ? '<div class="p-4 bg-gray-50 rounded-lg border border-gray-200">' +
+                '<h3 class="text-lg font-bold mb-2 text-[#0059a4]">รายละเอียดการปรับปรุงแก้ไข</h3>' +
+                '<p class="text-gray-700 whitespace-pre-line">' + esc(r.detail) + '</p></div>'
             : '') +
 
           '<div class="flex justify-center">' +
             (r.driveLink
-              ? '<a href="' + esc(r.driveLink.split(/[\r\n]+/)[0]) + '" target="_blank" rel="noreferrer" ' +
-                'class="inline-flex items-center px-6 py-3 bg-[#0072ce] text-white rounded-lg font-bold hover:bg-[#0059a4] transition-all shadow-md gap-2">' +
-                '<span class="material-symbols-outlined">folder_open</span>คลิกเปิดดูไฟล์หลักฐาน (PDF / Google Drive)</a>'
-              : '<span class="text-sm text-slate-500">โรงพยาบาลยังไม่ได้แนบหลักฐาน</span>') +
+              ? '<a href="' + esc(r.driveLink.split(/[\r\n]+/)[0]) + '" target="_blank" rel="noopener" ' +
+                'class="inline-flex items-center px-6 py-3 bg-[#0072ce] text-white rounded-lg font-bold hover:bg-[#0059a4] transition-colors shadow-md gap-2">' +
+                '<span class="material-symbols-outlined">folder</span>คลิกเปิดดูไฟล์หลักฐาน (PDF / Google Drive)</a>'
+              : '<span class="text-gray-500">โรงพยาบาลยังไม่ได้แนบหลักฐาน</span>') +
           '</div>' +
 
-          '<div class="space-y-3 border-t border-slate-200 pt-4">' +
-            '<label class="font-bold text-slate-700 block text-sm">สถานะการตรวจสอบ</label>' +
-            '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
-              '<button type="button" id="rv-revise" class="w-full px-4 py-3 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-sm">' +
-                '<span class="material-symbols-outlined text-xl">error_outline</span>ต้องแก้ไขเพิ่มเติม</button>' +
-              '<button type="button" id="rv-check" class="w-full px-4 py-3 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-sm">' +
-                '<span class="material-symbols-outlined text-xl">check_circle</span>ดำเนินการตรวจสอบแล้ว</button>' +
+          '<div class="space-y-4 border-t border-gray-100 pt-4">' +
+            '<label class="font-bold text-gray-600 block mb-2">สถานะการตรวจสอบ</label>' +
+            '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">' +
+              '<button type="button" id="rv-revise" class="w-full px-4 py-3 text-white rounded-lg font-bold shadow-sm transition-all flex items-center justify-center gap-2">ต้องแก้ไขเพิ่มเติม</button>' +
+              '<button type="button" id="rv-check" class="w-full px-4 py-3 text-white rounded-lg font-bold shadow-sm transition-all flex items-center justify-center gap-2">ดำเนินการตรวจสอบแล้ว</button>' +
             '</div>' +
-            '<p class="text-xs text-slate-500" id="rv-hint"></p>' +
+            '<p class="text-xs text-gray-500" id="rv-hint"></p>' +
           '</div>' +
 
-          '<div class="space-y-2">' +
-            '<label class="font-bold text-slate-700 block text-sm">ระดับการรับรอง (Certification Level)</label>' +
-            '<div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">' +
-              '<select id="rv-level" class="flex-1 p-3 bg-white border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-[#0059a4] outline-none">' +
+          '<div>' +
+            '<label class="font-bold text-gray-600 block mb-2">ระดับการรับรอง (Certification Level)</label>' +
+            '<div class="flex flex-col md:flex-row gap-3 items-stretch md:items-end">' +
+              '<select id="rv-level" class="flex-1 p-3 bg-white border border-gray-300 rounded-md text-lg focus:ring-2 focus:ring-[#0059a4] focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed">' +
                 '<option value="">เลือกระดับการรับรอง...</option>' +
                 levels.map(function (L) {
                   return '<option value="' + esc(L) + '"' + (state.level === L ? ' selected' : '') + '>' + esc(L) + '</option>';
                 }).join('') +
               '</select>' +
-              '<button type="button" id="rv-approve" class="px-6 py-3 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-sm">' +
-                '<span class="material-symbols-outlined text-xl">verified</span>รับรองผลเรียบร้อยแล้ว</button>' +
+              '<button type="button" id="rv-approve" class="flex-1 px-6 py-3 text-white rounded-lg font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">รับรองผลเรียบร้อยแล้ว</button>' +
             '</div>' +
           '</div>' +
 
           '<div>' +
-            '<label class="font-bold text-slate-700 block text-sm mb-1.5">หมายเหตุ / ข้อเสนอแนะส่งถึงโรงพยาบาล</label>' +
-            '<textarea id="rv-comment" class="w-full p-3 bg-[#f8fafc] border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-[#0059a4] outline-none min-h-[90px] resize-y" ' +
-              'placeholder="ระบุข้อเสนอแนะ รายละเอียดที่ต้องแก้ไขเพิ่มเติม">' + esc(state.comment) + '</textarea>' +
+            '<label class="font-bold text-gray-600 block mb-2">หมายเหตุ / ข้อเสนอแนะส่งถึงโรงพยาบาล</label>' +
+            '<textarea id="rv-comment" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-md text-lg focus:ring-2 focus:ring-[#0059a4] focus:border-transparent outline-none min-h-[80px] resize-y" ' +
+              'placeholder="ระบุรายละเอียด...">' + esc(state.comment) + '</textarea>' +
           '</div>' +
         '</div>' +
 
-        '<div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-[#f8fafc] shrink-0">' +
-          '<button type="button" id="rv-cancel" class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition-colors">ยกเลิก</button>' +
-          '<button type="button" id="rv-save" class="px-8 py-2 text-white rounded-lg font-bold transition-colors shadow-md flex items-center gap-1.5" style="background:' + CO.CHECKING.hex + '">' +
+        '<div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50 shrink-0">' +
+          '<button type="button" id="rv-cancel" class="px-8 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-bold hover:bg-gray-100 transition-colors">ยกเลิก</button>' +
+          '<button type="button" id="rv-save" class="px-8 py-2 text-white rounded-md font-bold transition-colors shadow-sm flex items-center gap-1.5" style="background:' + CO.CHECKING.hex + '">' +
             '<span class="material-symbols-outlined text-lg">save</span>บันทึกผล</button>' +
         '</div>' +
       '</div>';
@@ -704,6 +761,180 @@
           UI.toast('error', 'เกิดข้อผิดพลาด', err.message);
         });
     });
+  }
+
+  /* =========================================================
+   *  เป้าหมาย KPI + สรุประดับผลการประเมิน
+   *  ค่า KPI เก็บที่ Apps Script (Script Properties) ทุกคนจึงเห็นค่าเดียวกัน
+   * ======================================================= */
+  var settings = { kpi: { green: {}, occ: {} } };
+
+  var WORK_META = {
+    green: { key: 'green', word: 'หมวด',        label: 'งาน Green & Clean',                     color: '#3d6a00' },
+    occ:   { key: 'occ',   word: 'องค์ประกอบ',  label: 'งานอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม', color: '#EA580C' }
+  };
+
+  function loadSettings() {
+    return API.get('getSettings', {})
+      .then(function (res) {
+        var d = (res && res.data) || {};
+        settings.kpi = d.kpi || { green: {}, occ: {} };
+      })
+      .catch(function () { /* อ่านไม่ได้ก็ใช้ค่าว่าง ไม่ให้หน้าพัง */ });
+  }
+
+  /** ฟอร์มกรอกเป้าหมาย สร้างจากรายการระดับใน config จึงไม่มีทางหลุดจากกัน */
+  function renderKpiForms() {
+    var box = $('kpi-forms');
+    if (!box) return;
+
+    box.innerHTML = ['green', 'occ'].map(function (k) {
+      var meta = WORK_META[k];
+      var levels = CFG.LEVELS[k] || [];
+      var saved = settings.kpi[k] || {};
+      return '<div class="border border-outline-custom rounded-xl p-4">' +
+        '<h4 class="font-bold mb-3" style="color:' + meta.color + '">' + esc(meta.label) + '</h4>' +
+        '<div class="grid grid-cols-2 md:grid-cols-' + Math.min(levels.length, 4) + ' gap-3">' +
+          levels.map(function (L) {
+            return '<div class="space-y-1">' +
+              '<label class="text-xs font-bold text-text-muted block text-center">' + esc(L) + '</label>' +
+              '<div class="flex items-center gap-1">' +
+                '<input type="number" min="0" max="100" step="1" ' +
+                  'class="kpi-input w-full border border-outline-custom rounded-lg px-2 py-2 text-sm text-center" ' +
+                  'data-work="' + k + '" data-level="' + esc(L) + '" ' +
+                  'value="' + (saved[L] != null ? esc(saved[L]) : '') + '" placeholder="-">' +
+                '<span class="text-xs text-text-muted">%</span>' +
+              '</div></div>';
+          }).join('') +
+        '</div></div>';
+    }).join('');
+  }
+
+  function bindKpi() {
+    var btn = $('btn-save-kpi');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var next = { green: {}, occ: {} };
+      document.querySelectorAll('.kpi-input').forEach(function (el) {
+        var v = String(el.value).trim();
+        if (v === '') return;
+        var n = Number(v);
+        if (isNaN(n) || n < 0 || n > 100) return;
+        next[el.getAttribute('data-work')][el.getAttribute('data-level')] = n;
+      });
+
+      if (API.demoMode) {
+        UI.toast('info', 'โหมดตัวอย่าง', 'ยังต่อ Google Sheet ไม่ได้ จึงบันทึกค่าจริงไม่ได้');
+        return;
+      }
+
+      UI.loading('กำลังบันทึกเป้าหมาย KPI...');
+      API.post({ action: 'saveSettings', settings: { kpi: next } })
+        .then(function (res) {
+          UI.close();
+          if (res.status !== 'success') {
+            UI.toast('error', 'บันทึกไม่สำเร็จ', res.message || '');
+            return;
+          }
+          settings.kpi = next;
+          UI.toast('success', 'บันทึกเรียบร้อย', 'เป้าหมาย KPI ถูกใช้คำนวณในแท็บสรุประดับผลแล้ว');
+        })
+        .catch(function (err) {
+          UI.close();
+          if (err && err.authError) return;
+          UI.toast('error', 'เกิดข้อผิดพลาด', err.message);
+        });
+    });
+  }
+
+  /* ---------------------------------------------------------
+   *  แท็บย่อย 3: สรุประดับผลการประเมินสะสมทั้งจังหวัด
+   *  แผนภูมิที่ 1 = สัดส่วนรวมทุกระดับ
+   *  แผนภูมิถัดไป = แต่ละระดับเทียบกับเป้าหมาย KPI
+   * ------------------------------------------------------- */
+  function fillLevelYears() {
+    var sel = $('lv-year');
+    if (!sel) return;
+    var years = {};
+    allRows.forEach(function (r) { if (r.year) years[r.year] = 1; });
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">ทุกปี</option>' +
+      Object.keys(years).sort().reverse().map(function (y) {
+        return '<option value="' + esc(y) + '">' + esc(y) + '</option>';
+      }).join('');
+    sel.value = cur;
+  }
+
+  function renderLevels() {
+    var box = $('lv-charts');
+    if (!box || !window.Viz) return;
+
+    var k = view === 'occ' ? 'occ' : 'green';
+    var meta = WORK_META[k];
+    var levels = CFG.LEVELS[k] || [];
+    var year = $('lv-year') ? $('lv-year').value : '';
+
+    $('lv-title').textContent = 'สรุประดับผลการประเมินสะสมทั้งจังหวัด — ' + meta.label;
+    $('lv-title').style.color = meta.color;
+
+    /* นับเฉพาะรายงานที่ผ่านการรับรองแล้ว 1 โรงพยาบาลนับครั้งเดียวต่อระดับ */
+    var seen = {};
+    var count = {};
+    levels.forEach(function (L) { count[L] = 0; });
+
+    allRows.forEach(function (r) {
+      var isGreen = String(r.workType).indexOf('Green') !== -1;
+      if ((k === 'green') !== isGreen) return;
+      if (r.status !== S.APPROVED) return;
+      if (year && String(r.year) !== year) return;
+      if (levels.indexOf(r.level) === -1) return;
+      var id = r.hospital + '|' + r.level;
+      if (seen[id]) return;
+      seen[id] = 1;
+      count[r.level]++;
+    });
+
+    var total = levels.reduce(function (a, L) { return a + count[L]; }, 0);
+    var denom = registryDenominator() || total || 1;
+
+    /* --- แผนภูมิรวม --- */
+    var items = levels.map(function (L) {
+      return { label: L, count: count[L], pct: total ? count[L] * 100 / total : 0 };
+    });
+
+    var cards = ['<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm md:col-span-2">' +
+      '<h4 class="font-bold text-tertiary font-headline mb-1">สัดส่วนระดับผลการประเมินสะสมทั้งจังหวัด</h4>' +
+      '<p class="text-xs text-text-muted mb-5">รวมทุกระดับในกราฟเดียว นับจากหน่วยงานที่ผ่านการรับรองแล้ว' +
+        (year ? ' ปี ' + esc(year) : '') + ' รวม ' + total + ' แห่ง</p>' +
+      (total
+        ? Viz.donut(items, { colors: Viz.LEVEL_COLORS, centerLabel: 'แห่ง' })
+        : '<p class="text-sm text-text-muted">ยังไม่มีหน่วยงานที่ผ่านการรับรองในขอบเขตนี้</p>') +
+      '</div>'];
+
+    /* --- แผนภูมิรายระดับ เทียบเป้าหมาย KPI --- */
+    var kpi = (settings.kpi && settings.kpi[k]) || {};
+    levels.forEach(function (L) {
+      var got = count[L];
+      var pct = denom ? got * 100 / denom : 0;
+      var target = kpi[L];
+      var reach = (target != null && target > 0) ? Math.min(100, pct * 100 / target) : null;
+
+      cards.push('<div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">' +
+        '<h4 class="font-bold text-tertiary font-headline mb-1">' + esc(L) + '</h4>' +
+        '<p class="text-xs text-text-muted mb-4">' + got + ' แห่ง จากทั้งจังหวัด ' + denom + ' แห่ง' +
+          ' = ' + pct.toFixed(1) + '%</p>' +
+        (target != null
+          ? Viz.progress(pct, { color: Viz.LEVEL_COLORS[L] || meta.color, target: target }) +
+            '<p class="text-xs mt-2 ' + (pct >= target ? 'text-green-700' : 'text-text-muted') + '">' +
+              (pct >= target
+                ? '▲ ถึงเป้าหมายแล้ว (เป้า ' + target + '%)'
+                : 'ยังไม่ถึงเป้า — ทำได้ ' + reach.toFixed(0) + '% ของเป้าหมาย ' + target + '%') + '</p>'
+          : '<p class="text-xs text-text-muted">ยังไม่ได้ตั้งเป้าหมาย KPI สำหรับระดับนี้ ' +
+            '<span class="text-primary">(ตั้งได้ที่แท็บจัดการผู้ใช้งาน)</span></p>') +
+      '</div>');
+    });
+
+    box.innerHTML = cards.join('');
   }
 
   /* =========================================================

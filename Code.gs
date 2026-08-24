@@ -182,6 +182,7 @@ function doGet(e) {
 
       /* --- ต้องล็อกอิน --- */
       case 'getMasterData':  requireAuth_(p); return json(getMasterData());
+      case 'getSettings':    requireAuth_(p); return json(getSettings());
       case 'getDocuments':   requireAuth_(p); return json(getDocuments());
       case 'getSubmissions': return json(getSubmissions(scoped_(p)));
       case 'getRegistry':    return json(getRegistry(scoped_(p)));
@@ -213,6 +214,7 @@ function doPost(e) {
       /* --- เฉพาะ สสจ. --- */
       case 'updateStatus': requireAdmin_(payload); return json(updateStatus(payload));
       case 'saveUser':     requireAdmin_(payload); return json(saveUser(payload));
+      case 'saveSettings': requireAdmin_(payload); return json(saveSettings(payload));
       case 'deleteUser':   requireAdmin_(payload); return json(deleteUser(payload));
       default:             return json({ status: 'error', message: 'ไม่รู้จักคำสั่ง: ' + action });
     }
@@ -233,6 +235,31 @@ function errorPayload_(err) {
              message: 'บัญชีนี้ไม่มีสิทธิ์ใช้คำสั่งนี้' };
   }
   return { status: 'error', message: msg };
+}
+
+/* ============================================================
+ *  ค่าตั้งค่าระบบ — ตอนนี้ใช้เก็บเป้าหมาย KPI ของทั้งสองสายงาน
+ *  เก็บใน Script Properties เพื่อให้ทุกคนเห็นค่าเดียวกัน
+ *  (ถ้าเก็บในเบราว์เซอร์ ต่างคนจะตั้งคนละค่า ตัวเลขในแดชบอร์ดจะไม่ตรงกัน)
+ * ========================================================== */
+
+const SETTINGS_KEY = 'APP_SETTINGS';
+
+function getSettings() {
+  var raw = PropertiesService.getScriptProperties().getProperty(SETTINGS_KEY);
+  var val = {};
+  if (raw) { try { val = JSON.parse(raw); } catch (e) { val = {}; } }
+  return { status: 'success', data: val };
+}
+
+function saveSettings(payload) {
+  var incoming = payload && payload.settings;
+  if (!incoming || typeof incoming !== 'object') {
+    return { status: 'error', message: 'ไม่มีค่าที่จะบันทึก' };
+  }
+  PropertiesService.getScriptProperties()
+    .setProperty(SETTINGS_KEY, JSON.stringify(incoming));
+  return { status: 'success', message: 'บันทึกเป้าหมาย KPI เรียบร้อยแล้ว', data: incoming };
 }
 
 function json(obj) {
