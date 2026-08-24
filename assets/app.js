@@ -109,6 +109,144 @@
       return /Load failed|Failed to fetch|NetworkError|network error/i.test(m);
     },
 
+    /**
+     * ส่งคำสั่งที่เขียนข้อมูล
+     *
+     * ใช้ GET เป็นหลักสำหรับคำขอสั้น ๆ แทน POST เพราะ POST ของ Apps Script
+     * ถูก redirect ข้ามโดเมนไป script.googleusercontent.com ก่อนถึงปลายทาง
+     * ซึ่งบางเบราว์เซอร์ (Safari) บล็อกแล้วขึ้น "Load failed" ส่วน GET ใช้ได้ปกติ
+     * — สังเกตได้จากการอ่านข้อมูลทุกอย่างซึ่งใช้ GET ไม่เคยมีปัญหาเลย
+     *
+     * การแนบไฟล์ base64 ยาวเกินความยาว URL ที่รับได้ จึงยังต้องใช้ POST
+     * และถ้า GET พลาด ก็ถอยไปใช้ POST ให้อัตโนมัติ
+     *
+     * opts.timeout = กำหนดเวลารอเองได้ (ใช้ตอนแนบไฟล์ซึ่งนานกว่าปกติ)
+     */
+    post: function (payload, opts) {
+      var body = {};
+      Object.keys(payload || {}).forEach(function (k) { body[k] = payload[k]; });
+      var tk = API.token();
+      if (tk) body.token = tk;
+
+      var raw = JSON.stringify(body);
+      var timeout = opts && opts.timeout;
+
+      var readJson = function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      };
+
+      var viaPost = function () {
+        return API.fetchWithTimeout(CFG.API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          body: raw          // ตั้งใจไม่ใส่ headers — ดูหมายเหตุด้านบน
+        }, timeout).then(readJson);
+      };
+
+      var viaGet = function () {
+        return API.fetchWithTimeout(
+          CFG.API_URL + '?action=' + encodeURIComponent(body.action || '') +
+          '&payload=' + encodeURIComponent(raw) +
+          '&_=' + Date.now(),   /* กัน cache ของเบราว์เซอร์ คำสั่งเขียนต้องถึงเซิร์ฟเวอร์เสมอ */
+          { method: 'GET', redirect: 'follow' }, timeout
+        ).then(readJson);
+      };
+
+      /* คำขอสั้นพอ → ใช้ GET ก่อน แล้วถอยไป POST
+         คำขอยาว (แนบไฟล์) → ใช้ POST อย่างเดียว */
+      var chain = raw.length <= 6000
+        ? viaGet().catch(function (err) {
+            if (!API.isNetworkError(err)) throw err;
+            console.warn('[API] GET ไม่ผ่าน ลองใหม่ด้วย POST:', err.message);
+            return viaPost();
+          })
+        : viaPost().catch(function (err) {
+            if (!API.isNetworkError(err)) throw err;
+            console.warn('[API] POST ล้มระดับเครือข่าย กำลังลองใหม่:', err.message);
+            return new Promise(function (ok) { setTimeout(ok, 1000); }).then(viaPost);
+          });
+
+      return chain
+        .catch(function (err) {
+          if (!API.isNetworkError(err)) throw err;
+          var e = new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (' + ((err && err.message) || err) + ')');
+          e.networkError = true;
+          throw e;
+        })
+        .then(API.guard);
+    },
+
+    /**
+     * เซสชันหมดอายุ หรือถูกปฏิเสธสิทธิ์ → ล้างข้อมูลแล้วเด้งไปล็อกอินใหม่
+     * ทำที่ชั้นนี้ที่เดียว ทุกหน้าจึงได้พฤติกรรมเดียวกันโดยไม่ต้องเขียนซ้ำ
+     */
+    guard: function (res) {
+      if (res && res.status === 'error' &&
+          (res.code === 'AUTH_REQUIRED' || res.code === 'FORBIDDEN')) {
+        Auth.clear();
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'warning',
+            title: res.code === 'FORBIDDEN' ? 'ไม่มีสิทธิ์ใช้งาน' : 'เซสชันหมดอายุ',
+            text: res.message || 'กรุณาเข้าสู่ระบบใหม่',
+            confirmButtonColor: '#0072CE'
+          }).then(function () { window.location.replace('./index.html'); });
+        } else {
+          window.location.replace('./index.html');
+        }
+        var e = new Error(res.message || 'ต้องเข้าสู่ระบบใหม่');
+        e.authError = true;
+        throw e;
+      }
+      return res;
+    },
+
+    /**
+     * ยิง fetch พร้อมกำหนดเวลารอสูงสุด
+     * ถ้าเกินเวลาจะโยน error ที่บอกสาเหตุชัด ๆ แทนที่จะค้างรอไปเรื่อย ๆ
+     */
+    fetchWithTimeout: function (url, opts, ms) {
+      var limit = ms || CFG.TIMEOUT_MS || 45000;
+
+      /* เบราว์เซอร์เก่าที่ไม่มี AbortController ก็ยังใช้งานได้ เพียงไม่มี timeout */
+      if (typeof AbortController === 'undefined') return fetch(url, opts);
+
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, limit);
+      opts = opts || {};
+      opts.signal = ctrl.signal;
+
+      return fetch(url, opts)
+        .then(function (r) { clearTimeout(timer); return r; })
+        .catch(function (err) {
+          clearTimeout(timer);
+          if (err && err.name === 'AbortError') {
+            throw new Error('เซิร์ฟเวอร์ไม่ตอบกลับภายใน ' + Math.round(limit / 1000) + ' วินาที');
+          }
+          throw err;
+        });
+    },
+
+    get: function (action, params) {
+      return API.fetchWithTimeout(API.url(action, params), { method: 'GET', redirect: 'follow' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(API.guard);
+    },
+
+    /**
+     * error ระดับเครือข่าย: fetch โยน TypeError โดยข้อความต่างกันไปตามเบราว์เซอร์
+     * Safari = "Load failed" / Chrome = "Failed to fetch" / Firefox = "NetworkError..."
+     * แปลว่าคำขอไปไม่ถึงเซิร์ฟเวอร์ ไม่ใช่เซิร์ฟเวอร์ตอบว่าผิด
+     */
+    isNetworkError: function (err) {
+      var m = String((err && err.message) || err);
+      return /Load failed|Failed to fetch|NetworkError|network error/i.test(m);
+    },
+
     /** opts.timeout = กำหนดเวลารอเองได้ (ใช้ตอนแนบไฟล์ซึ่งนานกว่าปกติ) */
     post: function (payload, opts) {
       var body = {};
