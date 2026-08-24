@@ -17,13 +17,20 @@ const SHEET_FOLLOW_OCC   = "ติดตามงาน อาชีวอนา
 const SHEET_REGISTRY     = "ทะเบียนรายชื่อโรงพยาบาล";
 
 /* ---------- โฟลเดอร์ Drive สำหรับเก็บไฟล์หลักฐานที่อัปโหลดจากหน้าเว็บ ----------
- * ถ้าอยากใช้โฟลเดอร์ที่มีอยู่แล้ว ให้ใส่ ID ของโฟลเดอร์นั้นลงใน UPLOAD_FOLDER_ID
+ * แยกคนละโฟลเดอร์ตามสายงาน ใส่ ID ของโฟลเดอร์ที่ต้องการไว้ตรงนี้
  * (ID คือข้อความยาว ๆ ท้าย URL: drive.google.com/drive/folders/<ID>)
- * ถ้าเว้นว่างไว้ ระบบจะหา/สร้างโฟลเดอร์ชื่อ UPLOAD_FOLDER_NAME ให้เองอัตโนมัติ
- * ไฟล์จะถูกแยกเก็บเป็นโฟลเดอร์ย่อยตามชื่อหน่วยงาน */
-const UPLOAD_FOLDER_ID   = "";
-const UPLOAD_FOLDER_NAME = "หลักฐานการแก้ไข (อัปโหลดจากเว็บ)";
-const MAX_UPLOAD_MB      = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
+ * ถ้าเว้น ID ว่างไว้ ระบบจะหา/สร้างโฟลเดอร์ตามชื่อด้านล่างให้เองอัตโนมัติ
+ * ภายในแต่ละโฟลเดอร์จะแยกเป็นโฟลเดอร์ย่อยตามชื่อหน่วยงานอีกชั้น
+ *
+ * สำคัญ: บัญชีที่เป็นเจ้าของ Apps Script ต้องมีสิทธิ์แก้ไขโฟลเดอร์นี้
+ *        ไม่งั้นจะอัปโหลดไม่ได้ */
+const UPLOAD_FOLDER_GREEN_ID   = "1n3A4TMzsG5aL5FRzX3HN0E0V4TnjWqtU";
+const UPLOAD_FOLDER_GREEN_NAME = "รวมไฟล์ PDF งานแก้ไข Green & Clean";
+
+const UPLOAD_FOLDER_OCC_ID     = "1vd3CTraIlZrZN01ONsXc54MYZ1uHuCVa";
+const UPLOAD_FOLDER_OCC_NAME   = "รวมไฟล์ PDF งานแก้ไข อาชีวอนามัยฯ";
+
+const MAX_UPLOAD_MB            = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
 
 /* ---------- สถานะงาน (ต้องตรงกับ assets/config.js) ---------- */
 const STATUS_PENDING  = "รอตรวจสอบ";
@@ -442,10 +449,23 @@ function followSheetName_(workType) {
  * ========================================================== */
 
 /** โฟลเดอร์หลักที่ใช้เก็บหลักฐาน — ใช้ตาม ID ที่ตั้งไว้ ถ้าไม่ได้ตั้งก็สร้างให้ */
-function uploadFolder_() {
-  if (UPLOAD_FOLDER_ID) return DriveApp.getFolderById(UPLOAD_FOLDER_ID);
-  var it = DriveApp.getFoldersByName(UPLOAD_FOLDER_NAME);
-  return it.hasNext() ? it.next() : DriveApp.createFolder(UPLOAD_FOLDER_NAME);
+function uploadFolder_(workType) {
+  var green = String(workType || '').indexOf('Green') !== -1;
+  var id    = green ? UPLOAD_FOLDER_GREEN_ID   : UPLOAD_FOLDER_OCC_ID;
+  var name  = green ? UPLOAD_FOLDER_GREEN_NAME : UPLOAD_FOLDER_OCC_NAME;
+
+  if (id) {
+    try {
+      return DriveApp.getFolderById(id);
+    } catch (err) {
+      /* บอกให้ชัดว่าติดที่โฟลเดอร์ไหน จะได้ไม่ต้องไล่เดา */
+      throw new Error('เปิดโฟลเดอร์ Drive ของ' + (green ? 'งาน Green & Clean' : 'งานอาชีวอนามัยฯ') +
+                      ' ไม่ได้ (ID: ' + id + ') — ตรวจว่าบัญชีเจ้าของ Apps Script ' +
+                      'มีสิทธิ์แก้ไขโฟลเดอร์นี้หรือยัง');
+    }
+  }
+  var it = DriveApp.getFoldersByName(name);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(name);
 }
 
 /** โฟลเดอร์ย่อยรายหน่วยงาน เพื่อไม่ให้ไฟล์ทุกแห่งกองรวมกัน */
@@ -477,10 +497,10 @@ function safeName_(name) {
 function saveFiles_(files, payload) {
   if (!files || !files.length) return [];
 
-  /* โครงโฟลเดอร์:  <โฟลเดอร์หลัก> / <สายงาน> / <ชื่อหน่วยงาน> / ไฟล์
-     แยกสายงานก่อน เพื่อให้ สสจ. เปิดดูเฉพาะงานที่รับผิดชอบได้ง่าย */
+  /* โครงโฟลเดอร์:  <โฟลเดอร์ของสายงาน> / <ชื่อหน่วยงาน> / ไฟล์
+     ตัวโฟลเดอร์หลักแยกตามสายงานอยู่แล้ว จึงเหลือแค่แยกรายหน่วยงานข้างใน */
   var work   = workFolderName_(payload.workType);
-  var folder = subFolder_(subFolder_(uploadFolder_(), work), payload.hospital);
+  var folder = subFolder_(uploadFolder_(payload.workType), payload.hospital);
 
   var stamp  = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd-HHmm');
   var limit  = MAX_UPLOAD_MB * 1024 * 1024;
