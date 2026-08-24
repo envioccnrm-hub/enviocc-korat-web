@@ -41,6 +41,9 @@ const STATUS_APPROVED = "รับรองผลเรียบร้อยแ�
 /* ---------- อายุของ token หลังล็อกอิน (ชั่วโมง) ---------- */
 const TOKEN_TTL_HOURS = 12;
 
+/* เลขรุ่นของโค้ด — เรียก ?action=ping เพื่อดูว่าที่ deploy อยู่เป็นรุ่นไหน */
+const CODE_VERSION = '2026-08-24d';
+
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
  * เพราะแต่ละชีตเขียนคนละแบบ เช่น
@@ -187,6 +190,86 @@ function statsScope_(p) {
 }
 
 /* ============================================================
+ *  ตัวตรวจระบบ — รันเองจากหน้า Apps Script ได้เลย
+ *
+ *  วิธีใช้: เลือกฟังก์ชัน "ตรวจระบบ" ที่แถบด้านบน แล้วกด Run
+ *          ผลลัพธ์ดูได้ที่ Execution log (Ctrl/Cmd + Enter)
+ *
+ *  ถ้ายังไม่เคยอนุญาตสิทธิ์ Google Drive การกด Run จะขึ้นหน้าต่างขออนุญาต
+ *  ให้กดอนุญาตให้ครบ — นี่คือวิธีที่แน่นอนที่สุดในการเปิดสิทธิ์ Drive
+ *  เพราะการกด Deploy เฉย ๆ บางครั้งไม่ขอสิทธิ์ใหม่ให้
+ * ========================================================== */
+
+function ตรวจระบบ() {
+  var out = [];
+  var ok = 0, fail = 0;
+
+  var check = function (label, fn) {
+    try {
+      var msg = fn();
+      out.push('[ผ่าน] ' + label + (msg ? ' — ' + msg : ''));
+      ok++;
+    } catch (err) {
+      out.push('[ไม่ผ่าน] ' + label + ' — ' + (err && err.message ? err.message : err));
+      fail++;
+    }
+  };
+
+  /* 1) โฟลเดอร์ Drive — ต้องเปิดได้และสร้างไฟล์ได้จริง */
+  [['งาน Green & Clean', UPLOAD_FOLDER_GREEN_ID],
+   ['งานอาชีวอนามัยฯ',  UPLOAD_FOLDER_OCC_ID]].forEach(function (pair) {
+    check('โฟลเดอร์ ' + pair[0], function () {
+      var f = DriveApp.getFolderById(pair[1]);
+      /* ทดสอบเขียนจริง แล้วลบทิ้ง — เปิดได้อย่างเดียวไม่พอ ต้องเขียนได้ด้วย */
+      var probe = f.createFile(Utilities.newBlob('test', 'text/plain', '__ทดสอบสิทธิ์__.txt'));
+      probe.setTrashed(true);
+      return 'ชื่อ "' + f.getName() + '" เขียนไฟล์ได้';
+    });
+  });
+
+  /* 2) ชีตและหัวคอลัมน์ที่ระบบต้องใช้ */
+  [SHEET_FOLLOW_GREEN, SHEET_FOLLOW_OCC].forEach(function (name) {
+    check('ชีต ' + name, function () {
+      var d = readSheet_(name);
+      if (!d.sheet) throw new Error('ไม่พบชีตนี้');
+      var m = followMap_(d.headers);
+      var missing = [];
+      if (m.hospital < 0) missing.push('ชื่อโรงพยาบาล');
+      if (m.status   < 0) missing.push('สถานะ');
+      if (m.link     < 0) missing.push('ลิงก์/หลักฐาน');
+      if (m.level    < 0) missing.push('ระดับผลการประเมิน');
+      if (missing.length) {
+        throw new Error('ไม่พบคอลัมน์: ' + missing.join(', ') +
+                        ' | หัวคอลัมน์ที่มี: ' + d.headers.filter(String).join(' | '));
+      }
+      return 'คอลัมน์ครบ (' + d.rows.length + ' แถว)';
+    });
+  });
+
+  check('ชีต ' + SHEET_LOGIN, function () {
+    var d = readSheet_(SHEET_LOGIN);
+    if (!d.sheet) throw new Error('ไม่พบชีตนี้');
+    return d.rows.length + ' บัญชี';
+  });
+
+  /* 3) การเข้ารหัสภาษาไทยใน token */
+  check('เข้ารหัสชื่อภาษาไทยใน token', function () {
+    var t = issueToken_({ role: 'user', hospital: 'โรงพยาบาลทดสอบภาษาไทย' });
+    var back = readToken_(t);
+    if (!back) throw new Error('อ่าน token กลับไม่ได้');
+    if (back.hospital !== 'โรงพยาบาลทดสอบภาษาไทย') {
+      throw new Error('ชื่อเพี้ยนเป็น "' + back.hospital + '" — โค้ดที่ deploy ยังเป็นเวอร์ชันเก่า');
+    }
+    return 'ภาษาไทยไม่เพี้ยน';
+  });
+
+  var report = '===== ผลตรวจระบบ =====\n' + out.join('\n') +
+               '\n\nผ่าน ' + ok + ' รายการ / ไม่ผ่าน ' + fail + ' รายการ';
+  Logger.log(report);
+  return report;
+}
+
+/* ============================================================
  *  ROUTER
  * ========================================================== */
 
@@ -207,7 +290,7 @@ function doGet(e) {
 
       /* --- เฉพาะ สสจ. --- */
       case 'getUsers':       requireAdmin_(p); return json(getUsers());
-      case 'ping':           return json({ status: 'success', message: 'API ทำงานปกติ', version: '2.0', time: new Date() });
+      case 'ping':           return json({ status: 'success', message: 'API ทำงานปกติ', version: CODE_VERSION, time: new Date() });
       default:               return json({ status: 'success', message: 'API ทำงานปกติ', version: '2.0' });
     }
   } catch (err) {
