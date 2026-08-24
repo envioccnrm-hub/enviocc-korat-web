@@ -595,6 +595,11 @@
     });
     if (!treeHTML) treeHTML = '<p class="text-gray-500">ไม่ได้ระบุ' + groupWord + '/ข้อที่แก้ไข</p>';
 
+    /* ชีตเก็บ "ระดับที่ขอ" กับ "ระดับที่รับรอง" ไว้คอลัมน์เดียวกัน
+       ค่าในช่องนี้จึงเปลี่ยนความหมายไปหลังรับรองผล ป้ายจึงต้องเปลี่ยนตาม
+       ไม่งั้นผู้ตรวจที่เปิดดูซ้ำภายหลังจะเข้าใจผิดว่าเป็นระดับที่โรงพยาบาลขอมา */
+    var levelLabel = r.status === S.APPROVED ? 'ระดับที่รับรอง' : 'ระดับที่ส่งประเมิน';
+
     var infoCell = function (label, value, strong) {
       return '<div class="space-y-1"><p class="text-sm font-bold text-gray-500 mb-1">' + label + '</p>' +
              '<p class="text-lg ' + (strong ? 'text-[#0059a4] font-bold' : 'text-gray-800') + '">' +
@@ -623,7 +628,7 @@
           '<div class="p-4 bg-gray-50 rounded-lg border border-gray-200">' +
             '<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">' +
               infoCell('อำเภอ', r.district) + infoCell('ประเภทโรงพยาบาล', r.hospType) +
-              infoCell('ปีที่ประเมิน', r.year) + infoCell('ระดับที่ส่งประเมิน', r.level, true) +
+              infoCell('ปีที่ประเมิน', r.year) + infoCell(levelLabel, r.level, true) +
             '</div>' +
             '<div class="space-y-4">' +
               '<h3 class="text-lg font-bold mb-2 text-[#0059a4]' +
