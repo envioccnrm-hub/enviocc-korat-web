@@ -573,11 +573,21 @@ function uploadFolder_(workType) {
 }
 
 /** โฟลเดอร์ย่อยรายหน่วยงาน เพื่อไม่ให้ไฟล์ทุกแห่งกองรวมกัน */
-/** หาโฟลเดอร์ย่อยตามชื่อ ถ้ายังไม่มีก็สร้างให้ */
+/**
+ * หาโฟลเดอร์ย่อยตามชื่อ ถ้ายังไม่มีก็สร้างให้
+ *
+ * ถ้าสิทธิ์ไม่พอจะสร้างโฟลเดอร์ย่อยไม่ได้ (createFolder ต้องใช้สิทธิ์ Drive เต็ม)
+ * กรณีนั้นให้เก็บไฟล์ไว้ในโฟลเดอร์หลักแทน ดีกว่าปล่อยให้การส่งรายงานล้มทั้งใบ
+ * — ชื่อไฟล์มีชื่อหน่วยงานอยู่แล้ว จึงยังแยกออกว่าเป็นของใคร
+ */
 function subFolder_(parent, name) {
   var n = String(name || '').trim().replace(/[\/\\]/g, '-') || 'ไม่ระบุ';
-  var it = parent.getFoldersByName(n);
-  return it.hasNext() ? it.next() : parent.createFolder(n);
+  try {
+    var it = parent.getFoldersByName(n);
+    return it.hasNext() ? it.next() : parent.createFolder(n);
+  } catch (err) {
+    return parent;
+  }
 }
 
 /** ชื่อสายงานแบบเต็ม ใช้เป็นทั้งชื่อโฟลเดอร์และส่วนหนึ่งของชื่อไฟล์ */
