@@ -422,17 +422,24 @@ function uploadFolder_() {
 }
 
 /** โฟลเดอร์ย่อยรายหน่วยงาน เพื่อไม่ให้ไฟล์ทุกแห่งกองรวมกัน */
-function hospitalFolder_(parent, hospital) {
-  var name = String(hospital || '').trim() || 'ไม่ระบุหน่วยงาน';
-  name = name.replace(/[\/\\]/g, '-');
-  var it = parent.getFoldersByName(name);
-  return it.hasNext() ? it.next() : parent.createFolder(name);
+/** หาโฟลเดอร์ย่อยตามชื่อ ถ้ายังไม่มีก็สร้างให้ */
+function subFolder_(parent, name) {
+  var n = String(name || '').trim().replace(/[\/\\]/g, '-') || 'ไม่ระบุ';
+  var it = parent.getFoldersByName(n);
+  return it.hasNext() ? it.next() : parent.createFolder(n);
+}
+
+/** ชื่อสายงานแบบเต็ม ใช้เป็นทั้งชื่อโฟลเดอร์และส่วนหนึ่งของชื่อไฟล์ */
+function workFolderName_(workType) {
+  return String(workType || '').indexOf('Green') !== -1
+    ? 'งาน Green & Clean'
+    : 'งานอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม';
 }
 
 /** ตัดอักขระที่ใช้ตั้งชื่อไฟล์ไม่ได้ออก และกันชื่อยาวเกิน */
 function safeName_(name) {
-  var n = String(name || 'หลักฐาน.pdf').replace(/[\/\\:*?"<>|]/g, '-').trim();
-  return n.length > 120 ? n.slice(0, 110) + '.pdf' : n;
+  var n = String(name || 'หลักฐาน').replace(/[\/\\:*?"<>|]/g, '-').trim();
+  return n.length > 120 ? n.slice(0, 120) : n;
 }
 
 /**
@@ -443,9 +450,23 @@ function safeName_(name) {
 function saveFiles_(files, payload) {
   if (!files || !files.length) return [];
 
-  var folder = hospitalFolder_(uploadFolder_(), payload.hospital);
-  var stamp  = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd-HHmmss');
+  /* โครงโฟลเดอร์:  <โฟลเดอร์หลัก> / <สายงาน> / <ชื่อหน่วยงาน> / ไฟล์
+     แยกสายงานก่อน เพื่อให้ สสจ. เปิดดูเฉพาะงานที่รับผิดชอบได้ง่าย */
+  var work   = workFolderName_(payload.workType);
+  var folder = subFolder_(subFolder_(uploadFolder_(), work), payload.hospital);
+
+  var stamp  = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyyMMdd-HHmm');
   var limit  = MAX_UPLOAD_MB * 1024 * 1024;
+  var many   = files.length > 1;
+
+  /* ชื่อไฟล์: [ชื่อโรงพยาบาล]_[ประเภทงาน]_[ปีที่ประเมิน]_[วันเวลาที่ส่ง].pdf
+     ตั้งให้ค้นหาง่ายว่าไฟล์ไหนของหน่วยงานใด เมื่อมีหลายแห่งส่งเข้ามา */
+  var base = [
+    String(payload.hospital || 'ไม่ระบุหน่วยงาน').trim(),
+    work,
+    String(payload.year || 'ไม่ระบุปี').trim(),
+    stamp
+  ].join('_');
 
   return files.map(function (f, i) {
     if (!f || !f.data) throw new Error('ไฟล์ลำดับที่ ' + (i + 1) + ' ไม่มีข้อมูล');
@@ -455,8 +476,10 @@ function saveFiles_(files, payload) {
       throw new Error('ไฟล์ ' + f.name + ' ใหญ่เกิน ' + MAX_UPLOAD_MB + ' MB');
     }
 
-    var blob = Utilities.newBlob(bytes, f.mimeType || 'application/pdf',
-                                 stamp + '_' + (i + 1) + '_' + safeName_(f.name));
+    /* แนบหลายไฟล์ในครั้งเดียว ต่อท้ายลำดับกันชื่อซ้ำ */
+    var fileName = safeName_(base + (many ? '_' + (i + 1) : '')) + '.pdf';
+
+    var blob = Utilities.newBlob(bytes, f.mimeType || 'application/pdf', fileName);
     var file = folder.createFile(blob);
 
     /* ให้ สสจ. เปิดดูได้จากลิงก์ในชีตโดยไม่ต้องขอสิทธิ์ทีละไฟล์ */

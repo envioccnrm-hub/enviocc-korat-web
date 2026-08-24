@@ -58,8 +58,34 @@
       return res;
     },
 
+    /**
+     * ยิง fetch พร้อมกำหนดเวลารอสูงสุด
+     * ถ้าเกินเวลาจะโยน error ที่บอกสาเหตุชัด ๆ แทนที่จะค้างรอไปเรื่อย ๆ
+     */
+    fetchWithTimeout: function (url, opts, ms) {
+      var limit = ms || CFG.TIMEOUT_MS || 45000;
+
+      /* เบราว์เซอร์เก่าที่ไม่มี AbortController ก็ยังใช้งานได้ เพียงไม่มี timeout */
+      if (typeof AbortController === 'undefined') return fetch(url, opts);
+
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, limit);
+      opts = opts || {};
+      opts.signal = ctrl.signal;
+
+      return fetch(url, opts)
+        .then(function (r) { clearTimeout(timer); return r; })
+        .catch(function (err) {
+          clearTimeout(timer);
+          if (err && err.name === 'AbortError') {
+            throw new Error('เซิร์ฟเวอร์ไม่ตอบกลับภายใน ' + Math.round(limit / 1000) + ' วินาที');
+          }
+          throw err;
+        });
+    },
+
     get: function (action, params) {
-      return fetch(API.url(action, params), { method: 'GET', redirect: 'follow' })
+      return API.fetchWithTimeout(API.url(action, params), { method: 'GET', redirect: 'follow' })
         .then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.json();
@@ -67,17 +93,18 @@
         .then(API.guard);
     },
 
-    post: function (payload) {
+    /** opts.timeout = กำหนดเวลารอเองได้ (ใช้ตอนแนบไฟล์ซึ่งนานกว่าปกติ) */
+    post: function (payload, opts) {
       var body = {};
       Object.keys(payload || {}).forEach(function (k) { body[k] = payload[k]; });
       var tk = API.token();
       if (tk) body.token = tk;
 
-      return fetch(CFG.API_URL, {
+      return API.fetchWithTimeout(CFG.API_URL, {
         method: 'POST',
         redirect: 'follow',
         body: JSON.stringify(body)   // ตั้งใจไม่ใส่ headers — ดูหมายเหตุด้านบน
-      }).then(function (r) {
+      }, opts && opts.timeout).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       }).then(API.guard);
@@ -230,8 +257,21 @@
       else alert(title + '\n' + (text || ''));
     },
 
-    loading: function (title) {
-      if (window.Swal) Swal.fire({ title: title || 'กำลังโหลด...', allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
+    loading: function (title, text) {
+      if (window.Swal) Swal.fire({
+        title: title || 'กำลังโหลด...',
+        text: text || '',
+        allowOutsideClick: false,
+        didOpen: function () { Swal.showLoading(); }
+      });
+    },
+
+    /** เปลี่ยนข้อความในกล่องโหลดที่เปิดค้างอยู่ ให้ผู้ใช้เห็นว่าคืบหน้าถึงไหน */
+    loadingText: function (title, text) {
+      if (!window.Swal || !Swal.isVisible()) return;
+      var t = Swal.getTitle(), c = Swal.getHtmlContainer();
+      if (t && title) t.textContent = title;
+      if (c) c.textContent = text || '';
     },
 
     close: function () { if (window.Swal) Swal.close(); },

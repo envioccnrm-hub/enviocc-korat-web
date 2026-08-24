@@ -9,7 +9,8 @@
 (function () {
   'use strict';
 
-  var S = window.APP_CONFIG.STATUS;
+  var CFG = window.APP_CONFIG;
+  var S = CFG.STATUS;
   var user = null;
   var masterData = { green: [], occ: [] };
   var registry = null;
@@ -478,21 +479,31 @@
   }
 
   /** อ่านไฟล์ที่แนบไว้ทั้งหมดเป็น base64 เพื่อส่งขึ้น Apps Script */
-  function readFiles(prefix) {
-    return Promise.all(picked[prefix].map(function (f) {
-      return new Promise(function (resolve, reject) {
-        var r = new FileReader();
-        r.onload  = function () {
-          resolve({
-            name: f.name,
-            mimeType: f.type || 'application/pdf',
-            data: String(r.result).split(',')[1]   /* ตัดหัว data:...;base64, ทิ้ง */
-          });
-        };
-        r.onerror = function () { reject(new Error('อ่านไฟล์ ' + f.name + ' ไม่สำเร็จ')); };
-        r.readAsDataURL(f);
+  /**
+   * อ่านไฟล์ที่แนบไว้ทั้งหมดเป็น base64 เพื่อส่งขึ้น Apps Script
+   * อ่านทีละไฟล์ (ไม่พร้อมกัน) เพื่อรายงานความคืบหน้าได้จริง และไม่กินหน่วยความจำพรวดเดียว
+   */
+  function readFiles(prefix, onProgress) {
+    var list = picked[prefix];
+
+    return list.reduce(function (chain, f, i) {
+      return chain.then(function (acc) {
+        if (onProgress) onProgress(i + 1, list.length, f.name);
+        return new Promise(function (resolve, reject) {
+          var r = new FileReader();
+          r.onload  = function () {
+            acc.push({
+              name: f.name,
+              mimeType: f.type || 'application/pdf',
+              data: String(r.result).split(',')[1]   /* ตัดหัว data:...;base64, ทิ้ง */
+            });
+            resolve(acc);
+          };
+          r.onerror = function () { reject(new Error('อ่านไฟล์ "' + f.name + '" ไม่สำเร็จ')); };
+          r.readAsDataURL(f);
+        });
       });
-    }));
+    }, Promise.resolve([]));
   }
 
   /* =========================================================
@@ -550,14 +561,21 @@
     }
 
     var nFiles = picked[prefix].length;
-    UI.loading(nFiles
-      ? 'กำลังอัปโหลดไฟล์ ' + nFiles + ' ไฟล์ และบันทึกข้อมูล...'
-      : 'กำลังบันทึกข้อมูลลง Google Sheet...');
+    var totalMB = (totalBytes(prefix) / 1024 / 1024).toFixed(1);
 
-    readFiles(prefix)
+    UI.loading(nFiles ? 'กำลังเตรียมไฟล์...' : 'กำลังบันทึกข้อมูล...',
+               nFiles ? 'แนบ ' + nFiles + ' ไฟล์ รวม ' + totalMB + ' MB' : '');
+
+    readFiles(prefix, function (done, total, name) {
+      UI.loadingText('กำลังเตรียมไฟล์ ' + done + '/' + total, name);
+    })
       .then(function (files) {
         payload.files = files;
-        return API.post(payload);
+        UI.loadingText(
+          nFiles ? 'กำลังอัปโหลดขึ้น Google Drive...' : 'กำลังบันทึกลง Google Sheet...',
+          nFiles ? 'ไฟล์ใหญ่อาจใช้เวลาสักครู่ กรุณาอย่าปิดหน้านี้' : '');
+        /* แนบไฟล์ใช้เวลานานกว่าปกติ จึงยืดเวลารอให้ยาวขึ้น */
+        return API.post(payload, { timeout: nFiles ? CFG.UPLOAD_TIMEOUT_MS : CFG.TIMEOUT_MS });
       })
       .then(function (res) {
         UI.close();
@@ -578,8 +596,29 @@
       })
       .catch(function (err) {
         UI.close();
-        UI.toast('error', 'เกิดข้อผิดพลาด',
-          'ส่งข้อมูลไม่สำเร็จ: ' + err.message + ' (ตรวจว่า Deploy Apps Script เป็น Anyone แล้วหรือยัง)');
+        if (err && err.authError) return;   /* ระบบเด้งไปหน้าล็อกอินให้แล้ว */
+
+        var msg = String((err && err.message) || err);
+        var hint;
+        if (msg.indexOf('ไม่ตอบกลับภายใน') !== -1) {
+          hint = nFiles
+            ? 'ไฟล์อาจใหญ่เกินไปหรือเน็ตช้า ลองลดจำนวนไฟล์ หรือใช้วิธีวางลิงก์ Google Drive แทน'
+            : 'เซิร์ฟเวอร์ตอบช้าผิดปกติ ลองกดส่งใหม่อีกครั้ง';
+        } else if (msg.indexOf('อ่านไฟล์') !== -1) {
+          hint = 'ลองเอาไฟล์นั้นออกแล้วแนบใหม่';
+        } else {
+          hint = 'ตรวจว่า Deploy Apps Script เป็น Anyone และอนุญาตสิทธิ์ Google Drive แล้วหรือยัง';
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'ส่งรายงานไม่สำเร็จ',
+          html: '<p style="margin-bottom:10px">' + esc(msg) + '</p>' +
+                '<p style="font-size:13px;color:#64748B">' + hint + '</p>' +
+                '<p style="font-size:13px;color:#64748B;margin-top:10px">' +
+                'ข้อมูลที่กรอกไว้ยังอยู่ครบ กดส่งใหม่ได้เลย</p>',
+          confirmButtonColor: '#0072CE'
+        });
       });
   }
 
