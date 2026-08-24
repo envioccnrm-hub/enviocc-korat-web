@@ -588,7 +588,17 @@
           title: 'ส่งรายงานเรียบร้อย',
           html: 'บันทึกลงชีต <b>' + esc(res.sheet || '') + '</b> แถวที่ ' + esc(res.row || '') +
                 (res.uploaded ? '<br>อัปโหลดไฟล์ขึ้น Google Drive แล้ว <b>' + esc(res.uploaded) + '</b> ไฟล์' : '') +
-                '<br>สถานะปัจจุบัน: <b>' + S.PENDING + '</b>',
+                '<br>สถานะปัจจุบัน: <b>' + S.PENDING + '</b>' +
+                /* โชว์ลิงก์ที่เขียนลงชีตจริง เพื่อให้ตรวจได้ทันทีว่าหลักฐานไปถึงแล้ว */
+                (res.links && res.links.length
+                  ? '<hr style="margin:12px 0"><p style="font-size:13px;color:#64748B;margin-bottom:6px">' +
+                    'ลิงก์หลักฐานที่บันทึกลงคอลัมน์ "' + esc(res.linkColumn || 'หลักฐาน') + '":</p>' +
+                    res.links.map(function (u, i) {
+                      return '<a href="' + esc(u) + '" target="_blank" rel="noopener" ' +
+                             'style="display:block;font-size:13px;color:#0072CE;word-break:break-all">' +
+                             (i + 1) + '. เปิดดูไฟล์</a>';
+                    }).join('')
+                  : ''),
           confirmButtonColor: '#0072CE'
         });
         resetForm(prefix);

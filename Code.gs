@@ -558,6 +558,18 @@ function submitReport(payload) {
   }
 
   var m = followMap_(d.headers);
+
+  /* ถ้าไม่มีคอลัมน์หลักฐาน ลิงก์จะหายไปเงียบ ๆ ทั้งที่ระบบขึ้นว่าบันทึกสำเร็จ
+     จึงต้องหยุดและบอกให้ชัด ก่อนที่ผู้ใช้จะเข้าใจผิดว่าแนบหลักฐานไปแล้ว */
+  if (m.link < 0) {
+    return {
+      status: 'error',
+      message: 'ไม่พบคอลัมน์สำหรับเก็บลิงก์หลักฐานในชีต "' + name + '" — ' +
+               'กรุณาตั้งชื่อหัวคอลัมน์ให้มีคำว่า "ลิงก์" หรือ "หลักฐาน" ' +
+               '(หัวคอลัมน์ที่มีอยู่: ' + d.headers.filter(String).join(' | ') + ')'
+    };
+  }
+
   var row = new Array(d.headers.length).fill('');
   var put = function (idx, val) { if (idx >= 0) row[idx] = val; };
 
@@ -584,7 +596,8 @@ function submitReport(payload) {
     sheet: name,
     row: d.sheet.getLastRow(),
     uploaded: uploadedLinks.length,
-    links: allLinks
+    links: allLinks,
+    linkColumn: String(d.headers[m.link] || '')
   };
 }
 
