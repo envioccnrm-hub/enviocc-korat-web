@@ -722,12 +722,26 @@
   /* =========================================================
    *  ประวัติการส่ง + แถบสถานะ
    * ======================================================= */
+  /** ชื่อหน่วยงานในชีตอาจมีช่องว่างเกินหรือเว้นวรรคต่างกัน จึงเทียบแบบผ่อนปรน */
+  function sameHospital(a, b) {
+    var norm = function (x) { return String(x == null ? '' : x).replace(/\s+/g, '').trim(); };
+    return norm(a) === norm(b);
+  }
+
   function loadHistory() {
     API.getOrDemo('getSubmissions', { hospital: user.hospital }, window.DEMO.submissions)
       .then(function (res) {
         var all = (res && res.data) || [];
-        var mine = all.filter(function (r) { return r.hospital === user.hospital; });
-        if (API.demoMode && !mine.length) mine = all;
+
+        /* Apps Script กรองให้เป็นของหน่วยงานนี้มาแล้ว (บังคับจาก token)
+           การกรองซ้ำตรงนี้เป็นแค่กันพลาด ถ้ากรองแล้วเหลือศูนย์ทั้งที่มีข้อมูล
+           แปลว่าชื่อในสองชีตเขียนไม่ตรงกัน — ใช้ของที่เซิร์ฟเวอร์ส่งมาแทน
+           ไม่งั้นผู้ใช้จะเห็นตารางว่างทั้งที่ส่งรายงานไปแล้ว */
+        var mine = all.filter(function (r) { return sameHospital(r.hospital, user.hospital); });
+        if (!mine.length && all.length) {
+          console.warn('ชื่อหน่วยงานในชีตติดตามงานไม่ตรงกับชีต Login — ใช้ข้อมูลที่เซิร์ฟเวอร์กรองมาแทน');
+          mine = all;
+        }
         myRows = mine;
 
         ['gc', 'occ'].forEach(function (p) {
@@ -740,7 +754,20 @@
           renderAlert(p, rows[0]);
         });
       })
-      .catch(function (err) { console.warn('โหลดประวัติไม่สำเร็จ:', err.message); });
+      .catch(function (err) {
+        if (err && err.authError) return;   /* ระบบพาไปล็อกอินให้แล้ว */
+        /* เดิมแค่ console.warn หน้าเว็บจึงเงียบ ผู้ใช้เห็นตารางว่างโดยไม่รู้สาเหตุ */
+        console.warn('โหลดประวัติไม่สำเร็จ:', err.message);
+        ['gc', 'occ'].forEach(function (p) {
+          var body = $(p + '-history-body');
+          if (!body) return;
+          body.innerHTML = '<tr><td colspan="5" class="py-8 px-6 text-center text-sm">' +
+            '<span class="text-red-600 font-semibold">โหลดประวัติไม่สำเร็จ</span><br>' +
+            '<span class="text-text-muted text-xs">' + esc(err.message) + '</span><br>' +
+            '<span class="text-text-muted text-xs">ลองรีเฟรชหน้า หรือออกจากระบบแล้วเข้าใหม่</span>' +
+            '</td></tr>';
+        });
+      });
   }
 
   function renderHistory(prefix, rows) {
