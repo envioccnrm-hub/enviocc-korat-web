@@ -539,6 +539,35 @@
     return m ? m[1] : '';
   }
 
+  /**
+   * ปุ่มเปิดไฟล์หลักฐาน
+   * คอลัมน์หลักฐานเก็บได้หลายลิงก์ (คั่นด้วยขึ้นบรรทัดใหม่) จึงทำปุ่มให้ครบทุกอัน
+   * และรับเฉพาะที่ขึ้นต้นด้วย http เท่านั้น — ถ้าใส่ค่าที่ไม่ใช่ URL ลงใน href
+   * เบราว์เซอร์จะมองเป็นพาธสัมพัทธ์แล้ววิ่งไปหน้าเว็บตัวเองแทน (เช่นลิงก์ github.io)
+   */
+  function evidenceHTML(raw) {
+    var links = String(raw == null ? '' : raw)
+      .split(/[\r\n]+|\s+(?=https?:\/\/)/)
+      .map(function (x) { return x.trim(); })
+      .filter(function (x) { return /^https?:\/\//i.test(x); });
+
+    if (!links.length) {
+      var note = String(raw || '').trim();
+      return note
+        ? '<span class="text-gray-500 text-sm">หลักฐานที่แนบมาไม่ใช่ลิงก์ที่เปิดได้: ' +
+          '<span class="font-mono text-xs">' + esc(note.slice(0, 120)) + '</span></span>'
+        : '<span class="text-gray-500">โรงพยาบาลยังไม่ได้แนบหลักฐาน</span>';
+    }
+
+    return links.map(function (u, i) {
+      return '<a href="' + esc(u) + '" target="_blank" rel="noopener" ' +
+        'class="inline-flex items-center px-6 py-3 bg-[#0072ce] text-white rounded-lg font-bold hover:bg-[#0059a4] transition-colors shadow-md gap-2">' +
+        '<span class="material-symbols-outlined">folder</span>' +
+        'คลิกเปิดดูไฟล์หลักฐาน (PDF / Google Drive)' +
+        (links.length > 1 ? ' — ไฟล์ที่ ' + (i + 1) : '') + '</a>';
+    }).join('');
+  }
+
   function openReview(r) {
     var isGreen   = String(r.workType || '').indexOf('Green') !== -1;
     var levels    = (CFG.LEVELS && (isGreen ? CFG.LEVELS.green : CFG.LEVELS.occ)) || [];
@@ -628,13 +657,7 @@
                 '<p class="text-gray-700 whitespace-pre-line">' + esc(r.detail) + '</p></div>'
             : '') +
 
-          '<div class="flex justify-center">' +
-            (r.driveLink
-              ? '<a href="' + esc(r.driveLink.split(/[\r\n]+/)[0]) + '" target="_blank" rel="noopener" ' +
-                'class="inline-flex items-center px-6 py-3 bg-[#0072ce] text-white rounded-lg font-bold hover:bg-[#0059a4] transition-colors shadow-md gap-2">' +
-                '<span class="material-symbols-outlined">folder</span>คลิกเปิดดูไฟล์หลักฐาน (PDF / Google Drive)</a>'
-              : '<span class="text-gray-500">โรงพยาบาลยังไม่ได้แนบหลักฐาน</span>') +
-          '</div>' +
+          '<div class="flex flex-col items-center gap-2">' + evidenceHTML(r.driveLink) + '</div>' +
 
           '<div class="space-y-4 border-t border-gray-100 pt-4">' +
             '<label class="font-bold text-gray-600 block mb-2">สถานะการตรวจสอบ</label>' +

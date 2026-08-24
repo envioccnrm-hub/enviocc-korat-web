@@ -38,7 +38,10 @@
   body { font-family: Sarabun, sans-serif; }
   .stat-card { transition: transform .15s, box-shadow .15s; }
   .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
-  .stat-card.active { outline: 2px solid #0072CE; outline-offset: 2px; }
+  /* กล่องที่กำลังเลือกอยู่ ใช้ขอบสีกรมท่าให้เห็นชัดบนพื้นสีเข้ม */
+  .stat-card.active { outline: 4px solid #0A2540; outline-offset: 2px; }
+  .stat-card.active .stat-check { display: inline-block; }
+  .stat-check { display: none; }
 </style>
 <script src="./assets/config.js"></script>
 <script src="./assets/demo-data.js"></script>
@@ -122,25 +125,25 @@
 
       <!-- การ์ดสถิติ (คลิกเพื่อกรองตามสถานะ) -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8" id="stat-cards">
-        <div class="stat-card active cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="">
-          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px]" style="color:#0072CE">inbox</span> รายการส่งงานทั้งหมด</div>
-          <p class="text-3xl font-bold mt-2" style="color:#0072CE" id="stat-total">-</p>
+        <div class="stat-card active cursor-pointer rounded-2xl p-5 shadow-sm text-white" style="background:#0072CE" data-status="">
+          <div class="flex items-center gap-2 text-white/90 text-sm"><span class="material-symbols-outlined text-[18px]">inbox</span> รายการส่งงานทั้งหมด<span class="stat-check material-symbols-outlined text-[16px] ml-auto">check_circle</span></div>
+          <p class="text-3xl font-bold text-white mt-2" id="stat-total">-</p>
         </div>
-        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="รอตรวจสอบ">
-          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px] text-yellow-status">hourglass_empty</span> รอตรวจสอบ</div>
-          <p class="text-3xl font-bold text-yellow-status mt-2" id="stat-pending">-</p>
+        <div class="stat-card cursor-pointer rounded-2xl p-5 shadow-sm text-white" style="background:#EAB308" data-status="รอตรวจสอบ">
+          <div class="flex items-center gap-2 text-white/90 text-sm"><span class="material-symbols-outlined text-[18px]">hourglass_empty</span> รอตรวจสอบ<span class="stat-check material-symbols-outlined text-[16px] ml-auto">check_circle</span></div>
+          <p class="text-3xl font-bold text-white mt-2" id="stat-pending">-</p>
         </div>
-        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="ดำเนินการตรวจสอบแล้ว">
-          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px]" style="color:#16A34A">fact_check</span> ดำเนินการตรวจสอบแล้ว</div>
-          <p class="text-3xl font-bold mt-2" style="color:#16A34A" id="stat-checking">-</p>
+        <div class="stat-card cursor-pointer rounded-2xl p-5 shadow-sm text-white" style="background:#16A34A" data-status="ดำเนินการตรวจสอบแล้ว">
+          <div class="flex items-center gap-2 text-white/90 text-sm"><span class="material-symbols-outlined text-[18px]">fact_check</span> ดำเนินการตรวจสอบแล้ว<span class="stat-check material-symbols-outlined text-[16px] ml-auto">check_circle</span></div>
+          <p class="text-3xl font-bold text-white mt-2" id="stat-checking">-</p>
         </div>
-        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="ต้องแก้ไขเพิ่มเติม">
-          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px] text-red-500">warning</span> ต้องแก้ไขเพิ่มเติม</div>
-          <p class="text-3xl font-bold text-red-500 mt-2" id="stat-revise">-</p>
+        <div class="stat-card cursor-pointer rounded-2xl p-5 shadow-sm text-white" style="background:#EF4444" data-status="ต้องแก้ไขเพิ่มเติม">
+          <div class="flex items-center gap-2 text-white/90 text-sm"><span class="material-symbols-outlined text-[18px]">warning</span> ต้องแก้ไขเพิ่มเติม<span class="stat-check material-symbols-outlined text-[16px] ml-auto">check_circle</span></div>
+          <p class="text-3xl font-bold text-white mt-2" id="stat-revise">-</p>
         </div>
-        <div class="stat-card cursor-pointer bg-white border border-outline-custom rounded-2xl p-5 shadow-sm" data-status="รับรองผลเรียบร้อยแล้ว">
-          <div class="flex items-center gap-2 text-text-muted text-sm"><span class="material-symbols-outlined text-[18px]" style="color:#7C3AED">workspace_premium</span> รับรองผลการประเมิน</div>
-          <p class="text-3xl font-bold mt-2" style="color:#7C3AED" id="stat-approved">-</p>
+        <div class="stat-card cursor-pointer rounded-2xl p-5 shadow-sm text-white" style="background:#7C3AED" data-status="รับรองผลเรียบร้อยแล้ว">
+          <div class="flex items-center gap-2 text-white/90 text-sm"><span class="material-symbols-outlined text-[18px]">workspace_premium</span> รับรองผลการประเมิน<span class="stat-check material-symbols-outlined text-[16px] ml-auto">check_circle</span></div>
+          <p class="text-3xl font-bold text-white mt-2" id="stat-approved">-</p>
         </div>
       </div>
 

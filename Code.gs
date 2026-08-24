@@ -107,11 +107,12 @@ function sign_(data) {
 
 /** ออก token ให้หลังล็อกอินสำเร็จ */
 function issueToken_(sess) {
+  /* ต้องระบุ UTF-8 ให้ชัด ไม่งั้นชื่อหน่วยงานภาษาไทยจะกลายเป็น ???????? */
   var body = Utilities.base64EncodeWebSafe(JSON.stringify({
     r: sess.role,
     h: sess.hospital,
     e: Date.now() + TOKEN_TTL_HOURS * 3600 * 1000
-  }));
+  }), Utilities.Charset.UTF_8);
   return body + '.' + sign_(body);
 }
 
@@ -126,11 +127,20 @@ function readToken_(token) {
 
   var rec;
   try {
-    rec = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(body)).getDataAsString());
+    /* อ่านกลับเป็น UTF-8 ให้ตรงกับตอนเข้ารหัส */
+    rec = JSON.parse(
+      Utilities.newBlob(Utilities.base64DecodeWebSafe(body)).getDataAsString('UTF-8'));
   } catch (err) { return null; }
 
   if (!rec || !rec.e || rec.e < Date.now()) return null;   /* หมดอายุ */
-  return { role: rec.r, hospital: String(rec.h || '') };
+
+  /* token รุ่นเก่าเข้ารหัสโดยไม่ระบุ UTF-8 ชื่อหน่วยงานภาษาไทยจึงกลายเป็น ????
+     ถ้าเจอแบบนั้นให้ถือว่าใช้ไม่ได้ ผู้ใช้จะถูกพาไปล็อกอินใหม่แล้วได้ token ที่ถูกต้อง
+     ดีกว่าปล่อยผ่านแล้วไปกรองข้อมูลผิดหรือเขียนชื่อขยะลงชีต */
+  var h = String(rec.h || '');
+  if (/\?{3,}/.test(h)) return null;
+
+  return { role: rec.r, hospital: h };
 }
 
 /** ต้องล็อกอินก่อน */
@@ -295,6 +305,15 @@ function readSheet_(name) {
 }
 
 /** หาเลขคอลัมน์ (0-based) จาก regex ของชื่อหัวคอลัมน์ — ไม่เจอคืน -1 */
+/** ลองหลายรูปแบบตามลำดับ ใช้ตัวแรกที่เจอ */
+function findColAny_(headers, list) {
+  for (var i = 0; i < list.length; i++) {
+    var idx = findCol_(headers, list[i]);
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
 function findCol_(headers, re) {
   for (var i = 0; i < headers.length; i++) {
     if (re.test(headers[i])) return i;
@@ -321,7 +340,9 @@ function followMap_(headers) {
     link:     findCol_(headers, /ลิงก์|ลิ้งก์|หลักฐาน/),
     status:   findCol_(headers, /สถานะ/),
     comment:  findCol_(headers, /หมายเหตุ|ข้อเสนอแนะ/),
-    level:    findCol_(headers, /ระดับผล/)
+    /* ชีตแต่ละแท็บอาจตั้งชื่อไม่เหมือนกัน ลองจากเจาะจงไปกว้าง
+       กันกรณีหัวคอลัมน์เขียนว่า "ระดับการรับรอง" หรือ "ระดับที่ได้รับ" */
+    level:    findColAny_(headers, [/ระดับผล/, /ระดับการรับรอง/, /ระดับที่ได้/, /ระดับ/])
   };
 }
 
@@ -705,22 +726,25 @@ function updateStatus(payload) {
                   .map(function (h) { return String(h).trim(); });
   var m = followMap_(headers);
 
+  var cols = headers.filter(String).join(' | ');
+
+  /* ตรวจให้ครบก่อน แล้วค่อยเขียน จะได้ไม่เขียนไปครึ่งเดียวแล้วค่อยแจ้ง error */
   if (m.status < 0) {
     return { status: 'error',
-             message: 'ไม่พบคอลัมน์ "สถานะ" ในชีต ' + name + ' จึงบันทึกผลไม่ได้' };
+             message: 'ไม่พบคอลัมน์ "สถานะ" ในชีต "' + name + '" จึงบันทึกผลไม่ได้ ' +
+                      '(หัวคอลัมน์ที่มีอยู่: ' + cols + ')' };
   }
+  if (payload.level && m.level < 0) {
+    return { status: 'error',
+             message: 'ไม่พบคอลัมน์สำหรับเก็บระดับผลการประเมินในชีต "' + name + '" — ' +
+                      'กรุณาตั้งชื่อหัวคอลัมน์ให้มีคำว่า "ระดับผล" หรือ "ระดับการรับรอง" ' +
+                      '(หัวคอลัมน์ที่มีอยู่: ' + cols + ')' };
+  }
+
   sh.getRange(rowNo, m.status + 1).setValue(payload.status || STATUS_CHECKING);
 
-  /* ระดับการรับรอง — เดิมไม่เคยถูกเขียนลงชีตเลย ค่าที่ผู้ตรวจเลือกจึงหายไปเงียบ ๆ
-     เขียนเฉพาะตอนที่ส่งค่ามา เพื่อไม่ไปลบระดับเดิมตอนแค่เปลี่ยนสถานะ */
-  if (payload.level) {
-    if (m.level < 0) {
-      return { status: 'error',
-               message: 'ไม่พบคอลัมน์ "ระดับผลการประเมิน" ในชีต ' + name +
-                        ' จึงบันทึกระดับการรับรองไม่ได้' };
-    }
-    sh.getRange(rowNo, m.level + 1).setValue(payload.level);
-  }
+  /* ระดับการรับรอง — เขียนเฉพาะตอนที่ส่งค่ามา เพื่อไม่ไปลบระดับเดิมตอนแค่เปลี่ยนสถานะ */
+  if (payload.level) sh.getRange(rowNo, m.level + 1).setValue(payload.level);
 
   if (m.comment >= 0) {
     // ต่อท้ายชื่อผู้ตรวจกับวันที่ไว้ในช่องหมายเหตุ เพราะชีตไม่มีคอลัมน์แยก
@@ -735,7 +759,8 @@ function updateStatus(payload) {
     message: 'บันทึกผลการตรวจเรียบร้อยแล้ว',
     row: rowNo,
     savedStatus: payload.status || STATUS_CHECKING,
-    savedLevel: payload.level || ''
+    savedLevel: payload.level || '',
+    levelColumn: m.level >= 0 ? String(headers[m.level] || '') : ''
   };
 }
 
