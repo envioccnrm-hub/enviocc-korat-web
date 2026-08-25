@@ -48,7 +48,7 @@ const TOKEN_TTL_HOURS = 12;
 const AUTH_SALT = 'enviocc-korat-2026';
 
 /* เลขรุ่นของโค้ด — เรียก ?action=ping เพื่อดูว่าที่ deploy อยู่เป็นรุ่นไหน */
-const CODE_VERSION = '2026-08-25b';
+const CODE_VERSION = '2026-08-25c';
 
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
@@ -236,10 +236,13 @@ function ตรวจระบบ() {
   };
 
   /* 1) โฟลเดอร์ Drive — ต้องเปิดได้และสร้างไฟล์ได้จริง */
-  [['งาน Green & Clean', UPLOAD_FOLDER_GREEN_ID],
-   ['งานอาชีวอนามัยฯ',  UPLOAD_FOLDER_OCC_ID]].forEach(function (pair) {
+  [['งาน Green & Clean', 'Green'],
+   ['งานอาชีวอนามัยฯ',  'Occ']].forEach(function (pair) {
     check('โฟลเดอร์ ' + pair[0], function () {
-      var f = DriveApp.getFolderById(pair[1]);
+      /* เรียกผ่านตัวเดียวกับตอนอัปโหลดจริง ผลตรวจจึงตรงกับของจริงเสมอ
+         เดิมเรียก DriveApp.getFolderById() ตรง ๆ พอเว้น ID ว่างไว้ (= ให้ระบบสร้างเอง)
+         จึงฟ้อง "Invalid file or folder ID" ทั้งที่ระบบทำงานปกติ */
+      var f = uploadFolder_(pair[1]);
       /* ทดสอบเขียนจริง แล้วลบทิ้ง — เปิดได้อย่างเดียวไม่พอ ต้องเขียนได้ด้วย */
       var probe = f.createFile(Utilities.newBlob('test', 'text/plain', '__ทดสอบสิทธิ์__.txt'));
       probe.setTrashed(true);

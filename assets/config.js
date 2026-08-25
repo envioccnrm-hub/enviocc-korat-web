@@ -8,12 +8,12 @@ window.APP_CONFIG = {
 
   // รุ่นของไฟล์หน้าเว็บ — ใช้เช็คว่าเบราว์เซอร์โหลดของใหม่แล้วหรือยัง
   // เปิด Console แล้วดูบรรทัดที่ขึ้นตอนเปิดหน้า ถ้าเลขไม่ตรงแปลว่ายังติด cache เก่า
-  WEB_VERSION: '2026-08-25a',
+  WEB_VERSION: '2026-08-25b',
 
   // ⚠️ ในไฟล์เดิมของพี่มี URL อยู่ 2 อันที่ไม่ตรงกัน (ตัว I l กับ O 0 สลับกัน)
   //    ผมเลือกอันที่ใช้ในหน้า Login มาเป็นค่าตั้งต้น
   //    ถ้า Deploy Code.gs ตัวใหม่แล้ว จะได้ URL ใหม่ ให้เอามาวางทับตรงนี้
-  API_URL: 'https://script.google.com/macros/s/AKfycby9t6vY3B6lTx8BIGdI1riw0GhTlMnGWVuqQQQDRG7xMo8smqrLOniahIC0QQloI-Ms/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzxi5egfy3ofJOVVN0D1cBBLleF8mdfz7G8IOWfss7zsJFBQGkFgQ3OlEu_VaD0QKJr/exec',
 
   // ค่าคงที่ที่ใช้ผสมกับรหัสหน่วยงานก่อนแปลงเป็น SHA-256 ตอนเข้าสู่ระบบ
   // ต้องตรงกับ AUTH_SALT ใน Code.gs เป๊ะ ๆ ไม่งั้นเข้าระบบไม่ได้ทั้งระบบ
