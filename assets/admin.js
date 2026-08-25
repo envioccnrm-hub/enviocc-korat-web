@@ -976,7 +976,7 @@
 
 
   /**
-   * กราฟสัดส่วนระดับผลการรับรอง — ขึ้นเฉพาะตอนเลือกกล่อง "รับรองผลการประเมิน"
+   * กราฟสัดส่วนรับรองผลการประเมิน (คอลัมน์ O) — ขึ้นเฉพาะตอนเลือกกล่อง "รับรองผลการประเมิน"
    * ข้อความข้างกราฟกดได้ เพื่อกรองตารางด้านล่างให้เหลือเฉพาะระดับนั้น
    */
   function renderApprovedChart() {
@@ -1047,12 +1047,13 @@
       return;
     }
     var head = ['วันที่ส่ง', 'ประเภทงาน', 'อำเภอ', 'รหัสโรงพยาบาล', 'โรงพยาบาล', 'ประเภทโรงพยาบาล',
-                'ปีที่ประเมิน', 'ผู้ส่ง', 'เบอร์โทร', 'ระดับผลการประเมิน', 'หมวด/องค์ประกอบที่แก้ไข',
+                'ปีที่ประเมิน', 'ผู้ส่ง', 'เบอร์โทร', 'ระดับที่ขอรับการประเมิน', 'รับรองผลการประเมิน',
+                'หมวด/องค์ประกอบที่แก้ไข',
                 'ข้อที่แก้ไข', 'รายละเอียดการปรับปรุงแก้ไข', 'ลิงก์หลักฐาน', 'สถานะการตรวจสอบ',
                 'หมายเหตุ / ข้อเสนอแนะ'];
     var body = rows.map(function (r) {
       return [UI.thaiDate(r.submittedAt), r.workType, r.district, r.hospitalCode, r.hospital, r.hospType,
-              r.year, r.senderName, r.phone, r.level, r.categories, r.items, r.detail, r.driveLink,
+              r.year, r.senderName, r.phone, r.level, r.certLevel, r.categories, r.items, r.detail, r.driveLink,
               r.status, r.comment];
     });
     UI.downloadCSV('รายการติดตามงาน_' + new Date().toISOString().slice(0, 10) + '.csv', [head].concat(body));

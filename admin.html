@@ -45,10 +45,10 @@
   .stat-card.active .stat-check { display: inline-block; }
   .stat-check { display: none; }
 </style>
-<script src="./assets/config.js?v=2026-08-25c"></script>
-<script src="./assets/demo-data.js?v=2026-08-25c"></script>
-<script src="./assets/app.js?v=2026-08-25c"></script>
-<script src="./assets/stats.js?v=2026-08-25c"></script>
+<script src="./assets/config.js?v=2026-08-25d"></script>
+<script src="./assets/demo-data.js?v=2026-08-25d"></script>
+<script src="./assets/app.js?v=2026-08-25d"></script>
+<script src="./assets/stats.js?v=2026-08-25d"></script>
 </head>
 
 <body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
@@ -194,10 +194,10 @@
       <!-- สรุประดับผลของกลุ่ม "รับรองผลการประเมิน" (ขึ้นเมื่อเลือกกล่องนั้น) -->
       <div id="approved-chart" class="hidden bg-white border border-outline-custom rounded-2xl p-6 shadow-sm mb-6">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-          <h3 class="font-bold font-headline" style="color:#7C3AED">สัดส่วนระดับผลการรับรอง</h3>
+          <h3 class="font-bold font-headline" style="color:#7C3AED">สัดส่วนรับรองผลการประเมิน</h3>
           <button id="approved-clear" class="hidden text-xs text-primary hover:underline font-semibold">ล้างตัวกรองระดับ</button>
         </div>
-        <p class="text-xs text-text-muted mb-5">คลิกที่ระดับข้างกราฟ เพื่อกรองตารางด้านล่างให้เหลือเฉพาะหน่วยงานในระดับนั้น</p>
+        <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ O “รับรองผลการประเมิน” — ระดับที่ สสจ. รับรองจริง (คิดตามตัวกรองประเภทหน่วยงานและปีที่เลือกอยู่) <b>คลิกที่ระดับข้างกราฟ</b> เพื่อกรองตารางด้านล่างให้เหลือเฉพาะหน่วยงานในระดับนั้น</p>
         <div id="approved-donut"></div>
       </div>
 
@@ -260,7 +260,7 @@
 
           <div class="bg-white border border-outline-custom rounded-2xl p-6 shadow-sm">
             <h3 class="font-bold text-tertiary font-headline mb-1">สัดส่วนระดับผลการประเมินที่ขอรับรอง</h3>
-            <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ “ระดับผลการประเมิน” ของรายการที่ส่งเข้ามา</p>
+            <p class="text-xs text-text-muted mb-5">นับจากคอลัมน์ N “ระดับที่ขอรับการประเมิน” — ระดับที่โรงพยาบาลติ๊กขอมาเอง คนละค่ากับผลที่ สสจ. รับรอง</p>
             <div id="dash-level"></div>
             <h4 class="font-semibold text-tertiary text-sm mt-6 mb-3">สถานะการตรวจของ สสจ.</h4>
             <div id="dash-status"></div>
@@ -452,6 +452,6 @@
   </main>
 </div>
 
-<script src="./assets/admin.js?v=2026-08-25c"></script>
+<script src="./assets/admin.js?v=2026-08-25d"></script>
 </body>
 </html>
