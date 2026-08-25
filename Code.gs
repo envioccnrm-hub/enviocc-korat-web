@@ -24,10 +24,11 @@ const SHEET_REGISTRY     = "ทะเบียนรายชื่อโรง�
  *
  * สำคัญ: บัญชีที่เป็นเจ้าของ Apps Script ต้องมีสิทธิ์แก้ไขโฟลเดอร์นี้
  *        ไม่งั้นจะอัปโหลดไม่ได้ */
-const UPLOAD_FOLDER_GREEN_ID   = "1n3A4TMzsG5aL5FRzX3HN0E0V4TnjWqtU";
+const UPLOAD_FOLDER_GREEN_ID   = "";   /* ล้างแล้ว 25 ส.ค. 2569 — ID เดิมอยู่ในบัญชีที่ถูกปิด
+                                          เว้นว่างไว้ = ระบบสร้างโฟลเดอร์ตามชื่อข้างล่างให้เอง */
 const UPLOAD_FOLDER_GREEN_NAME = "รวมไฟล์ PDF งานแก้ไข Green & Clean";
 
-const UPLOAD_FOLDER_OCC_ID     = "1vd3CTraIlZrZN01ONsXc54MYZ1uHuCVa";
+const UPLOAD_FOLDER_OCC_ID     = "";   /* เช่นเดียวกัน */
 const UPLOAD_FOLDER_OCC_NAME   = "รวมไฟล์ PDF งานแก้ไข อาชีวอนามัยฯ";
 
 const MAX_UPLOAD_MB            = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
