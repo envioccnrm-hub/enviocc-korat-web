@@ -8,7 +8,7 @@ window.APP_CONFIG = {
 
   // รุ่นของไฟล์หน้าเว็บ — ใช้เช็คว่าเบราว์เซอร์โหลดของใหม่แล้วหรือยัง
   // เปิด Console แล้วดูบรรทัดที่ขึ้นตอนเปิดหน้า ถ้าเลขไม่ตรงแปลว่ายังติด cache เก่า
-  WEB_VERSION: '2026-08-25b',
+  WEB_VERSION: '2026-08-25c',
 
   // ⚠️ ในไฟล์เดิมของพี่มี URL อยู่ 2 อันที่ไม่ตรงกัน (ตัว I l กับ O 0 สลับกัน)
   //    ผมเลือกอันที่ใช้ในหน้า Login มาเป็นค่าตั้งต้น
@@ -34,7 +34,7 @@ window.APP_CONFIG = {
 
   // ลิงก์คู่มือการใช้งานสำหรับผู้ดูแลระบบ (แท็บคู่มือในหน้า สสจ.)
   // เปลี่ยนเป็นลิงก์ไฟล์คู่มือตัวจริงได้ที่นี่ที่เดียว
-  ADMIN_MANUAL_URL: 'https://drive.google.com/drive/folders/1Cu5JOwr1eyEaTOXbH5oJ0YvRhngQb2Vx?usp=sharing',
+  ADMIN_MANUAL_URL: 'https://drive.google.com/drive/folders/1wsabDKlJCO1sXxTjlPoZwfNp-m4YLgTK',
   CONTACT_LINE: 'กลุ่มงานอนามัยสิ่งแวดล้อมและอาชีวอนามัย สสจ.นครราชสีมา โทร. 044-465011-4 ต่อ 123',
 
   // สถานะงาน — ต้องตรงกับใน Code.gs

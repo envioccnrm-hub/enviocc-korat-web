@@ -260,9 +260,9 @@
       if (t && r.hospType !== t) return false;
       if (y && String(r.year) !== y) return false;
       if (st && r.status !== st) return false;
-      if (!opts.ignoreLevel && levelFilter && r.level !== levelFilter) return false;
+      if (!opts.ignoreLevel && levelFilter && r.certLevel !== levelFilter) return false;
       if (q) {
-        var hay = [r.hospital, r.district, r.categories, r.items, r.senderName, r.level]
+        var hay = [r.hospital, r.district, r.categories, r.items, r.senderName, r.level, r.certLevel]
           .join(' ').toLowerCase();
         if (hay.indexOf(q) === -1) return false;
       }
@@ -321,7 +321,8 @@
         '<td class="py-3 px-4">' + esc(r.workType) + '</td>' +
         '<td class="py-3 px-4 max-w-[260px]"><div class="truncate" title="' + esc(r.categories) + '">' + esc(r.categories || '-') + '</div>' +
           '<div class="text-xs text-text-muted truncate" title="' + esc(r.items) + '">' + esc(r.items || '') + '</div></td>' +
-        '<td class="py-3 px-4">' + esc(r.level || '-') + '</td>' +
+        '<td class="py-3 px-4">' + esc(r.certLevel || r.level || '-') +
+          (r.certLevel ? '' : '<br><span class="text-xs text-text-muted">(ระดับที่ขอ)</span>') + '</td>' +
         '<td class="py-3 px-4">' + UI.statusBadge(r.status) + '</td>' +
         '<td class="py-3 px-4 text-right whitespace-nowrap">' +
           '<button class="btn-review px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover" ' +
@@ -560,7 +561,7 @@
     /* ---- สถานะภายในป็อปอัพ ---- */
     var state = {
       status:  r.status || S.PENDING,
-      level:   r.level || '',
+      level:   r.certLevel || '',        /* ช่องนี้คือ "ผลการรับรอง" (คอลัมน์ O) ไม่ใช่ระดับที่ รพ. ขอ */
       comment: stripSignature(r.comment)
     };
 
@@ -595,10 +596,9 @@
     });
     if (!treeHTML) treeHTML = '<p class="text-gray-500">ไม่ได้ระบุ' + groupWord + '/ข้อที่แก้ไข</p>';
 
-    /* ชีตเก็บ "ระดับที่ขอ" กับ "ระดับที่รับรอง" ไว้คอลัมน์เดียวกัน
-       ค่าในช่องนี้จึงเปลี่ยนความหมายไปหลังรับรองผล ป้ายจึงต้องเปลี่ยนตาม
-       ไม่งั้นผู้ตรวจที่เปิดดูซ้ำภายหลังจะเข้าใจผิดว่าเป็นระดับที่โรงพยาบาลขอมา */
-    var levelLabel = r.status === S.APPROVED ? 'ระดับที่รับรอง' : 'ระดับที่ส่งประเมิน';
+    /* ตอนนี้ชีตแยกสองช่องแล้ว (N = ระดับที่ รพ. ขอ, O = ระดับที่ สสจ. รับรอง)
+       จึงโชว์คู่กันได้ ผู้ตรวจเห็นทันทีว่าขอมาเท่าไรและให้ไปเท่าไร */
+    var certText = r.certLevel || 'ยังไม่รับรอง';
 
     var infoCell = function (label, value, strong) {
       return '<div class="space-y-1"><p class="text-sm font-bold text-gray-500 mb-1">' + label + '</p>' +
@@ -628,7 +628,7 @@
           '<div class="p-4 bg-gray-50 rounded-lg border border-gray-200">' +
             '<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">' +
               infoCell('อำเภอ', r.district) + infoCell('ประเภทโรงพยาบาล', r.hospType) +
-              infoCell('ปีที่ประเมิน', r.year) + infoCell(levelLabel, r.level, true) +
+              infoCell('ระดับที่ส่งประเมิน', r.level) + infoCell('ผลการรับรอง', certText, true) +
             '</div>' +
             '<div class="space-y-4">' +
               '<h3 class="text-lg font-bold mb-2 text-[#0059a4]' +
@@ -920,11 +920,12 @@
       if ((k === 'green') !== isGreen) return;
       if (r.status !== S.APPROVED) return;
       if (year && String(r.year) !== year) return;
-      if (levels.indexOf(r.level) === -1) return;
-      var id = r.hospital + '|' + r.level;
+      /* นับจากระดับที่ "รับรองจริง" (คอลัมน์ O) ไม่ใช่ระดับที่โรงพยาบาลขอมา */
+      if (levels.indexOf(r.certLevel) === -1) return;
+      var id = r.hospital + '|' + r.certLevel;
       if (seen[id]) return;
       seen[id] = 1;
-      count[r.level]++;
+      count[r.certLevel]++;
     });
 
     var total = levels.reduce(function (a, L) { return a + count[L]; }, 0);
@@ -998,11 +999,12 @@
     var seen = {}, count = {};
     levels.forEach(function (L) { count[L] = 0; });
     rows.forEach(function (r) {
-      if (levels.indexOf(r.level) === -1) return;
-      var id = r.hospital + '|' + r.level;
+      /* นับจากระดับที่ "รับรองจริง" (คอลัมน์ O) ไม่ใช่ระดับที่โรงพยาบาลขอมา */
+      if (levels.indexOf(r.certLevel) === -1) return;
+      var id = r.hospital + '|' + r.certLevel;
       if (seen[id]) return;
       seen[id] = 1;
-      count[r.level]++;
+      count[r.certLevel]++;
     });
 
     var items = levels

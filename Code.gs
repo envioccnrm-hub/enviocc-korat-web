@@ -24,11 +24,10 @@ const SHEET_REGISTRY     = "ทะเบียนรายชื่อโรง�
  *
  * สำคัญ: บัญชีที่เป็นเจ้าของ Apps Script ต้องมีสิทธิ์แก้ไขโฟลเดอร์นี้
  *        ไม่งั้นจะอัปโหลดไม่ได้ */
-const UPLOAD_FOLDER_GREEN_ID   = "";   /* ล้างแล้ว 25 ส.ค. 2569 — ID เดิมอยู่ในบัญชีที่ถูกปิด
-                                          เว้นว่างไว้ = ระบบสร้างโฟลเดอร์ตามชื่อข้างล่างให้เอง */
+const UPLOAD_FOLDER_GREEN_ID   = "1wgBSSBGNslh8qK9HCnXLzIeCT_t_8JTw";
 const UPLOAD_FOLDER_GREEN_NAME = "รวมไฟล์ PDF งานแก้ไข Green & Clean";
 
-const UPLOAD_FOLDER_OCC_ID     = "";   /* เช่นเดียวกัน */
+const UPLOAD_FOLDER_OCC_ID     = "1HSX7vILb0cukKMZgfWLhVYwjRvCV4ZMj";
 const UPLOAD_FOLDER_OCC_NAME   = "รวมไฟล์ PDF งานแก้ไข อาชีวอนามัยฯ";
 
 const MAX_UPLOAD_MB            = 15;   /* ต่อไฟล์ ต้องตรงกับ MAX_FILE_MB ใน assets/hospital.js */
@@ -48,7 +47,7 @@ const TOKEN_TTL_HOURS = 12;
 const AUTH_SALT = 'enviocc-korat-2026';
 
 /* เลขรุ่นของโค้ด — เรียก ?action=ping เพื่อดูว่าที่ deploy อยู่เป็นรุ่นไหน */
-const CODE_VERSION = '2026-08-25c';
+const CODE_VERSION = '2026-08-25d';
 
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
@@ -260,7 +259,8 @@ function ตรวจระบบ() {
       if (m.hospital < 0) missing.push('ชื่อโรงพยาบาล');
       if (m.status   < 0) missing.push('สถานะ');
       if (m.link     < 0) missing.push('ลิงก์/หลักฐาน');
-      if (m.level    < 0) missing.push('ระดับผลการประเมิน');
+      if (m.level    < 0) missing.push('ระดับที่ส่งประเมิน (คอลัมน์ N)');
+      if (m.certLevel < 0) missing.push('รับรองผลการประเมิน (คอลัมน์ O)');
       if (missing.length) {
         throw new Error('ไม่พบคอลัมน์: ' + missing.join(', ') +
                         ' | หัวคอลัมน์ที่มี: ' + d.headers.filter(String).join(' | '));
@@ -499,9 +499,12 @@ function followMap_(headers) {
     link:     findCol_(headers, /ลิงก์|ลิ้งก์|หลักฐาน/),
     status:   findCol_(headers, /สถานะ/),
     comment:  findCol_(headers, /หมายเหตุ|ข้อเสนอแนะ/),
-    /* ชีตแต่ละแท็บอาจตั้งชื่อไม่เหมือนกัน ลองจากเจาะจงไปกว้าง
-       กันกรณีหัวคอลัมน์เขียนว่า "ระดับการรับรอง" หรือ "ระดับที่ได้รับ" */
-    level:    findColAny_(headers, [/ระดับผล/, /ระดับการรับรอง/, /ระดับที่ได้/, /ระดับ/])
+    /* คอลัมน์ N — ระดับที่ "โรงพยาบาล" ขอส่งประเมิน (หัวคอลัมน์ต่างกันตามแท็บ)
+       ลองจากเจาะจงไปกว้าง เผื่อชีตเก่าที่ยังใช้ชื่อเดิมว่า "ระดับผลการประเมิน" */
+    level:    findColAny_(headers, [/ระดับที่ส่ง/, /ระดับผล/, /ระดับที่ได้/, /ระดับ/]),
+    /* คอลัมน์ O — ระดับที่ "สสจ." รับรอง คนละช่องกับด้านบน
+       แยกกันเพราะสองค่านี้ไม่จำเป็นต้องเท่ากัน และต้องเห็นพร้อมกันได้ */
+    certLevel: findColAny_(headers, [/รับรองผลการประเมิน/, /รับรองผล/, /ผลการรับรอง/])
   };
 }
 
@@ -782,6 +785,17 @@ function submitReport(payload) {
     };
   }
 
+  /* ระดับที่ขอส่งประเมินเป็นข้อมูลบังคับของฟอร์ม ถ้าไม่มีคอลัมน์รองรับ
+     ค่าจะหายเงียบ ๆ ทั้งที่หน้าจอขึ้นว่าบันทึกสำเร็จ จึงต้องหยุดและบอกให้ชัด */
+  if (payload.level && m.level < 0) {
+    return {
+      status: 'error',
+      message: 'ไม่พบคอลัมน์สำหรับเก็บระดับที่ส่งประเมินในชีต "' + name + '" — ' +
+               'กรุณาตั้งชื่อหัวคอลัมน์ N ให้มีคำว่า "ระดับที่ส่ง" ' +
+               '(หัวคอลัมน์ที่มีอยู่: ' + d.headers.filter(String).join(' | ') + ')'
+    };
+  }
+
   var row = new Array(d.headers.length).fill('');
   var put = function (idx, val) { if (idx >= 0) row[idx] = val; };
 
@@ -875,7 +889,8 @@ function getSubmissions(params) {
         driveLink:    String(get(m.link) || ''),
         status:       String(get(m.status) || '').trim() || STATUS_PENDING,
         comment:      String(get(m.comment) || ''),
-        level:        String(get(m.level) || '')
+        level:        String(get(m.level) || ''),          /* N — ระดับที่โรงพยาบาลขอส่งประเมิน */
+        certLevel:    String(get(m.certLevel) || '')       /* O — ระดับที่ สสจ. รับรอง */
       });
     });
   });
@@ -925,17 +940,19 @@ function updateStatus(payload) {
              message: 'ไม่พบคอลัมน์ "สถานะ" ในชีต "' + name + '" จึงบันทึกผลไม่ได้ ' +
                       '(หัวคอลัมน์ที่มีอยู่: ' + cols + ')' };
   }
-  if (payload.level && m.level < 0) {
+  if (payload.level && m.certLevel < 0) {
     return { status: 'error',
-             message: 'ไม่พบคอลัมน์สำหรับเก็บระดับผลการประเมินในชีต "' + name + '" — ' +
-                      'กรุณาตั้งชื่อหัวคอลัมน์ให้มีคำว่า "ระดับผล" หรือ "ระดับการรับรอง" ' +
+             message: 'ไม่พบคอลัมน์สำหรับเก็บผลการรับรองในชีต "' + name + '" — ' +
+                      'กรุณาตั้งชื่อหัวคอลัมน์ O ว่า "รับรองผลการประเมิน" ' +
                       '(หัวคอลัมน์ที่มีอยู่: ' + cols + ')' };
   }
 
   sh.getRange(rowNo, m.status + 1).setValue(payload.status || STATUS_CHECKING);
 
-  /* ระดับการรับรอง — เขียนเฉพาะตอนที่ส่งค่ามา เพื่อไม่ไปลบระดับเดิมตอนแค่เปลี่ยนสถานะ */
-  if (payload.level) sh.getRange(rowNo, m.level + 1).setValue(payload.level);
+  /* ผลการรับรองของ สสจ. ลงคอลัมน์ O เท่านั้น ห้ามไปทับคอลัมน์ N
+     ที่เป็นระดับซึ่งโรงพยาบาลขอมา — ต้องเทียบกันได้ภายหลังว่าขอเท่าไรได้เท่าไร
+     เขียนเฉพาะตอนที่ส่งค่ามา เพื่อไม่ไปลบของเดิมตอนแค่เปลี่ยนสถานะ */
+  if (payload.level) sh.getRange(rowNo, m.certLevel + 1).setValue(payload.level);
 
   if (m.comment >= 0) {
     // ต่อท้ายชื่อผู้ตรวจกับวันที่ไว้ในช่องหมายเหตุ เพราะชีตไม่มีคอลัมน์แยก

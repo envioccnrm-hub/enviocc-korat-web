@@ -714,10 +714,23 @@
         });
         if (!docs.length) return;
 
+        /* ไอคอนประจำเล่ม — เดิมใช้ไอคอนกลาง ๆ อันเดียวกันหมดทุกใบ แยกไม่ออกว่าเล่มไหนเป็นเล่มไหน
+           เลือกจากสายงานก่อน (Green / อาชีวฯ) แล้วค่อยตกมาที่คู่มือระบบ
+           ถ้าเป็นเอกสารอื่นที่เพิ่มเข้ามาทีหลัง ใช้ไอคอนเดิมไปตามเดิม */
+        var iconOf = function (d) {
+          var key = String(d.workType || '') + ' ' + String(d.title || '');
+          if (/Green/i.test(key))                  return './logo4.png';
+          if (/อาชีว/.test(key))                    return './logo5.png';
+          if (/System|คู่มือการใช้งาน/i.test(key)) return './logo3.png';
+          return '';
+        };
+
         box.innerHTML = docs.map(function (d) {
+          var img = iconOf(d);
           return '<div class="bg-surface rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-outline-custom flex flex-col h-full">' +
-            '<div class="w-14 h-14 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary mx-auto">' +
-              '<span class="material-symbols-outlined text-3xl">description</span></div>' +
+            '<div class="w-20 h-20 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary mx-auto overflow-hidden">' +
+              (img ? '<img src="' + img + '" alt="" class="w-full h-full object-contain rounded-lg">'
+                   : '<span class="material-symbols-outlined text-3xl">description</span>') + '</div>' +
             '<p class="text-[11px] text-text-muted text-center mb-1">' + esc(d.workType || 'เอกสาร') + '</p>' +
             '<h3 class="text-base font-headline font-semibold text-text-main mb-4 flex-grow text-center">' + esc(d.title) + '</h3>' +
             '<a href="' + esc(d.url) + '" target="_blank" rel="noopener" ' +
@@ -868,7 +881,8 @@
        - ถ้ายังไม่รับรอง โชว์รายการระดับที่เป็นไปได้ของสายงานนั้น
          (เดิมเขียนตายเป็นของ Green ทำให้แท็บอาชีวอนามัยฯ แสดงระดับผิดสายงาน) */
     var levels = (CFG.LEVELS && (prefix === 'gc' ? CFG.LEVELS.green : CFG.LEVELS.occ)) || [];
-    var approvedLevel = latest && latest.status === S.APPROVED ? String(latest.level || '').trim() : '';
+    /* อ่านจาก certLevel (คอลัมน์ O) เท่านั้น — level คือระดับที่ "ขอส่ง" ไม่ใช่ที่ได้จริง */
+    var approvedLevel = latest && latest.status === S.APPROVED ? String(latest.certLevel || '').trim() : '';
     var lastSub = approvedLevel
       ? approvedLevel
       : '[' + levels.map(function (L) { return L.replace(/^ระดับ/, ''); }).join(' / ') + ']';
@@ -932,10 +946,10 @@
         '<span class="material-symbols-outlined">workspace_premium</span>' +
         '<h3 class="font-bold text-lg font-headline">รับรองผลการประเมินเรียบร้อยแล้ว</h3></div>' +
         /* เดิมบอกแต่หมายเหตุ ไม่บอกว่าได้ระดับอะไร ทั้งที่เป็นสิ่งที่ผู้ใช้อยากรู้ที่สุด */
-        (latest.level
+        (latest.certLevel
           ? '<p class="text-base font-bold" style="color:' +
             ((CFG.STATUS_COLORS && CFG.STATUS_COLORS.APPROVED.hex) || '#7C3AED') + '">' +
-            'ระดับที่ได้รับการรับรอง: ' + esc(latest.level) + '</p>'
+            'ระดับที่ได้รับการรับรอง: ' + esc(latest.certLevel) + '</p>'
           : '') +
         '<p class="text-text-main text-sm whitespace-pre-line">' + esc(latest.comment || 'เอกสารครบถ้วน') + '</p>';
       return;
