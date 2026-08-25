@@ -1125,7 +1125,7 @@
           input('u-district', 'อำเภอ', v('district')) +
           input('u-type', 'ประเภทโรงพยาบาล', v('type')) +
           input('u-hospital', 'ชื่อโรงพยาบาล / หน่วยงาน (ใช้เป็นชื่อผู้ใช้)', v('hospital')) +
-          input('u-password', 'รหัสผ่าน', u ? '' : '', 'text') +
+          input('u-code', 'รหัสผ่าน', u ? '' : '', 'text') +
           '<p class="text-xs" style="color:#64748B;margin-top:4px">' +
             (u ? 'เว้นว่างไว้ = ไม่เปลี่ยนรหัสผ่านเดิม' : 'ตั้งรหัสผ่านสำหรับเข้าสู่ระบบ') + '</p>' +
           '<label class="block font-semibold mb-1 mt-3">สิทธิ์การใช้งาน</label>' +
@@ -1140,7 +1140,7 @@
           Swal.showValidationMessage('กรุณากรอกชื่อโรงพยาบาล/หน่วยงาน');
           return false;
         }
-        var pwd = document.getElementById('u-password').value.trim();
+        var pwd = document.getElementById('u-code').value.trim();
         if (!u && !pwd) {
           Swal.showValidationMessage('กรุณาตั้งรหัสผ่าน');
           return false;
@@ -1152,8 +1152,10 @@
           type: document.getElementById('u-type').value.trim(),
           hospital: hospital,
           /* เว้นว่าง = คงรหัสเดิม ฝั่ง Apps Script อ่านของเดิมจากชีตให้เอง
-             หน้าเว็บจึงไม่ต้องรู้รหัสผ่านของใครเลย */
-          password: pwd,
+             หน้าเว็บจึงไม่ต้องรู้รหัสผ่านของใครเลย
+             ชื่อช่องเป็น accessCode ไม่ใช่ password เพราะคำว่า password บน URL
+             คือสิ่งที่ทำให้ระบบตรวจจับของ Google ระงับ Apps Script ตัวเดิมไป */
+          accessCode: pwd,
           role: document.getElementById('u-role').value
         };
       }

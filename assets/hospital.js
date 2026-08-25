@@ -534,7 +534,7 @@
       action: 'submitReport',
       workType: st.workType,
       hospital: user.hospital,
-      hospitalCode: user.hospitalCode || '',
+      /* ไม่ส่ง hospitalCode แล้ว — Code.gs ไปหยิบรหัสจากชีต Login เองตอนบันทึก */
       district: user.district || '',
       hospType: user.hospitalType || val(prefix + '-hospital-type'),
       year: val(prefix + '-year'),

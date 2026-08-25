@@ -153,9 +153,9 @@
       opacity: 0.9;
     }
   </style>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&amp;display=swap" rel="stylesheet" class=""><script src="./assets/config.js?v=2026-08-24h"></script>
-<script src="./assets/demo-data.js?v=2026-08-24h"></script>
-<script src="./assets/app.js?v=2026-08-24h"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&amp;display=swap" rel="stylesheet" class=""><script src="./assets/config.js?v=2026-08-25a"></script>
+<script src="./assets/demo-data.js?v=2026-08-25a"></script>
+<script src="./assets/app.js?v=2026-08-25a"></script>
 </head>
 <body class="font-sans text-on-surface relative m-0 p-0 overflow-x-hidden" style="font-family: Sarabun, sans-serif !important;">
 <!-- Background Image Overlay -->
@@ -345,11 +345,11 @@
 
     var hospital = $('hospital').value;
     var username = $('username').value.trim();
-    var password = $('password').value;
+    var accessCode = $('password').value;
     var btn = $('submitBtn');
     var original = btn.innerHTML;
 
-    if (!hospital || !password) {
+    if (!hospital || !accessCode) {
       UI.toast('warning', 'กรุณากรอกข้อมูล', 'กรุณาเลือกโรงพยาบาลและใส่รหัสผ่านให้ถูกต้อง');
       return;
     }
@@ -357,20 +357,27 @@
     btn.disabled = true;
     btn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กำลังเข้าสู่ระบบ...';
 
-    API.post({ action: 'login', hospital: hospital, username: username, password: password })
+    /* ส่งเป็นค่า SHA-256 ไม่ใช่ตัวรหัสเอง — รหัสจึงไม่โผล่บน URL ที่วิ่งไปหา Google
+       ฝั่ง Code.gs แปลงค่าในชีตด้วยสูตรเดียวกันแล้วเทียบ จึงไม่ต้องแก้ชีตเลย */
+    API.post({
+      action: 'openSession',
+      hospital: hospital,
+      username: username,
+      code: Hash.code(accessCode)
+    })
       .catch(function (err) {
         // ต่อ API ไม่ได้ → โหมดตัวอย่าง (รหัสผ่าน 1234)
         if (!window.APP_CONFIG.ALLOW_DEMO_FALLBACK) throw err;
         API.demoMode = true;
         UI.showDemoBanner();
         var rec = (window.DEMO.dropdowns.fullData || []).filter(function (r) { return r.hospital === hospital; })[0] || {};
-        if (password !== '1234') {
+        if (accessCode !== '1234') {
           return { status: 'error', message: 'โหมดตัวอย่าง: รหัสผ่านคือ 1234' };
         }
         return {
           status: 'success',
           role: hospital.indexOf('สสจ') !== -1 ? 'admin' : 'user',
-          hospital: hospital, hospitalCode: '00000',
+          hospital: hospital,
           district: rec.district || '', hospitalType: rec.type || '',
           typeCode: rec.typeCode || '', typeLabel: rec.type || '', contactName: ''
         };
@@ -400,7 +407,6 @@
           /* กุญแจยืนยันตัวตนกับ Apps Script ทุกคำสั่งหลังจากนี้ */
           token: data.token || '',
           hospital: data.hospital || hospital,
-          hospitalCode: data.hospitalCode || '',
           username: username || data.contactName || data.hospital || hospital,
           contactName: data.contactName || '',
           district: data.district || rec.district || '',

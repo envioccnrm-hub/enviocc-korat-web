@@ -41,8 +41,13 @@ const STATUS_APPROVED = "รับรองผลเรียบร้อยแ�
 /* ---------- อายุของ token หลังล็อกอิน (ชั่วโมง) ---------- */
 const TOKEN_TTL_HOURS = 12;
 
+/* ---------- ค่าคงที่ผสมรหัสหน่วยงานก่อนแปลงเป็น SHA-256 ---------- */
+/*  ต้องตรงกับ AUTH_SALT ใน assets/config.js เป๊ะ ๆ ไม่งั้นเข้าระบบไม่ได้ทั้งระบบ
+    ไม่ใช่ความลับ — หน้าที่ของมันคือกันไม่ให้รหัสวิ่งเป็นตัวหนังสือเปล่าบน URL */
+const AUTH_SALT = 'enviocc-korat-2026';
+
 /* เลขรุ่นของโค้ด — เรียก ?action=ping เพื่อดูว่าที่ deploy อยู่เป็นรุ่นไหน */
-const CODE_VERSION = '2026-08-24e';
+const CODE_VERSION = '2026-08-25a';
 
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
@@ -106,6 +111,20 @@ function tokenSecret_() {
 function sign_(data) {
   return Utilities.base64EncodeWebSafe(
     Utilities.computeHmacSha256Signature(data, tokenSecret_()));
+}
+
+/** SHA-256 → ข้อความ hex ตัวเล็ก ต้องให้ผลตรงกับ Hash.sha256() ใน assets/app.js */
+function sha256Hex_(str) {
+  var raw = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256, String(str), Utilities.Charset.UTF_8);
+  var hex = '';
+  for (var i = 0; i < raw.length; i++) hex += ('0' + (raw[i] & 255).toString(16)).slice(-2);
+  return hex;
+}
+
+/** ค่าที่หน้าเว็บส่งมาแทนรหัสหน่วยงาน — สูตรเดียวกับ Hash.code() ใน assets/app.js */
+function accessCodeHash_(raw) {
+  return sha256Hex_(AUTH_SALT + ':' + String(raw == null ? '' : raw).trim());
 }
 
 /** ออก token ให้หลังล็อกอินสำเร็จ */
@@ -263,6 +282,26 @@ function ตรวจระบบ() {
     return 'ภาษาไทยไม่เพี้ยน';
   });
 
+  /* 4) สูตรแปลงรหัสหน่วยงาน ต้องตรงกับ Hash.code() ใน assets/app.js เป๊ะ ๆ
+        ค่าที่คาดไว้คำนวณจากฝั่งหน้าเว็บ ถ้าไม่ตรง = แก้ AUTH_SALT ข้างใดข้างหนึ่ง
+        แล้วลืมแก้อีกข้าง ผลคือทุกคนเข้าระบบไม่ได้ */
+  check('สูตรแปลงรหัสหน่วยงานตรงกับหน้าเว็บ', function () {
+    var pairs = [
+      ['12345',   '528b8abfe30a3cc3db0712d9675246a96d4d9e1fb64a1a400ca52a9c4d1216c2'],
+      ['รหัสไทย', '98ddd9f3c5f9d9ae6ccc762b06952998aacc3d93e2e3e6efb87de7ad941b8f08']
+    ];
+    if (AUTH_SALT !== 'enviocc-korat-2026') {
+      throw new Error('AUTH_SALT ถูกเปลี่ยนเป็น "' + AUTH_SALT + '" ต้องแก้ assets/config.js ให้ตรงกันด้วย');
+    }
+    for (var i = 0; i < pairs.length; i++) {
+      var got = accessCodeHash_(pairs[i][0]);
+      if (got !== pairs[i][1]) {
+        throw new Error('รหัส "' + pairs[i][0] + '" ได้ ' + got + ' แต่ควรได้ ' + pairs[i][1]);
+      }
+    }
+    return 'ตรงกันทั้ง ' + pairs.length + ' เคส';
+  });
+
   var report = '===== ผลตรวจระบบ =====\n' + out.join('\n') +
                '\n\nผ่าน ' + ok + ' รายการ / ไม่ผ่าน ' + fail + ' รายการ';
   Logger.log(report);
@@ -298,7 +337,7 @@ function doGet(e) {
          ทั้งที่ GET ใช้ได้ปกติ จึงเปิดให้เรียกคำสั่งเดียวกันผ่าน GET ได้
          โดยส่งข้อมูลมาเป็น JSON ก้อนเดียวในพารามิเตอร์ payload
          การตรวจสิทธิ์ใช้ชุดเดียวกับ POST ทุกประการ ไม่ได้หย่อนลง */
-      case 'login':
+      case 'openSession':
       case 'submitReport':
       case 'updateStatus':
       case 'saveUser':
@@ -381,7 +420,7 @@ function parsePayload_(p) {
 function handleWrite_(payload) {
   switch (payload.action || '') {
     /* --- เปิดสาธารณะ --- */
-    case 'login':        return json(doLogin(payload));
+    case 'openSession':  return json(doOpenSession(payload));
 
     /* --- ต้องล็อกอิน --- */
     case 'submitReport': return json(submitReport(payload));
@@ -463,23 +502,26 @@ function followMap_(headers) {
 }
 
 /* ============================================================
- *  1) LOGIN
+ *  1) เข้าสู่ระบบ
  *     ชีต Login: A อำเภอ | B ประเภทหน่วยงาน | C ชื่อโรงพยาบาล
- *                D รหัสผ่าน/รหัสโรงพยาบาล | E สิทธิ์ | F ชื่อผู้บันทึก
+ *                D รหัสหน่วยงาน | E สิทธิ์ | F ชื่อผู้บันทึก
+ *
+ *  หน้าเว็บส่งมาเป็นค่า SHA-256 (payload.code) ไม่ใช่ตัวรหัสเอง
+ *  ฝั่งนี้แปลงค่าในชีตด้วยสูตรเดียวกันแล้วค่อยเทียบ — ชีตไม่ต้องแก้อะไรเลย
  * ========================================================== */
 
-function doLogin(payload) {
+function doOpenSession(payload) {
   var hospital = String(payload.hospital || payload.username || '').trim();
-  var password = String(payload.password || '').trim();
+  var code = String(payload.code || '').trim().toLowerCase();
 
   var d = readSheet_(SHEET_LOGIN);
   if (!d.sheet) return { status: 'error', message: 'ไม่พบชีต ' + SHEET_LOGIN };
+  if (!code) return { status: 'error', message: 'โรงพยาบาลหรือรหัสผ่านไม่ถูกต้อง' };
 
   for (var i = 0; i < d.rows.length; i++) {
     var r = d.rows[i];
     var name = String(r[2] || '').trim();
-    var pass = String(r[3] || '').trim();
-    if (name !== hospital || pass !== password) continue;
+    if (name !== hospital || accessCodeHash_(r[3]) !== code) continue;
 
     var rawRole = String(r[4] || '').trim();
     var codes = typeCodes_(r[1]);
@@ -494,7 +536,8 @@ function doLogin(payload) {
       /* token นี้คือสิ่งที่ใช้ยืนยันตัวตนกับทุกคำสั่งหลังจากนี้ */
       token: issueToken_({ role: role, hospital: name }),
       hospital: name,
-      hospitalCode: pass,                        // รหัสโรงพยาบาล = รหัสผ่านในชีตนี้
+      /* ไม่ส่งรหัสหน่วยงานกลับไปแล้ว — ตอนบันทึกรายงาน ฝั่งนี้ไปหยิบจากชีตเอง
+         (hospitalCodeOf_) เบราว์เซอร์จึงไม่ต้องถือรหัสไว้ และปลอมไม่ได้ด้วย */
       district: String(r[0] || '').trim(),
       hospitalType: String(r[1] || '').trim(),   // ข้อความตามชีต เช่น "รพ.สต."
       typeCode: codes[0] || '',                  // รหัสกลาง เช่น "SUB"
@@ -686,6 +729,19 @@ function saveFiles_(files, payload) {
   });
 }
 
+/** หารหัสหน่วยงาน (ชีต Login คอลัมน์ D) จากชื่อหน่วยงาน
+ *  ใช้ตอนบันทึกรายงาน จะได้ไม่ต้องให้หน้าเว็บถือรหัสไว้แล้วส่งกลับมา */
+function hospitalCodeOf_(hospital) {
+  var target = String(hospital || '').trim();
+  if (!target) return '';
+  var d = readSheet_(SHEET_LOGIN);
+  if (!d.sheet) return '';
+  for (var i = 0; i < d.rows.length; i++) {
+    if (String(d.rows[i][2] || '').trim() === target) return String(d.rows[i][3] || '').trim();
+  }
+  return '';
+}
+
 function submitReport(payload) {
   /* ต้องล็อกอิน และถ้าไม่ใช่ สสจ. จะส่งในนามหน่วยงานอื่นไม่ได้ */
   var sess = requireAuth_(payload);
@@ -721,7 +777,7 @@ function submitReport(payload) {
   var put = function (idx, val) { if (idx >= 0) row[idx] = val; };
 
   put(m.date,     new Date());
-  put(m.code,     payload.hospitalCode || '');
+  put(m.code,     hospitalCodeOf_(payload.hospital));
   put(m.hospital, payload.hospital || '');
   put(m.hospType, payload.hospType || '');
   put(m.year,     payload.year || '');
@@ -1013,7 +1069,7 @@ function saveUser(payload) {
   // เก็บคำเดิมในชีต (Hospital / Admin) ไม่เปลี่ยนรูปแบบที่พี่ใช้อยู่
   var roleText = payload.role === 'admin' ? 'Admin' : 'Hospital';
   var rowNo = parseInt(payload.row, 10);
-  var pass = String(payload.password || '').trim();
+  var pass = String(payload.accessCode || '').trim();
 
   /* แก้ไขผู้ใช้เดิมแล้วเว้นช่องรหัสผ่านว่าง = คงรหัสเดิมไว้
      (อ่านจากชีตตรงนี้ ไม่ต้องให้หน้าเว็บส่งรหัสเดิมกลับมา) */
