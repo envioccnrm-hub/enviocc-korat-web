@@ -1,0 +1,281 @@
+/*  ปรับหน้าเว็บให้ใช้งานบนมือถือ/แท็บเล็ตได้จริง
+ *  ------------------------------------------------------------------
+ *  ไฟล์นี้เป็น "ตัวทับ" ของ Tailwind เท่านั้น ไม่ได้แก้ดีไซน์บนจอคอม
+ *  เพราะ Tailwind CDN ฉีด <style> เข้ามาตอนรันไทม์ (มาทีหลังไฟล์นี้)
+ *  กฎในนี้จึงต้องใส่ !important ไม่งั้นโดนทับกลับ
+ *
+ *  จุดตัดขนาดจอที่ใช้
+ *    ≤ 767px  = มือถือ            → เมนูเป็นลิ้นชัก, ตารางเป็นการ์ด
+ *    768–1023 = แท็บเล็ต          → เมนูข้างแคบลง, ตัวหนังสือเล็กลง
+ *    ≥ 1024px = คอม (ของเดิม)
+ * ------------------------------------------------------------------ */
+
+/* ---------- ใช้ได้ทุกขนาดจอ ---------- */
+html {
+  -webkit-text-size-adjust: 100%;   /* กัน iOS ขยายตัวหนังสือเองตอนหมุนจอ */
+  text-size-adjust: 100%;
+}
+body { overflow-x: hidden; }        /* กันเลื่อนซ้ายขวาทั้งหน้าโดยไม่ตั้งใจ */
+img, svg, video, canvas { max-width: 100%; }
+
+/* ตารางทุกใบเลื่อนนิ้วบน iOS ได้ลื่น */
+.overflow-x-auto { -webkit-overflow-scrolling: touch; }
+
+/* ฉากหลังดำตอนเปิดลิ้นชักเมนู */
+#nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 37, 64, .5);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+#nav-backdrop.is-open { opacity: 1; pointer-events: auto; }
+body.nav-open { overflow: hidden; }   /* ล็อกไม่ให้เนื้อหาข้างหลังเลื่อน */
+
+
+/* ==================================================================
+   แท็บเล็ต 768–1023px — เมนูข้างยังอยู่ แต่บีบให้เหลือที่ให้เนื้อหามากขึ้น
+   ================================================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #side-nav { width: 13rem !important; }
+  #side-nav a { padding: .65rem .75rem !important; font-size: .875rem !important; }
+  main { padding: 1.25rem !important; }
+
+  /* แถบหัวเรื่องสูง 80px ตายตัว (โครงข้างล่างคำนวณจากเลขนี้) ของข้างในจึงต้องพอดี
+     ชื่อระบบตัดเหลือสองบรรทัด และซ่อนบรรทัดชื่อหน่วยงานที่มีอยู่ในเมนูข้างแล้ว */
+  header h1 {
+    font-size: .9rem !important;
+    line-height: 1.25 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  header h1 + p { display: none !important; }
+  header .w-12 { width: 2.5rem !important; height: 2.5rem !important; }
+  #btn-sync { font-size: .75rem !important; padding: .5rem .7rem !important; }
+  #hdr-extra-actions { display: none !important; }
+}
+
+
+/* ==================================================================
+   มือถือ ≤767px
+   ================================================================== */
+@media (max-width: 767px) {
+
+  /* ---------- 1) แถบหัวเรื่อง ---------- */
+  header {
+    height: auto !important;
+    min-height: 60px;
+    padding: .5rem .75rem !important;
+    padding-left: max(.75rem, env(safe-area-inset-left)) !important;
+    padding-right: max(.75rem, env(safe-area-inset-right)) !important;
+    gap: .5rem;
+  }
+  header > div { min-width: 0; }                 /* ให้ข้อความหดได้ ไม่ดันจอ */
+  header .w-12 { width: 2rem !important; height: 2rem !important; }
+  /* โลโก้ใบที่สองซ่อนไว้ พื้นที่แถวบนมีจำกัด ใบแรกสื่อความหมายพอแล้ว */
+  header > div:first-child > div.w-12:nth-of-type(2) { display: none !important; }
+  header h1 {
+    font-size: .8rem !important;
+    line-height: 1.25 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;                       /* ยาวเกินสองบรรทัดตัดด้วย ... */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  header h1 + p { display: none !important; }    /* บรรทัดชื่อหน่วยงานย้ายไปอยู่ในลิ้นชัก */
+  /* ชื่อผู้ใช้บนหัวซ่อน แล้วไปโผล่ในลิ้นชักเมนูแทน (responsive.js คัดลอกข้อความให้) */
+  header .flex.flex-col.items-end { display: none !important; }
+  header .w-9 { width: 2rem !important; height: 2rem !important; }
+  /* ปุ่มกระดิ่ง/ช่วยเหลือในหน้าโรงพยาบาล ไม่จำเป็นบนจอเล็ก */
+  #hdr-extra-actions { display: none !important; }
+
+  /* ---------- 2) โครงหน้า: เลิกแบ่งสองคอลัมน์ ให้ทั้งหน้าเลื่อนตามปกติ ---------- */
+  #layout {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  #main-content-area,
+  main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  body:not(.page-login) main {
+    padding: 1rem !important;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* ---------- 3) เมนูข้าง → ลิ้นชักเลื่อนออกจากซ้าย ---------- */
+  /* nav มีคลาส hidden ของ Tailwind อยู่ ต้องทับด้วย !important ถึงจะโผล่ */
+  #side-nav {
+    display: flex !important;
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 80vw !important;
+    max-width: 300px;
+    z-index: 60 !important;
+    overflow-y: auto !important;
+    padding-top: calc(1rem + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: 0 0 28px rgba(0, 0, 0, .25);
+  }
+  #side-nav.is-open { transform: translateX(0); }
+  #side-nav a { padding: .85rem 1rem !important; }   /* นิ้วกดโดนแน่ ๆ */
+
+  /* ---------- 4) ตาราง → การ์ดทีละรายการ ---------- */
+  /* responsive.js เป็นคนเติม data-label ให้แต่ละช่องจากหัวตาราง */
+  table.rwd-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: block;
+  }
+  table.rwd-card thead { display: none; }
+  table.rwd-card tbody,
+  table.rwd-card tr,
+  table.rwd-card td { display: block; width: 100%; }
+  table.rwd-card tbody > tr {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: .75rem;
+    margin-bottom: .75rem;
+    padding: .25rem 0;
+    background: #fff;
+  }
+  /* ป้ายกำกับวางไว้บรรทัดบน แล้วค่อยตามด้วยเนื้อหา
+     เคยลองวางป้ายไว้คอลัมน์ซ้ายด้วย grid แล้วพัง เพราะบางช่องมีหลายก้อน
+     (ชื่อโรงพยาบาล + ประเภท, หมวด + ข้อย่อย) ก้อนที่สองจะหล่นไปทับช่องป้าย */
+  table.rwd-card td {
+    padding: .5rem .9rem !important;
+    max-width: none !important;
+    white-space: normal !important;
+    border: 0 !important;
+  }
+  table.rwd-card td + td { border-top: 1px dashed #e2e8f0 !important; }
+  table.rwd-card td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: .7rem;
+    font-weight: 700;
+    color: #64748b;
+    line-height: 1.4;
+    margin-bottom: .15rem;
+  }
+  /* ช่องที่ถูกบีบ/ตัดข้อความไว้บนจอคอม บนมือถือให้แสดงเต็ม อ่านครบ */
+  table.rwd-card td .truncate {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  /* ช่องที่ตั้งไว้ชิดขวา (ปุ่มจัดการ/ตัวเลข) บนการ์ดให้ชิดซ้ายจะอ่านง่ายกว่า */
+  table.rwd-card td.text-right,
+  table.rwd-card td[class*="text-right"] { text-align: left !important; }
+  /* แถว "กำลังโหลด..." / "ไม่พบรายการ" กินเต็มการ์ด ไม่ต้องมีป้ายกำกับ */
+  table.rwd-card td[colspan] {
+    display: block !important;
+    text-align: center !important;
+  }
+  table.rwd-card td[colspan]::before { content: none; }
+
+  /* ---------- 5) ฟอร์ม ---------- */
+  /* iOS จะซูมเข้าอัตโนมัติถ้าตัวหนังสือในช่องกรอกเล็กกว่า 16px */
+  input:not([type="radio"]):not([type="checkbox"]),
+  select, textarea { font-size: 16px !important; }
+  input:not([type="radio"]):not([type="checkbox"]),
+  select, textarea, button { min-height: 42px; }
+  /* ปุ่มยาว ๆ ให้เต็มบรรทัด กดง่ายกว่าเรียงกันแน่น ๆ */
+  .flex.justify-end > button { flex: 1 1 auto; justify-content: center; }
+
+  /* ---------- 6) การ์ดสถิติ / กราฟ / แท็บ ---------- */
+  .stat-card { padding: .85rem !important; }
+  .stat-card p.text-3xl { font-size: 1.5rem !important; }
+  .stat-card .text-sm { font-size: .72rem !important; line-height: 1.3; }
+  .stat-card.active { outline-width: 3px !important; }
+
+  /* กล่องเนื้อหาทุกใบบีบขอบในลง เหลือพื้นที่ให้ตัวหนังสือ */
+  .rounded-2xl.p-6, .rounded-2xl.p-5 { padding: 1rem !important; }
+  h1.text-2xl, h1.text-3xl { font-size: 1.25rem !important; line-height: 1.35 !important; }
+  h2.text-2xl { font-size: 1.15rem !important; }
+
+  /* แถบแท็บด้านบน (ตาราง/วิเคราะห์/ระดับผล) ให้เลื่อนแนวนอนแทนการตัดบรรทัดมั่ว */
+  #pane-tabs, .pane-tabs { width: 100%; }
+  .pane-tab { padding: .5rem .75rem !important; font-size: .75rem !important; }
+
+  /* แถบสถานะ 5 ขั้น: บีบให้ครบ 5 ขั้นพอดีจอ ผู้ใช้จะได้เห็นสถานะทั้งหมดในตาเดียว
+     ไม่ต้องเลื่อนหา (ถ้าจอเล็กกว่า 340px ค่อยเลื่อนเอา) */
+  #gc-stepper, #occ-stepper { padding-bottom: 1rem !important; min-width: 330px; }
+  #gc-stepper .w-10, #occ-stepper .w-10 {
+    width: 1.9rem !important;
+    height: 1.9rem !important;
+    border-width: 3px !important;
+  }
+  #gc-stepper .material-symbols-outlined,
+  #occ-stepper .material-symbols-outlined { font-size: 15px !important; }
+  #gc-stepper p, #occ-stepper p {
+    white-space: normal !important;    /* ป้ายยาว ๆ ขึ้นบรรทัดใหม่ได้ */
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+    margin-top: .5rem !important;
+    padding: 0 2px;
+  }
+  #gc-stepper > div.absolute, #occ-stepper > div.absolute {
+    top: 31px !important;              /* กลางวงกลมขยับขึ้นตามขนาดที่เล็กลง */
+  }
+
+  /* คู่มือ/ลิงก์ PDF: ปุ่มลงมาอยู่ใต้ข้อความเต็มบรรทัด */
+  #admin-manual-link .self-end { align-self: stretch !important; }
+  #admin-manual-link .self-end span { justify-content: center; }
+}
+
+
+/* ==================================================================
+   จอเล็กมาก ≤380px (iPhone SE / มือถือรุ่นเล็ก)
+   ================================================================== */
+@media (max-width: 380px) {
+  header h1 { font-size: .72rem !important; }
+  body.page-login h1 { font-size: 1.05rem !important; }
+  body.page-login p.text-xl { font-size: .8rem !important; }
+  body.page-login h3, body.page-login h2 { font-size: .85rem !important; }
+  body:not(.page-login) main { padding: .75rem !important; }
+  .stat-card p.text-3xl { font-size: 1.25rem !important; }
+}
+
+
+/* ==================================================================
+   หน้าเข้าสู่ระบบ (index.html)
+   ================================================================== */
+@media (max-width: 767px) {
+  body.page-login .main-container {
+    min-height: auto !important;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+  body.page-login h1 { font-size: 1.35rem !important; line-height: 1.4 !important; }
+  body.page-login h1 span { display: block; }
+  body.page-login p.text-xl { font-size: .95rem !important; }
+  /* โลโก้วงกลมด้านบนย่อลง จะได้เห็นช่องกรอกโดยไม่ต้องเลื่อนเยอะ */
+  body.page-login .w-32 { width: 5.5rem !important; height: 5.5rem !important; }
+  body.page-login .w-24 { width: 4rem !important; height: 4rem !important; }
+  body.page-login .rounded-2xl.p-8 { padding: 1.25rem !important; }
+  body.page-login .gap-12 { gap: 1.5rem !important; }
+}
+
+/* iOS: 100vh นับรวมแถบ URL ทำให้หน้าสูงเกินจริงและเด้ง — ใช้ svh ถ้ารองรับ */
+@supports (height: 100svh) {
+  body.page-login,
+  body.page-login .main-container { min-height: 100svh; }
+}
+
+/* ---------- พิมพ์ออกกระดาษ: ซ่อนเมนู กางเนื้อหาเต็มหน้า ---------- */
+@media print {
+  header, #side-nav, #nav-backdrop, #filter-bar { display: none !important; }
+  #layout { display: block !important; height: auto !important; }
+  main { padding: 0 !important; overflow: visible !important; }
+}

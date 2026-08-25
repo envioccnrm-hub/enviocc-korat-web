@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="th" style=""><head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./favicon.png">
 <title>ระบบติดตามมาตรฐานโรงพยาบาล - แบบฟอร์มส่งรายงานแก้ไข</title>
@@ -61,14 +61,19 @@
   .dropdown-menu-custom { display: none; }
   .dropdown-menu-custom.menu-open { display: block !important; }
 </style>
-<script src="./assets/config.js?v=2026-08-25d"></script>
-<script src="./assets/demo-data.js?v=2026-08-25d"></script>
-<script src="./assets/app.js?v=2026-08-25d"></script>
+<link rel="stylesheet" href="./assets/responsive.css?v=2026-08-25e">
+<script src="./assets/config.js?v=2026-08-25e"></script>
+<script src="./assets/demo-data.js?v=2026-08-25e"></script>
+<script src="./assets/app.js?v=2026-08-25e"></script>
 </head>
 <body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
 <!-- Top Header -->
 <header class="flex justify-between items-center h-20 px-6 bg-surface-container-low shadow-md w-full flex-shrink-0 z-50 sticky top-0" style="background-color: rgb(241, 248, 233);">
-<div class="flex items-center gap-4">
+<div class="flex items-center gap-4 min-w-0">
+<button id="btn-menu" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="side-nav"
+        class="md:hidden -ml-2 p-2 rounded-full text-primary hover:bg-primary-light transition-colors flex-shrink-0">
+<span class="material-symbols-outlined">menu</span>
+</button>
 <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0">
 <img alt="Logo สำนักงานสาธารณสุขจังหวัดนครราชสีมา" class="w-full h-full object-contain" src="./logo1.jpg">
 </div><div class="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0"><img alt="Medical Environmental Logo" class="w-full h-full object-contain" src="./logo2.png"></div>
@@ -78,12 +83,14 @@
 </div>
 </div>
 <div class="flex items-center gap-3">
+<div id="hdr-extra-actions" class="flex items-center gap-3">
 <button class="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
 <span class="material-symbols-outlined">notifications</span>
 </button>
 <button class="p-2 text-primary hover:bg-primary-light rounded-full transition-colors">
 <span class="material-symbols-outlined">help</span>
 </button>
+</div>
 <div class="flex flex-col items-end px-2 gap-1">
 <p class="text-sm font-headline text-primary leading-tight" style="color: rgb(0, 0, 0);" id="user-display-name">นพ. สมชาย รักดี</p>
 <p class="text-[12px] font-label text-primary" id="user-display-hosp">โรงพยาบาลมหาราชนครราชสีมา (User)</p>
@@ -92,14 +99,15 @@
     <span class="material-symbols-outlined text-primary">person</span>
 </div>
 </div>
-<!-- Mobile Menu Button -->
-<button class="md:hidden p-2 text-primary hover:bg-primary-light rounded-full ml-2">
-<span class="material-symbols-outlined">menu</span>
-</button>
 </header>
-<div class="flex flex-1 overflow-hidden h-[calc(100vh-80px)] flex-grow">
+<div id="layout" class="flex flex-1 overflow-hidden h-[calc(100vh-80px)] flex-grow">
 <!-- SideNavBar -->
-<nav class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 border-r border-outline-custom z-40 overflow-y-auto bg-primary text-white self-stretch">
+<nav id="side-nav" class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 border-r border-outline-custom z-40 overflow-y-auto bg-primary text-white self-stretch">
+<!-- ชื่อผู้ใช้ — บนจอเล็กแถบหัวเรื่องไม่มีที่พอ responsive.js จึงคัดลอกมาไว้ตรงนี้ -->
+<div class="md:hidden px-4 pb-3 mb-1 border-b border-white/20">
+<p class="text-sm font-bold leading-tight" id="nav-user-name">-</p>
+<p class="text-[11px] text-white/70 mt-0.5" id="nav-user-hosp">-</p>
+</div>
 <ul class="flex-1 space-y-2 mt-4" id="sidebar-tabs">
 <li class="">
 <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label text-white tab-link bg-white/20 font-bold border-l-4 border-secondary" data-target="tab-green-clean" href="#" onclick="switchTab(event, 'tab-green-clean')">
@@ -260,7 +268,7 @@
 <span class="font-semibold">ข้อแนะนำจาก สสจ.:</span> กรุณาแนบภาพถ่ายถังขยะแยกประเภทเพิ่มเติมในหมวดที่ 1 (ข้อ 1.1) เนื่องจากภาพเดิมไม่ชัดเจน
     </p>
 </div><div class="mt-12 mb-8">
-<h2 class="text-xl font-bold text-tertiary mb-6 font-headline">สถานะการส่งรายงานล่าสุด</h2><div id="gc-stepper" class="relative w-full max-w-4xl mx-auto flex justify-between items-start pt-4 pb-8"></div></div><div class="mt-8"><h2 class="text-xl font-bold text-tertiary mb-4 font-headline">ประวัติการส่งรายงาน (Submission History)</h2>
+<h2 class="text-xl font-bold text-tertiary mb-6 font-headline">สถานะการส่งรายงานล่าสุด</h2><div class="overflow-x-auto"><div id="gc-stepper" class="relative w-full max-w-4xl mx-auto flex justify-between items-start pt-4 pb-8"></div></div></div><div class="mt-8"><h2 class="text-xl font-bold text-tertiary mb-4 font-headline">ประวัติการส่งรายงาน (Submission History)</h2>
 <div class="bg-surface border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
@@ -437,7 +445,7 @@
 </ul>
 </div>
 </div><div class="mt-12 mb-8">
-<h2 class="text-xl font-bold text-tertiary mb-6 font-headline">สถานะการส่งรายงานล่าสุด</h2><div id="occ-stepper" class="relative w-full max-w-4xl mx-auto flex justify-between items-start pt-4 pb-8"></div></div><div class="mt-8"><h2 class="text-xl font-bold text-tertiary mb-4 font-headline">ประวัติการส่งรายงาน (Submission History)</h2>
+<h2 class="text-xl font-bold text-tertiary mb-6 font-headline">สถานะการส่งรายงานล่าสุด</h2><div class="overflow-x-auto"><div id="occ-stepper" class="relative w-full max-w-4xl mx-auto flex justify-between items-start pt-4 pb-8"></div></div></div><div class="mt-8"><h2 class="text-xl font-bold text-tertiary mb-4 font-headline">ประวัติการส่งรายงาน (Submission History)</h2>
 <div class="bg-surface border border-outline-custom rounded-2xl overflow-hidden shadow-sm">
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
@@ -584,5 +592,6 @@
 </div>
 </div>
 
-<script src="./assets/hospital.js?v=2026-08-25d"></script>
+<script src="./assets/hospital.js?v=2026-08-25e"></script>
+<script src="./assets/responsive.js?v=2026-08-25e"></script>
 </body></html>

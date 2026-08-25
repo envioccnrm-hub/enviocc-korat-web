@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./favicon.png">
 <title>ระบบติดตามมาตรฐานโรงพยาบาล - ผู้ดูแลระบบ (สสจ.)</title>
@@ -45,17 +45,22 @@
   .stat-card.active .stat-check { display: inline-block; }
   .stat-check { display: none; }
 </style>
-<script src="./assets/config.js?v=2026-08-25d"></script>
-<script src="./assets/demo-data.js?v=2026-08-25d"></script>
-<script src="./assets/app.js?v=2026-08-25d"></script>
-<script src="./assets/stats.js?v=2026-08-25d"></script>
+<link rel="stylesheet" href="./assets/responsive.css?v=2026-08-25e">
+<script src="./assets/config.js?v=2026-08-25e"></script>
+<script src="./assets/demo-data.js?v=2026-08-25e"></script>
+<script src="./assets/app.js?v=2026-08-25e"></script>
+<script src="./assets/stats.js?v=2026-08-25e"></script>
 </head>
 
 <body class="text-text-main antialiased flex flex-col min-h-screen bg-surface">
 
 <!-- ===== Header ===== -->
 <header class="flex justify-between items-center h-20 px-6 shadow-md w-full flex-shrink-0 z-50 sticky top-0" style="background-color:#f1f8e9">
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-4 min-w-0">
+    <button id="btn-menu" type="button" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="side-nav"
+            class="md:hidden -ml-2 p-2 rounded-full text-primary hover:bg-primary-light transition-colors flex-shrink-0">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
     <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0">
       <img alt="Logo สำนักงานสาธารณสุขจังหวัดนครราชสีมา" class="w-full h-full object-contain" src="./logo1.jpg">
     </div>
@@ -81,10 +86,15 @@
   </div>
 </header>
 
-<div class="flex flex-1 h-[calc(100vh-80px)]">
+<div id="layout" class="flex flex-1 h-[calc(100vh-80px)]">
 
   <!-- ===== Sidebar ===== -->
-  <nav class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 z-40 overflow-y-auto bg-primary text-white">
+  <nav id="side-nav" class="hidden md:flex w-64 flex-col p-4 flex-shrink-0 z-40 overflow-y-auto bg-primary text-white">
+    <!-- ชื่อผู้ใช้ — บนจอเล็กแถบหัวเรื่องไม่มีที่พอ responsive.js จึงคัดลอกมาไว้ตรงนี้ -->
+    <div class="md:hidden px-4 pb-3 mb-2 border-b border-white/20">
+      <p class="text-sm font-bold leading-tight" id="nav-user-name">-</p>
+      <p class="text-[11px] text-white/70 mt-0.5" id="nav-user-hosp">-</p>
+    </div>
     <p class="text-[11px] uppercase tracking-wider text-white/60 px-4 mb-2 mt-2">เมนูหลัก</p>
     <ul class="flex-1 space-y-2">
       <li><a href="#" data-view="green" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-white bg-white/20 font-bold border-l-4 border-secondary">
@@ -97,6 +107,8 @@
         <span class="material-symbols-outlined">manage_accounts</span> จัดการผู้ใช้งาน</a></li>
     </ul>
     <div class="mt-auto pt-4 border-t border-white/20">
+      <a href="#" id="btn-sync-m" class="md:hidden flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-lg transition-colors text-white cursor-pointer">
+        <span class="material-symbols-outlined">sync</span> ซิงค์ข้อมูลเดี๋ยวนี้</a>
       <a href="#" id="btn-logout" class="flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-lg transition-colors text-white cursor-pointer">
         <span class="material-symbols-outlined">logout</span> ออกจากระบบ</a>
     </div>
@@ -452,6 +464,7 @@
   </main>
 </div>
 
-<script src="./assets/admin.js?v=2026-08-25d"></script>
+<script src="./assets/admin.js?v=2026-08-25e"></script>
+<script src="./assets/responsive.js?v=2026-08-25e"></script>
 </body>
 </html>
