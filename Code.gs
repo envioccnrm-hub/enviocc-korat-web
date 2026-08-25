@@ -48,7 +48,7 @@ const TOKEN_TTL_HOURS = 12;
 const AUTH_SALT = 'enviocc-korat-2026';
 
 /* เลขรุ่นของโค้ด — เรียก ?action=ping เพื่อดูว่าที่ deploy อยู่เป็นรุ่นไหน */
-const CODE_VERSION = '2026-08-25a';
+const CODE_VERSION = '2026-08-25b';
 
 /**
  * ตารางเทียบ "ประเภทหน่วยงาน" ให้เป็นรหัสกลาง
@@ -522,7 +522,12 @@ function doOpenSession(payload) {
   for (var i = 0; i < d.rows.length; i++) {
     var r = d.rows[i];
     var name = String(r[2] || '').trim();
-    if (name !== hospital || accessCodeHash_(r[3]) !== code) continue;
+    var raw  = String(r[3] == null ? '' : r[3]).trim();
+    /* แถวที่ยังไม่ได้ตั้งรหัส ห้ามใช้เข้าระบบเด็ดขาด
+       ไม่งั้นใครก็ยิงค่าแฮชของ "รหัสว่าง" เข้ามาที่ /exec ตรง ๆ แล้วเข้าได้เลย
+       (หน้าเว็บกันช่องว่างไว้แล้ว แต่ /exec เปิดให้ทุกคนเรียก จึงต้องกันฝั่งนี้ด้วย) */
+    if (!raw) continue;
+    if (name !== hospital || accessCodeHash_(raw) !== code) continue;
 
     var rawRole = String(r[4] || '').trim();
     var codes = typeCodes_(r[1]);
