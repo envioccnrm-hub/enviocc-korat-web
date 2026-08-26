@@ -269,8 +269,8 @@ body.nav-open { overflow: hidden; }   /* ล็อกไม่ให้เนื
 
   /* ---- ส่วนหัว ---- */
   body.page-login .login-logo {
-    width: 3.5rem !important;
-    height: 3.5rem !important;
+    width: 5rem !important;
+    height: 5rem !important;
     margin-top: 0 !important;
   }
   body.page-login .login-title {
@@ -316,7 +316,7 @@ body.nav-open { overflow: hidden; }   /* ล็อกไม่ให้เนื
 /* หน้าต่างเบราว์เซอร์เตี้ย (ย่อหน้าต่าง / จอโน้ตบุ๊กเตี้ย) — ตัดของประดับเหมือนฝั่งมือถือ */
 @media (min-width: 768px) and (max-height: 760px) {
   body.page-login .login-card-logo { display: none !important; }
-  body.page-login .login-logo { width: 2.75rem !important; height: 2.75rem !important; }
+  body.page-login .login-logo { width: 3.75rem !important; height: 3.75rem !important; }
   body.page-login .login-title { font-size: 1.5rem !important; }
   body.page-login .login-unit { margin-top: 0 !important; }
   body.page-login #loginForm > * + * { margin-top: .4rem !important; }
@@ -335,8 +335,8 @@ body.nav-open { overflow: hidden; }   /* ล็อกไม่ให้เนื
 
   /* ---- ส่วนหัว: โลโก้ + ชื่อระบบ ---- */
   body.page-login .login-logo {
-    width: 3.25rem !important;
-    height: 3.25rem !important;
+    width: 4.25rem !important;
+    height: 4.25rem !important;
     margin-top: 0 !important;
   }
   body.page-login .login-title {
@@ -418,7 +418,7 @@ body.nav-open { overflow: hidden; }   /* ล็อกไม่ให้เนื
 /* ~664px — iPhone รุ่นใหม่ตอนแถบ URL โผล่อยู่ */
 @media (max-width: 767px) and (max-height: 700px) {
   body.page-login .login-card-logo { display: none !important; }
-  body.page-login .login-logo { width: 2.6rem !important; height: 2.6rem !important; }
+  body.page-login .login-logo { width: 3.25rem !important; height: 3.25rem !important; }
   body.page-login .login-title { font-size: .95rem !important; }
   body.page-login .login-unit { margin-top: 0 !important; }
   body.page-login .login-footer p:nth-child(2) { display: none; }
