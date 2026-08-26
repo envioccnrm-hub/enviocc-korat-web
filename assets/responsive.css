@@ -257,38 +257,70 @@ body.nav-open { overflow: hidden; }   /* ล็อกไม่ให้เนื
    จากบรรทัดบนมาอยู่ซ้ายมือ (ประหยัดไปห้าบรรทัด)
    ถ้าจอเตี้ยกว่าที่เผื่อไว้จริง ๆ ก็ยังเลื่อนได้ตามปกติ ไม่ได้ตัดทิ้ง
    ================================================================== */
-/* จอคอม/แท็บเล็ต — ของเดิมสูงราว 940px ปุ่มเข้าสู่ระบบเลยหล่นใต้ขอบจอ
-   บีบระยะห่างและขนาดโลโก้ลงให้จบในจอเดียวของโน้ตบุ๊กทั่วไป (สูง ~740px)
-   ตัวหนังสือและองค์ประกอบทุกอย่างยังอยู่ครบเหมือนเดิม */
+/* จอคอม/แท็บเล็ต (≥768px) — ชื่อระบบอยู่ข้างบน ฟอร์มอยู่ล่าง เหมือนดีไซน์เดิม
+   ------------------------------------------------------------------
+   ของเดิมเรียงแบบนี้แล้วสูงราว 940px ปุ่มเข้าสู่ระบบหล่นใต้ขอบจอ
+   ทางแก้คือย่อทุกอย่างลงทีละนิด ไม่ย้ายตำแหน่งอะไรทั้งนั้น
+   เป้าหมาย ~750px = พอดีจอโน้ตบุ๊กทั่วไปโดยไม่ต้องเลื่อน
+   ================================================================== */
 @media (min-width: 768px) {
   body.page-login .main-container { min-height: 0 !important; flex: 1 1 auto; }
-  body.page-login .login-stack { gap: 1.25rem !important; }
-  body.page-login .login-logo { width: 4.5rem !important; height: 4.5rem !important; margin-top: 0 !important; }
-  body.page-login .login-title { margin-top: .5rem !important; }
-  body.page-login .login-org { margin-top: .75rem !important; }
-  body.page-login .login-card { padding: 1.5rem !important; }
-  body.page-login .login-card-logo { width: 4rem !important; height: 4rem !important; }
-  body.page-login .login-unit { margin-top: .75rem !important; }
-  body.page-login #loginForm > * + * { margin-top: .75rem !important; }
-  body.page-login .login-divider { margin-top: 1rem !important; margin-bottom: .25rem !important; }
-  body.page-login .login-forgot { margin-top: .5rem !important; }
-  body.page-login .login-footer { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+  body.page-login .login-stack { gap: .75rem !important; }
+
+  /* ---- ส่วนหัว ---- */
+  body.page-login .login-logo {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    margin-top: 0 !important;
+  }
+  body.page-login .login-title {
+    font-size: 1.75rem !important;
+    line-height: 1.3 !important;
+    margin: .4rem 0 0 !important;
+  }
+  body.page-login .login-title span { margin: 0 !important; }
+  body.page-login .login-org {
+    font-size: 1.05rem !important;
+    margin-top: .4rem !important;
+  }
+
+  /* ---- กล่องฟอร์ม ---- */
+  body.page-login .login-card { padding: 1.25rem 1.5rem !important; }
+  body.page-login .login-card-logo { width: 3.25rem !important; height: 3.25rem !important; }
+  body.page-login .login-unit { font-size: .9rem !important; margin: .5rem 0 0 !important; }
+  body.page-login .login-lead { font-size: .9rem !important; margin-bottom: .6rem !important; }
+  body.page-login #loginForm > * + * { margin-top: .5rem !important; }
+  body.page-login .login-field input,
+  body.page-login .login-field select {
+    min-height: 38px;
+    padding-top: .3rem !important;
+    padding-bottom: .3rem !important;
+  }
+  body.page-login .login-submit { padding-top: .5rem !important; }
+  body.page-login #submitBtn { padding-top: .6rem !important; padding-bottom: .6rem !important; }
+  body.page-login .login-divider {
+    margin-top: .6rem !important;
+    margin-bottom: .15rem !important;
+  }
+  body.page-login .login-forgot { margin-top: .35rem !important; }
+
+  /* ---- ท้ายหน้า ---- */
+  body.page-login .login-footer {
+    padding-top: .45rem !important;
+    padding-bottom: .45rem !important;
+    font-size: .8rem !important;
+    line-height: 1.4;
+  }
 }
 
 /* หน้าต่างเบราว์เซอร์เตี้ย (ย่อหน้าต่าง / จอโน้ตบุ๊กเตี้ย) — ตัดของประดับเหมือนฝั่งมือถือ */
-@media (min-width: 768px) and (max-height: 700px) {
+@media (min-width: 768px) and (max-height: 760px) {
   body.page-login .login-card-logo { display: none !important; }
-  body.page-login .login-logo { width: 3rem !important; height: 3rem !important; }
-  body.page-login #loginForm > * + * { margin-top: .5rem !important; }
+  body.page-login .login-logo { width: 2.75rem !important; height: 2.75rem !important; }
+  body.page-login .login-title { font-size: 1.5rem !important; }
+  body.page-login .login-unit { margin-top: 0 !important; }
+  body.page-login #loginForm > * + * { margin-top: .4rem !important; }
   body.page-login .login-footer p:nth-child(2) { display: none; }
-}
-
-/* 768–1023px — สองคอลัมน์แล้วแต่ช่องซ้ายแคบ ชื่อระบบตัวใหญ่จะแตกเป็นสี่บรรทัด
-   ย่อลงให้เหลือสองบรรทัดเหมือนบนจอกว้าง */
-@media (min-width: 768px) and (max-width: 1023px) {
-  body.page-login .login-logo { width: 3.5rem !important; height: 3.5rem !important; }
-  body.page-login .login-title { font-size: 1.35rem !important; line-height: 1.4 !important; }
-  body.page-login .login-org { font-size: .95rem !important; }
 }
 
 @media (max-width: 767px) {
